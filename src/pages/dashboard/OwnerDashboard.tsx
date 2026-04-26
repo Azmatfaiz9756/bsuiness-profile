@@ -13,15 +13,15 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const [selectedLang, setSelectedLang] = useState<'hi' | 'en' | 'ar' | null>(null);
 
   const greetings = {
-    hi: `Aadaab! Main ${profile?.name} ka AI assistant hoon. Main aapki kis tarah madad kar sakta hoon?`,
+    hi: `Namaste! Main ${profile?.name} ka AI assistant hoon. Main aapki kaise madad kar sakta hoon?`,
     en: `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`,
     ar: `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`
   };
 
   const prompts = {
-    hi: `Aap ${profile.name} ke ek behad muhazzib (polite) AI assistant hain. 
-Aapko hamesha North Indian Hindustani (Urdu-Hindi mix) mein baat karni hai, jisme tehzeeb aur tameez jhalakti ho. 
-Sanskrit-heavy shabd ka istemal bilkul na karein. 'Aap', 'Farmayiye', 'Shukriya', 'Tashreef rakhiye' jaise alfaz ka istemal karein.
+    hi: `Aap ${profile.name} ke AI assistant hain. Aapko hamesha North India ki aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo Delhi style mein boli jati hai.
+Polite rahein aur 'Aap' ka use karein, lekin bohot zyada mushkil Urdu words use na karein. 
+Simple words zyada use karein, sanskrit-heavy words (jaise 'vistar', 'mukhya', 'adhik') bilkul use na karein. Unki jagah 'zyada info', 'khas', 'zyada' use karein.
 Context: Aap ${profile.name} (Title: ${profile.title} at ${profile.company}) ko represent karte hain.
 Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`,
     en: `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
@@ -123,6 +123,14 @@ export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState('basic');
   const [sidebarTab, setSidebarTab] = useState('profile');
   const [appointments, setAppointments] = useState<any[]>([]);
+  const [emailError, setEmailError] = useState('');
+  const [campaignData, setCampaignData] = useState({ subject: '', message: '', ctaLink: '' });
+  const [campaignLoading, setCampaignLoading] = useState(false);
+
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -154,6 +162,25 @@ export default function OwnerDashboard() {
           setFormData(emptyProfile);
           // Auto create
           await setDoc(docRef, emptyProfile);
+          
+          // Trigger Welcome Email
+          try {
+            await fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: emptyProfile.email,
+                subject: 'Swaagat hai! Welcome to DBC Network',
+                type: 'welcome',
+                data: {
+                  name: emptyProfile.name,
+                  profileUrl: `${window.location.origin}/profile/${emptyProfile.slug}`
+                }
+              })
+            });
+          } catch (emailErr) {
+            console.error("Welcome email failed:", emailErr);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -181,6 +208,13 @@ export default function OwnerDashboard() {
   if (!profile && !loading) return <div style={{padding: 40}}>Error: Profile could not be loaded. Please check your permissions or try again.</div>;
 
   const handleSave = async () => {
+    if (formData.email && !validateEmail(formData.email)) {
+      setEmailError('Invalid email format');
+      alert('Please correct the email address before saving.');
+      return;
+    }
+    setEmailError('');
+
     try {
       await setDoc(doc(db, 'profiles', user.uid), formData, { merge: true });
       setProfile(formData);
@@ -202,6 +236,7 @@ export default function OwnerDashboard() {
           <div onClick={() => setSidebarTab('profile')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'profile' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'profile' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'profile' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><LayoutDashboard size={18} /> My Profile</div>
           <div onClick={() => setSidebarTab('appointments')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'appointments' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'appointments' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'appointments' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><Calendar size={18} /> Appointments</div>
           <div onClick={() => setSidebarTab('chatbot')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'chatbot' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'chatbot' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'chatbot' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><MessageSquare size={18} /> AI Chatbot</div>
+          <div onClick={() => setSidebarTab('campaigns')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'campaigns' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'campaigns' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'campaigns' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><Send size={18} /> Email Campaigns</div>
           <div onClick={() => setSidebarTab('plan')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'plan' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'plan' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'plan' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><Settings size={18} /> Subscription</div>
         </div>
         <div style={{ padding: '20px' }}><Link to="/" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14 }}>← Back to Site</Link></div>
@@ -245,7 +280,16 @@ export default function OwnerDashboard() {
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Email</label>
-                      <input type="email" value={formData.email || ''} onChange={e => setFormData({...formData, email: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                      <input 
+                        type="email" 
+                        value={formData.email || ''} 
+                        onChange={e => {
+                          setFormData({...formData, email: e.target.value});
+                          if (emailError) setEmailError('');
+                        }} 
+                        style={{ padding: 12, border: emailError ? '1.5px solid #ef4444' : '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} 
+                      />
+                      {emailError && <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 600 }}>{emailError}</span>}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 2' }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Bio</label>
@@ -530,6 +574,88 @@ export default function OwnerDashboard() {
                    </div>
                  </div>
                )}
+            </div>
+          )}
+
+          {sidebarTab === 'campaigns' && (
+            <div style={{ padding: 24 }}>
+               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>Advertising & Marketing Campaigns</h3>
+               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, maxWidth: 600 }}>
+                  <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24 }}>Send professional email notifications to your clients about your latest services, offers, or business updates.</p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Email Subject</label>
+                        <input 
+                          type="text" 
+                          placeholder="Special Offer on Our Services..." 
+                          value={campaignData.subject}
+                          onChange={e => setCampaignData({...campaignData, subject: e.target.value})}
+                          style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} 
+                        />
+                     </div>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Campaign Message</label>
+                        <textarea 
+                          placeholder="Tell your clients what's new..." 
+                          rows={6} 
+                          value={campaignData.message}
+                          onChange={e => setCampaignData({...campaignData, message: e.target.value})}
+                          style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit' }} 
+                        />
+                     </div>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Call to Action (CTA) Link</label>
+                        <input 
+                          type="url" 
+                          placeholder="https://..." 
+                          value={campaignData.ctaLink}
+                          onChange={e => setCampaignData({...campaignData, ctaLink: e.target.value})}
+                          style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} 
+                        />
+                     </div>
+                     
+                     <button 
+                        onClick={async () => {
+                           if (!campaignData.subject || !campaignData.message) {
+                             alert('Please fill in at least the subject and message.');
+                             return;
+                           }
+                           setCampaignLoading(true);
+                           try {
+                             await fetch('/api/send-email', {
+                               method: 'POST',
+                               headers: { 'Content-Type': 'application/json' },
+                               body: JSON.stringify({
+                                 to: profile.email,
+                                 subject: campaignData.subject,
+                                 type: 'ad',
+                                 data: {
+                                   message: campaignData.message,
+                                   ctaLink: campaignData.ctaLink || '#'
+                                 }
+                               })
+                             });
+                             alert('Campaign sent to your email for review!');
+                             setCampaignData({ subject: '', message: '', ctaLink: '' });
+                           } catch (err) {
+                             console.error(err);
+                             alert('Failed to send campaign');
+                           }
+                           setCampaignLoading(false);
+                        }}
+                        disabled={campaignLoading}
+                        style={{ 
+                          marginTop: 8, background: '#2563eb', color: '#fff', border: 'none', 
+                          padding: '12px 24px', borderRadius: 8, fontWeight: 700, 
+                          cursor: campaignLoading ? 'not-allowed' : 'pointer',
+                          opacity: campaignLoading ? 0.7 : 1
+                        }}
+                     >
+                        {campaignLoading ? 'Launching Campaign...' : 'Launch Campaign'}
+                     </button>
+                  </div>
+               </div>
             </div>
           )}
 
