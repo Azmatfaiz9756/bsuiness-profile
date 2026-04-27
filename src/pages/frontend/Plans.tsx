@@ -2,41 +2,41 @@ import React from 'react';
 
 export default function FrontendPlans() {
   return (
-    <div className="section">
-      <div style={{textAlign: 'center', marginBottom: 28}}>
-        <div style={{display: 'inline-block', background: '#ecfdf5', border: '1px solid #bbf7d0', borderRadius: 'var(--r999)', padding: '4px 14px', fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 12}}>
+    <div className="px-4 py-8 md:py-16 bg-slate-50 min-h-screen">
+      <div className="text-center mb-10">
+        <div className="inline-block bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 text-xs font-bold text-emerald-700 mb-4 tracking-wide">
           7 DAYS FREE TRIAL
         </div>
-        <div className="section-title">Simple, transparent pricing</div>
-        <div className="section-sub">No hidden fees. Cancel anytime. All plans include 7-day free trial.</div>
+        <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">Simple, transparent pricing</h2>
+        <p className="text-sm md:text-base text-slate-500">No hidden fees. Cancel anytime. All plans include 7-day free trial.</p>
       </div>
       
-      <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, maxWidth: 800, margin: '0 auto 24px'}}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
         {[
-          { name: 'Standard', price: 'AED 299', popular: false, badge: 'STANDARD', badgeClass: 'badge-gray', color: 'var(--blk2)' },
-          { name: 'Premium', price: 'AED 599', popular: true, badge: 'MOST POPULAR', badgeClass: 'badge-blue', color: 'var(--blue)' },
-          { name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO', badgeClass: 'badge-purple', color: 'var(--blk2)' }
+          { name: 'Standard', price: 'AED 299', popular: false, badge: 'STANDARD' },
+          { name: 'Premium', price: 'AED 599', popular: true, badge: 'MOST POPULAR' },
+          { name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO' }
         ].map(plan => (
-          <div key={plan.name} style={{background: plan.popular ? '#f0f7ff' : 'var(--w)', border: `1.5px solid ${plan.popular ? 'var(--blue)' : 'var(--bdr)'}`, borderRadius: 'var(--r16)', padding: 24, textAlign: 'center'}}>
-            <div style={{fontSize: 10, fontWeight: 700, background: plan.popular ? '#dbeafe' : '#f1f5f9', color: plan.popular ? '#1e40af' : '#475569', padding: '4px 10px', borderRadius: 999, display: 'inline-block', marginBottom: 12}}>
+          <div key={plan.name} className={`rounded-2xl p-6 text-center shadow-sm border ${plan.popular ? 'bg-blue-50/50 border-blue-500' : 'bg-white border-slate-200'}`}>
+            <div className={`text-[10px] font-bold rounded-full px-3 py-1 inline-block mb-4 tracking-wide ${plan.popular ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
                {plan.badge}
             </div>
-            <div style={{fontSize: 16, fontWeight: 800, color: plan.color, marginBottom: 4}}>{plan.name}</div>
-            <div style={{fontSize: 28, fontWeight: 900, color: 'var(--blk2)', marginBottom: 20}}>{plan.price}<sub style={{fontSize: 12, color: 'var(--gray)', fontWeight: 400}}>/yr</sub></div>
+            <div className={`text-base font-extrabold mb-1 ${plan.popular ? 'text-blue-600' : 'text-slate-900'}`}>{plan.name}</div>
+            <div className="text-3xl font-black text-slate-900 mb-6">{plan.price}<sub className="text-xs text-slate-500 font-medium bottom-0">/yr</sub></div>
             
-            <div style={{textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24}}>
-               <div style={{display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray2)'}}>
-                 <span style={{color: 'var(--grn)', fontWeight: 700}}>✓</span> Digital profile page
+            <div className="text-left flex flex-col gap-3 mb-8">
+               <div className="flex items-start gap-2 text-sm text-slate-600">
+                 <span className="text-emerald-500 font-bold mt-0.5">✓</span> Digital profile page
                </div>
-               <div style={{display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray2)'}}>
-                 <span style={{color: 'var(--grn)', fontWeight: 700}}>✓</span> Basic NFC card
+               <div className="flex items-start gap-2 text-sm text-slate-600">
+                 <span className="text-emerald-500 font-bold mt-0.5">✓</span> Basic NFC card
                </div>
-               <div style={{display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray2)'}}>
-                 <span style={{color: 'var(--grn)', fontWeight: 700}}>✓</span> Wallet + top-up
+               <div className="flex items-start gap-2 text-sm text-slate-600">
+                 <span className="text-emerald-500 font-bold mt-0.5">✓</span> Wallet + top-up
                </div>
             </div>
             
-            <button className={`btn w-full justify-center ${plan.popular ? 'btn-blue' : 'btn-outline'}`}>
+            <button className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>
               Start Free Trial
             </button>
           </div>

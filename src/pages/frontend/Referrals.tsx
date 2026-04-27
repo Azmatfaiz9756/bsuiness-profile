@@ -11,67 +11,67 @@ export default function FrontendReferrals() {
   };
 
   return (
-    <div className="section" style={{ maxWidth: 800, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div className="max-w-4xl mx-auto px-4 py-8 md:py-16 font-sans">
       
-      <div style={{ background: 'linear-gradient(135deg, #4f46e5, #3b82f6)', color: '#fff', padding: 40, borderRadius: 24, textAlign: 'center', marginBottom: 32 }}>
-        <Gift size={48} style={{ marginBottom: 16 }} />
-        <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 16 }}>Refer & Earn Wallet Money</h1>
-        <p style={{ fontSize: 16, opacity: 0.9, maxWidth: 500, margin: '0 auto 24px' }}>
+      <div className="bg-gradient-to-br from-indigo-600 to-blue-500 text-white p-8 md:p-12 rounded-3xl text-center mb-8 shadow-lg shadow-blue-500/20">
+        <Gift size={48} className="mx-auto mb-6 text-white" />
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-4">Refer & Earn Wallet Money</h1>
+        <p className="text-base md:text-lg text-blue-50 max-w-xl mx-auto mb-8 leading-relaxed">
           Invite other businesses to join Dubai Digital Connect. You both get AED 50 in your wallet when they activate their profile.
         </p>
-        <div style={{ background: '#fff', padding: 8, borderRadius: 12, display: 'flex', gap: 8, maxWidth: 400, margin: '0 auto' }}>
+        <div className="bg-white p-2 rounded-xl flex flex-col md:flex-row gap-2 max-w-md mx-auto shadow-sm">
           <input 
             type="text" 
             value={referralLink} 
             readOnly 
-            style={{ flex: 1, border: 'none', background: 'transparent', padding: '0 12px', fontSize: 14, color: '#111827', outline: 'none' }} 
+            className="flex-1 border-none bg-transparent px-4 py-2 md:py-0 text-sm font-medium text-slate-900 outline-none text-center md:text-left"
           />
-          <button onClick={copyRef} style={{ background: '#111827', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+          <button onClick={copyRef} className="bg-slate-900 text-white border-none px-6 py-2.5 md:py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors">
             <Copy size={16} /> Copy
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#6b7280' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-3 mb-4 text-slate-500">
             <Users size={20} />
-            <div style={{ fontWeight: 600 }}>Total Refferals</div>
+            <div className="font-semibold text-sm">Total Referrals</div>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: '#111827' }}>12</div>
+          <div className="text-3xl font-black text-slate-900">12</div>
         </div>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#6b7280' }}>
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-3 mb-4 text-slate-500">
             <TrendingUp size={20} />
-            <div style={{ fontWeight: 600 }}>Active Conversions</div>
+            <div className="font-semibold text-sm">Active Conversions</div>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: '#059669' }}>8</div>
+          <div className="text-3xl font-black text-emerald-600">8</div>
         </div>
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 24, borderRadius: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#6b7280' }}>
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-3 mb-4 text-slate-500">
             <Gift size={20} />
-            <div style={{ fontWeight: 600 }}>Total Earned</div>
+            <div className="font-semibold text-sm">Total Earned</div>
           </div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: '#2563eb' }}>AED 400</div>
+          <div className="text-3xl font-black text-blue-600">AED 400</div>
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 32, borderRadius: 16 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 24 }}>Recent Referrals</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-2xl shadow-sm">
+        <h2 className="text-xl md:text-2xl font-extrabold mb-6">Recent Referrals</h2>
+        <div className="flex flex-col">
           {[
             { name: 'Khaled Properties', date: 'Oct 12, 2026', status: 'Completed', amount: '+AED 50' },
             { name: 'Design House Studio', date: 'Oct 10, 2026', status: 'Pending', amount: 'AED 0' },
             { name: 'Tech Solutions LLC', date: 'Oct 05, 2026', status: 'Completed', amount: '+AED 50' }
           ].map((r, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, borderBottom: i < 2 ? '1px solid #f3f4f6' : 'none' }}>
+            <div key={i} className={`flex items-center justify-between py-4 ${i < 2 ? 'border-b border-slate-100' : ''}`}>
               <div>
-                <div style={{ fontWeight: 600, color: '#111827', marginBottom: 4 }}>{r.name}</div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>{r.date}</div>
+                <div className="font-bold text-slate-900 mb-1">{r.name}</div>
+                <div className="text-sm text-slate-500">{r.date}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, color: r.status === 'Completed' ? '#059669' : '#6b7280', marginBottom: 4 }}>{r.amount}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 12, background: r.status === 'Completed' ? '#dcfce7' : '#f3f4f6', color: r.status === 'Completed' ? '#059669' : '#4b5563', display: 'inline-block' }}>{r.status}</div>
+              <div className="text-right">
+                <div className={`font-black mb-1 ${r.status === 'Completed' ? 'text-emerald-600' : 'text-slate-500'}`}>{r.amount}</div>
+                <div className={`text-xs font-bold px-2.5 py-1 rounded-full inline-block ${r.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{r.status}</div>
               </div>
             </div>
           ))}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { db } from '../../firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image, Shield, Send } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image, Shield, Send, Menu, X } from 'lucide-react';
+import { GoogleGenAI, Type } from "@google/genai";
 
 function DashboardChatTester({ profile }: { profile: any }) {
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
@@ -12,17 +12,37 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<'hi' | 'en' | 'ar' | null>(null);
 
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
   const greetings = {
-    hi: `Namaste! Main ${profile?.name} ka AI assistant hoon. Main aapki kaise madad kar sakta hoon?`,
+    hi: `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`,
     en: `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`,
     ar: `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`
   };
 
   const prompts = {
-    hi: `Aap ${profile.name} ke AI assistant hain. Aapko hamesha North India ki aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo Delhi style mein boli jati hai.
-Polite rahein aur 'Aap' ka use karein, lekin bohot zyada mushkil Urdu words use na karein. 
-Simple words zyada use karein, sanskrit-heavy words (jaise 'vistar', 'mukhya', 'adhik') bilkul use na karein. Unki jagah 'zyada info', 'khas', 'zyada' use karein.
-Context: Aap ${profile.name} (Title: ${profile.title} at ${profile.company}) ko represent karte hain.
+    hi: `Aap ${profile.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+
+SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
+- No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
+- No formal Hindi/Sanskrit: 'vistar', 'mukhya', 'adhik', 'yogdaan', 'parinaam' - Yeh sab bhi bilkul use na karein.
+
+INKI JAGAH YE EK DUM SIMPLE WORDS USE KAREIN:
+- 'baat-cheet' (guftagu ki jagah)
+- 'help / madad' (khidmat ki jagah)
+- 'details / info' (vistar ki jagah)
+- 'kaam' (silsile ki jagah)
+- 'khass' (mukhya ki jagah)
+- 'zyada' (adhik ki jagah)
+- 'aaj kal ka' (naye daur ki jagah)
+- 'talent / hunar' (maharat ki jagah)
+
+Aapka andaaz bilkul friendly aur normal insaan jaisa hona chahiye, koi shayarana ya bohot formal baat nahi karni.
+
+Greeting Style:
+"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? Kya aap ${profile.name} sir se kisi khass topic pe baat-cheet karna chahte hain, ya humari company ${profile.company} ki services ke baare mein kuch jaanna chahte hain?"
+
+Context: Aap ${profile.name} (Work: ${profile.title} at ${profile.company}) ko represent karte hain.
 Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`,
     en: `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
 Your tone should be helpful, clear, and professional. 
@@ -38,42 +58,101 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
     }
   }, [selectedLang]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || loading || !selectedLang) return;
-    const newMsg = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: newMsg }]);
+  const sendMessage = async (customMessage?: string) => {
+    const textToSend = customMessage !== undefined ? customMessage : input.trim();
+    if (!textToSend || loading || !selectedLang) return;
+    
+    if (customMessage === undefined) setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: textToSend }]);
     setLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      const contents = messages.map(msg => ({
+      const history = messages.map(msg => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }));
-      
-      contents.push({
-        role: 'user',
-        parts: [{ text: newMsg }]
-      });
+
+      const modelName = 'gemini-flash-latest';
+      const systemInstruction = profile.aiPrompt || prompts[selectedLang];
 
       const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        model: modelName,
+        contents: [...history, { role: 'user', parts: [{ text: textToSend }] }],
         config: {
-          systemInstruction: profile.aiPrompt || prompts[selectedLang],
-        },
-        contents: contents,
+          systemInstruction: systemInstruction,
+          tools: [{
+            functionDeclarations: [
+              {
+                name: "book_appointment",
+                description: "Book an appointment. Requires name, email, date (YYYY-MM-DD), and time (HH:mm).",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    email: { type: Type.STRING },
+                    date: { type: Type.STRING },
+                    time: { type: Type.STRING },
+                    service: { type: Type.STRING }
+                  },
+                  required: ["name", "email", "date", "time"]
+                }
+              },
+              {
+                name: "send_inquiry",
+                description: "Send a contact inquiry. Requires name, email, and message.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    email: { type: Type.STRING },
+                    message: { type: Type.STRING }
+                  },
+                  required: ["name", "email", "message"]
+                }
+              }
+            ]
+          }]
+        }
       });
 
-      if (response.text) {
+      if (response.functionCalls) {
+        const results = [];
+        for (const fc of response.functionCalls) {
+          const col = fc.name === 'book_appointment' ? 'appointments' : 'leads';
+          try {
+            await addDoc(collection(db, col), {
+              ...fc.args,
+              profileId: profile.id,
+              createdAt: serverTimestamp(),
+              status: fc.name === 'book_appointment' ? 'Pending' : 'New',
+              source: 'Dashboard Tester'
+            });
+            results.push({ name: fc.name, response: { success: true } });
+          } catch (e) {
+            results.push({ name: fc.name, response: { success: false, error: "DB Error" } });
+          }
+        }
+
+        const finalResponse = await ai.models.generateContent({
+          model: modelName,
+          contents: [
+            ...history, 
+            { role: 'user', parts: [{ text: textToSend }] },
+            { role: 'model', parts: response.functionCalls.map(fc => ({ functionCall: fc })) },
+            { role: 'user', parts: results.map(r => ({ functionResponse: r })) }
+          ],
+          config: { systemInstruction }
+        });
+
+        if (finalResponse.text) {
+          setMessages(prev => [...prev, { role: 'model', content: finalResponse.text || '' }]);
+        }
+      } else if (response.text) {
         setMessages(prev => [...prev, { role: 'model', content: response.text || '' }]);
-      } else {
-        setMessages(prev => [...prev, { role: 'model', content: 'Connection error' }]);
       }
     } catch (err: any) {
       console.error("Gemini Error:", err);
-      setMessages(prev => [...prev, { role: 'model', content: 'Network or API error' }]);
+      setMessages(prev => [...prev, { role: 'model', content: 'Connection error' }]);
     }
     setLoading(false);
   };
@@ -226,32 +305,71 @@ export default function OwnerDashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'Inter, sans-serif', background: '#f8fafc' }}>
-      <div style={{ width: 250, background: '#1e293b', color: '#fff', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ padding: '24px 20px', borderBottom: '1px solid #334155' }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Business Portal</h2>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>DBC Access</span>
+    <div className="flex flex-col min-h-screen font-sans bg-slate-50 w-full overflow-x-hidden relative">
+      {/* Mobile Top Header */}
+      <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs">DBC</div>
+          <span className="font-bold text-white text-lg">Business Portal</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '20px 0' }}>
-          <div onClick={() => setSidebarTab('profile')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'profile' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'profile' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'profile' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><LayoutDashboard size={18} /> My Profile</div>
-          <div onClick={() => setSidebarTab('appointments')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'appointments' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'appointments' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'appointments' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><Calendar size={18} /> Appointments</div>
-          <div onClick={() => setSidebarTab('chatbot')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'chatbot' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'chatbot' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'chatbot' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><MessageSquare size={18} /> AI Chatbot</div>
-          <div onClick={() => setSidebarTab('campaigns')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'campaigns' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'campaigns' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'campaigns' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><Send size={18} /> Email Campaigns</div>
-          <div onClick={() => setSidebarTab('plan')} style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, background: sidebarTab === 'plan' ? '#0f172a' : 'transparent', borderLeft: sidebarTab === 'plan' ? '3px solid #3b82f6' : '3px solid transparent', color: sidebarTab === 'plan' ? '#fff' : '#cbd5e1', cursor: 'pointer', transition: 'all 0.2s' }}><Settings size={18} /> Subscription</div>
-        </div>
-        <div style={{ padding: '20px' }}><Link to="/" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: 14 }}>← Back to Site</Link></div>
+        <button className="text-slate-400 hover:text-white" onClick={() => setActiveTab(activeTab === 'mobile-menu' ? 'basic' : 'mobile-menu')}>
+          {activeTab === 'mobile-menu' ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
 
-      <div style={{ flex: 1, padding: 32 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#0f172a' }}>Manage Your Digital Card</h1>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Link to={`/profile/${profile?.slug || profile?.id}`} className="btn btn-outline" style={{ background: '#fff', padding: '10px 20px', border: '1px solid #cbd5e1', borderRadius: 8, textDecoration: 'none', color: '#0f172a', fontWeight: 600 }}>Preview Live</Link>
-            <button onClick={handleSave} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Save Changes</button>
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Sidebar Overlay for Mobile */}
+        {activeTab === 'mobile-menu' && (
+          <div className="md:hidden fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm" onClick={() => setActiveTab('basic')}></div>
+        )}
+
+        {/* Sidebar */}
+        <div className={`
+          absolute md:relative z-50 flex flex-col w-[260px] h-full bg-slate-900 border-r border-slate-800 transition-transform duration-300
+          ${activeTab === 'mobile-menu' ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
+          <div className="hidden md:flex flex-col px-5 py-6 border-b border-slate-800">
+            <h2 className="m-0 text-lg font-extrabold text-white">Business Portal</h2>
+            <span className="text-xs text-slate-400 mt-1">DBC Access</span>
+          </div>
+
+          <div className="flex flex-col flex-1 py-4 overflow-y-auto">
+            <button onClick={() => { setSidebarTab('profile'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'profile' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+              <LayoutDashboard size={18} /> My Profile
+            </button>
+            <button onClick={() => { setSidebarTab('appointments'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'appointments' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+              <Calendar size={18} /> Appointments
+            </button>
+            <button onClick={() => { setSidebarTab('chatbot'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'chatbot' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+              <MessageSquare size={18} /> AI Chatbot
+            </button>
+            <button onClick={() => { setSidebarTab('campaigns'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'campaigns' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+              <Send size={18} /> Email Campaigns
+            </button>
+            <button onClick={() => { setSidebarTab('plan'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'plan' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+              <Settings size={18} /> Subscription
+            </button>
+          </div>
+          
+          <div className="p-5 border-t border-slate-800 shrink-0">
+            <Link to="/" className="text-slate-400 hover:text-white text-sm flex items-center gap-2 transition-colors">
+              ← Back to Site
+            </Link>
           </div>
         </div>
 
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-0">
+              <h1 className="m-0 text-xl md:text-2xl font-extrabold text-slate-900">Manage Your Digital Card</h1>
+              <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-1 shrink-0">
+                <Link to={`/profile/${profile?.slug || profile?.id}`} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-50 transition-colors shrink-0">Preview Live</Link>
+                <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm shrink-0">Save Changes</button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {sidebarTab === 'profile' && (
             <>
               <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', overflowX: 'auto', whiteSpace: 'nowrap' }}>
@@ -265,7 +383,7 @@ export default function OwnerDashboard() {
               </div>
               <div style={{ padding: 24 }}>
                 {activeTab === 'basic' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Profile Name</label>
                       <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
@@ -300,7 +418,7 @@ export default function OwnerDashboard() {
 
                 {activeTab === 'contact' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Phone Number</label>
                         <input type="text" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="+971 50 123 4567" />
@@ -455,7 +573,7 @@ export default function OwnerDashboard() {
                        <button onClick={() => setFormData({...formData, bankAccounts: [...(formData.bankAccounts || []), { country: 'UAE', bankName: '', accountName: '', accountNumber: '', iban: '', swift: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Account</button>
                     </div>
                     {(formData.bankAccounts || []).map((acc: any, index: number) => (
-                       <div key={index} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                       <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                            <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Bank Name</label>
                            <input type="text" value={acc.bankName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].bankName = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
@@ -551,7 +669,7 @@ export default function OwnerDashboard() {
                    <button onClick={() => setSidebarTab('plan')} style={{ marginTop: 20, background: '#ef4444', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Upgrade Plan</button>
                  </div>
                ) : (
-                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: 24, borderRadius: 12 }}>
                      <label style={{ display: 'block', fontSize: 15, fontWeight: 700, color: '#1e3a8a', marginBottom: 8 }}>System Prompt / Context</label>
                      <p style={{ margin: '0 0 16px', fontSize: 14, color: '#1e40af', lineHeight: 1.5 }}>Provide instructions, business hours, services, and how the AI should answer questions. This acts as the memory for your AI Assistant.</p>
@@ -672,7 +790,7 @@ export default function OwnerDashboard() {
                   </div>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                    <div style={{ border: '1px solid #e2e8f0', padding: 20, borderRadius: 12, opacity: profile.plan === 'Basic' ? 0.5 : 1 }}>
                      <h4 style={{ margin: '0 0 8px', fontSize: 16 }}>Basic</h4>
                      <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Free</div>
@@ -708,7 +826,9 @@ export default function OwnerDashboard() {
             </div>
           )}
         </div>
+        </div>
       </div>
+    </div>
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut, Menu, X } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { loginWithGoogle, logout } from '../../firebase';
 
 export const AdminLayout = () => {
   const location = useLocation();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, authLoading } = useAppContext();
 
   const SUPER_ADMINS = ['azmatfaiz9756@gmail.com']; // Allow this email specifically for super admin
@@ -52,107 +53,138 @@ export const AdminLayout = () => {
   }
 
   const isActive = (path: string) => {
-    if (path === '/admin') return location.pathname === '/admin' ? 'active' : '';
-    return location.pathname.startsWith(path) ? 'active' : '';
+    if (path === '/admin') return location.pathname === '/admin' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800';
+    return location.pathname.startsWith(path) ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800';
   };
 
-  return (
-    <div className="admin-root">
-      <div className="sidebar">
-        <div className="logo">
-          <div className="logo-icon">DBC</div>
-          <div>
-            <div className="logo-text">Dubai Digital</div>
-            <div className="logo-sub">ADMIN PANEL</div>
-          </div>
-        </div>
-        <nav>
-          <div className="nav-section">OVERVIEW</div>
-          <Link to="/admin" className={`nav-item ${isActive('/admin')}`}>
-            <LayoutDashboard size={18} className="nav-icon" /> Dashboard
-          </Link>
-          <Link to="/admin/analytics" className={`nav-item ${isActive('/admin/analytics')}`}>
-            <BarChart2 size={18} className="nav-icon" /> Analytics
-          </Link>
-          
-          <div className="nav-section">PROFILES</div>
-          <Link to="/admin/profiles" className={`nav-item ${isActive('/admin/profiles')}`}>
-            <Users size={18} className="nav-icon" /> All Profiles
-          </Link>
-          
-          <div className="nav-section">eCommerce</div>
-          <Link to="/admin/products" className={`nav-item ${isActive('/admin/products')}`}>
-             <Tag size={18} className="nav-icon" /> Products
-          </Link>
-          <Link to="/admin/shop-orders" className={`nav-item ${isActive('/admin/shop-orders')}`}>
-             <ShoppingBag size={18} className="nav-icon" /> Shop Orders
-          </Link>
-          <Link to="/admin/promo-codes" className={`nav-item ${isActive('/admin/promo-codes')}`}>
-             <Percent size={18} className="nav-icon" /> Promo Codes
-          </Link>
-          
-          <div className="nav-section">FINANCE</div>
-          <Link to="/admin/wallets" className={`nav-item ${isActive('/admin/wallets')}`}>
-             <CreditCard size={18} className="nav-icon" /> Wallets
-          </Link>
-          <Link to="/admin/referrals" className={`nav-item ${isActive('/admin/referrals')}`}>
-             <Users size={18} className="nav-icon" /> Referrals
-          </Link>
-          
-          <div className="nav-section">DIRECTORY</div>
-          <Link to="/admin/directory" className={`nav-item ${isActive('/admin/directory')}`}>
-             <Users size={18} className="nav-icon" /> Directory
-          </Link>
+  const closeMenu = () => setIsMobileMenuOpen(false);
 
-          <div className="nav-section">SYSTEM</div>
-          <Link to="/admin/dns-help" className={`nav-item ${isActive('/admin/dns-help')}`}>
-             <Globe size={18} className="nav-icon" /> DNS / Domains
-          </Link>
-          <Link to="/admin/settings" className={`nav-item ${isActive('/admin/settings')}`}>
-             <Settings size={18} className="nav-icon" /> Settings
-          </Link>
-        </nav>
-        <div className="sidebar-footer">
-          <div className="admin-badge">
-            <div className="avatar">{user.email?.substring(0, 2).toUpperCase() || 'SA'}</div>
-            <div className="avatar-info">
-              <div className="avatar-name">Super Admin</div>
-              <div className="avatar-role" style={{ fontSize: 10, maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</div>
-            </div>
-            <button onClick={() => logout()} style={{marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', display: 'flex', alignItems: 'center'}}>
-               <LogOut size={16} />
-            </button>
-          </div>
+  return (
+    <div className="admin-root flex flex-col h-screen w-full overflow-hidden bg-slate-50 relative">
+      {/* Mobile Top Header */}
+      <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs">DBC</div>
+          <span className="font-bold text-white text-lg">Admin Panel</span>
         </div>
+        <button className="text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
-      
-      <div className="main">
-        <div className="topbar">
-          <div className="page-title">
-            {location.pathname === '/admin' ? 'Dashboard' : 
-             location.pathname === '/admin/profiles' ? 'Profile Management' : 
-             location.pathname === '/admin/products' ? 'Products' :
-             location.pathname === '/admin/shop-orders' ? 'Shop Orders' :
-             location.pathname === '/admin/promo-codes' ? 'Promo Codes' :
-             location.pathname === '/admin/analytics' ? 'Analytics' :
-             'Admin Panel'}
+
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Sidebar Overlay for Mobile */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm" onClick={closeMenu}></div>
+        )}
+
+        {/* Sidebar */}
+        <div className={`
+          absolute md:relative z-50 flex flex-col w-[260px] h-full bg-slate-900 border-r border-slate-800 transition-transform duration-300
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}>
+          <div className="hidden md:flex h-16 items-center gap-3 px-6 shrink-0 border-b border-slate-800">
+            <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
+            <div className="flex flex-col">
+              <span className="font-bold text-white text-sm leading-tight">Dubai Digital</span>
+              <span className="text-[10px] text-blue-400 font-bold tracking-wider">ADMIN PANEL</span>
+            </div>
           </div>
-          <div style={{ position: 'relative' }}>
-            <button className="topbar-btn btn-gold" onClick={() => setShowQuickAdd(!showQuickAdd)}>
-              + Quick Add
-            </button>
-            {showQuickAdd && (
-              <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', width: 200, zIndex: 100 }}>
-                <Link to="/admin/products" onClick={() => setShowQuickAdd(false)} style={{ display: 'block', padding: '10px 16px', color: '#334155', textDecoration: 'none', borderBottom: '1px solid #f1f5f9' }}>+ Add Product</Link>
-                <Link to="/admin/promo-codes" onClick={() => setShowQuickAdd(false)} style={{ display: 'block', padding: '10px 16px', color: '#334155', textDecoration: 'none', borderBottom: '1px solid #f1f5f9' }}>+ Add Promo Code</Link>
-                <Link to="/admin/profiles" onClick={() => setShowQuickAdd(false)} style={{ display: 'block', padding: '10px 16px', color: '#334155', textDecoration: 'none', borderBottom: '1px solid #f1f5f9' }}>+ Create Profile</Link>
-                <Link to="/admin/wallets" onClick={() => setShowQuickAdd(false)} style={{ display: 'block', padding: '10px 16px', color: '#334155', textDecoration: 'none' }}>+ Credit Wallet</Link>
+
+          <div className="flex-1 overflow-y-auto w-full py-4 px-3 flex flex-col gap-1">
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-2">OVERVIEW</div>
+            <Link onClick={closeMenu} to="/admin" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin')}`}>
+              <LayoutDashboard size={18} /> Dashboard
+            </Link>
+            <Link onClick={closeMenu} to="/admin/analytics" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/analytics')}`}>
+              <BarChart2 size={18} /> Analytics
+            </Link>
+            
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">PROFILES</div>
+            <Link onClick={closeMenu} to="/admin/profiles" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/profiles')}`}>
+              <Users size={18} /> All Profiles
+            </Link>
+            
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">eCommerce</div>
+            <Link onClick={closeMenu} to="/admin/products" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/products')}`}>
+               <Tag size={18} /> Products
+            </Link>
+            <Link onClick={closeMenu} to="/admin/shop-orders" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/shop-orders')}`}>
+               <ShoppingBag size={18} /> Shop Orders
+            </Link>
+            <Link onClick={closeMenu} to="/admin/promo-codes" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/promo-codes')}`}>
+               <Percent size={18} /> Promo Codes
+            </Link>
+            
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">FINANCE</div>
+            <Link onClick={closeMenu} to="/admin/wallets" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/wallets')}`}>
+               <CreditCard size={18} /> Wallets
+            </Link>
+            <Link onClick={closeMenu} to="/admin/referrals" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/referrals')}`}>
+               <Users size={18} /> Referrals
+            </Link>
+            
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">DIRECTORY</div>
+            <Link onClick={closeMenu} to="/admin/directory" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/directory')}`}>
+               <Users size={18} /> Directory
+            </Link>
+
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">SYSTEM</div>
+            <Link onClick={closeMenu} to="/admin/dns-help" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/dns-help')}`}>
+               <Globe size={18} /> DNS / Domains
+            </Link>
+            <Link onClick={closeMenu} to="/admin/settings" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/settings')}`}>
+               <Settings size={18} /> Settings
+            </Link>
+          </div>
+          
+          <div className="mt-auto p-4 border-t border-slate-800 shrink-0">
+            <div className="flex items-center gap-3 px-2">
+              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 text-xs font-bold shrink-0">{user.email?.substring(0, 2).toUpperCase() || 'SA'}</div>
+              <div className="flex flex-col flex-1 min-w-0 pr-2">
+                <div className="text-sm font-medium text-slate-200">Super Admin</div>
+                <div className="text-xs text-slate-500 truncate">{user.email}</div>
               </div>
-            )}
+              <button onClick={() => logout()} className="text-slate-500 hover:text-slate-300 p-1">
+                 <LogOut size={16} />
+              </button>
+            </div>
           </div>
         </div>
-        <div className="content">
-          <Outlet />
+        
+        {/* Main Workspace */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          <div className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8">
+            <div className="text-lg md:text-xl font-bold text-slate-800 truncate">
+              {location.pathname === '/admin' ? 'Dashboard' : 
+               location.pathname === '/admin/profiles' ? 'Profile Management' : 
+               location.pathname === '/admin/products' ? 'Products' :
+               location.pathname === '/admin/shop-orders' ? 'Shop Orders' :
+               location.pathname === '/admin/promo-codes' ? 'Promo Codes' :
+               location.pathname === '/admin/analytics' ? 'Analytics' :
+               'Admin Panel'}
+            </div>
+            <div className="relative shrink-0">
+              <button 
+                className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2" 
+                onClick={() => setShowQuickAdd(!showQuickAdd)}
+              >
+                <Plus size={16} /> <span className="hidden sm:inline">Quick Add</span>
+              </button>
+              {showQuickAdd && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-2">
+                  <Link to="/admin/products" onClick={() => setShowQuickAdd(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">+ Add Product</Link>
+                  <Link to="/admin/promo-codes" onClick={() => setShowQuickAdd(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">+ Add Promo Code</Link>
+                  <Link to="/admin/profiles" onClick={() => setShowQuickAdd(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">+ Create Profile</Link>
+                  <div className="h-px bg-slate-100 my-1"></div>
+                  <Link to="/admin/wallets" onClick={() => setShowQuickAdd(false)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">+ Credit Wallet</Link>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>

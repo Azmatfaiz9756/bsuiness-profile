@@ -43,23 +43,18 @@ export default function FullProfile() {
 
   return (
     <>
-      <div style={{ background: '#1a1a2e', padding: '10px 14px', display: 'flex', gap: 6, flexWrap: 'wrap', position: 'sticky', top: 0, zIndex: 200, borderBottom: '2px solid #2d2d4a', alignItems: 'center' }}>
-         <span style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', letterSpacing: 1, marginRight: 10}}>PROFILE TEMPLATE</span>
+      <div className="sticky top-0 z-50 bg-slate-900 px-3 py-2.5 flex flex-wrap gap-2 items-center border-b-2 border-slate-800 shadow-md">
+         <span className="text-[10px] font-bold text-slate-400 tracking-widest mr-2 uppercase">Profile Template</span>
          {['classic', 'executive', 'minimal'].map(tName => (
            <button 
               key={tName}
               onClick={() => setTemplate(tName)}
-              style={{
-                padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                background: template === tName ? '#1a56db' : 'transparent',
-                color: template === tName ? '#fff' : '#9ca3af',
-                border: `1.5px solid ${template === tName ? '#1a56db' : '#374151'}`
-              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border-2 ${template === tName ? 'bg-blue-600 text-white border-blue-600' : 'bg-transparent text-slate-400 border-slate-700 hover:border-slate-500'}`}
            >
              {tName.toUpperCase()}
            </button>
          ))}
-         <Link to="/admin" style={{marginLeft: 'auto', color: '#fff', fontSize: 12}}>Exit Preview</Link>
+         <Link to="/admin" className="ml-auto text-white text-xs font-semibold hover:text-blue-400 transition-colors">Exit Preview</Link>
       </div>
 
       {template === 'classic' && <ClassicModern profile={profile} onExit={handleExit} />}

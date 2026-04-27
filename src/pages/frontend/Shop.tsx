@@ -88,53 +88,53 @@ export default function FrontendShop() {
   };
 
   return (
-    <div className="section" style={{ maxWidth: 1000, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+    <div className="max-w-5xl mx-auto px-4 py-6 md:py-12 font-sans">
       {/* Navigation Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, background: '#fff', padding: '16px 24px', borderRadius: 16, border: '1px solid #e5e7eb' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div className="flex justify-between items-center mb-6 md:mb-8 bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3 md:gap-4">
           {view !== 'catalog' && (
-            <button onClick={() => setView('catalog')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#6b7280' }}>
+            <button onClick={() => setView('catalog')} className="text-slate-500 hover:text-slate-900 transition-colors">
               <ArrowLeft size={20} />
             </button>
           )}
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: 0 }}>
+          <h2 className="text-lg md:text-xl font-extrabold text-slate-900 m-0">
             {view === 'catalog' ? 'Official Store' : view.charAt(0).toUpperCase() + view.slice(1)}
           </h2>
         </div>
-        <div style={{ display: 'flex', gap: 16 }}>
-          <button onClick={() => setView('orders')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: view === 'orders' ? '#2563eb' : '#6b7280', position: 'relative' }}>
+        <div className="flex gap-4 md:gap-6">
+          <button onClick={() => setView('orders')} className={`relative transition-colors ${view === 'orders' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}>
             <Package size={24} />
           </button>
-          <button onClick={() => setView('wishlist')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: view === 'wishlist' ? '#2563eb' : '#6b7280', position: 'relative' }}>
+          <button onClick={() => setView('wishlist')} className={`relative transition-colors ${view === 'wishlist' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}>
             <Heart size={24} />
-            {wishlist.length > 0 && <span style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', color: '#fff', fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{wishlist.length}</span>}
+            {wishlist.length > 0 && <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold px-1">{wishlist.length}</span>}
           </button>
-          <button onClick={() => setView('cart')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: view === 'cart' ? '#2563eb' : '#6b7280', position: 'relative' }}>
+          <button onClick={() => setView('cart')} className={`relative transition-colors ${view === 'cart' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-900'}`}>
             <ShoppingCart size={24} />
-            {cart.length > 0 && <span style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', color: '#fff', fontSize: 10, width: 16, height: 16, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{cart.length}</span>}
+            {cart.length > 0 && <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold px-1">{cart.length}</span>}
           </button>
         </div>
       </div>
 
       {view === 'catalog' && (
         <>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, position: 'relative', minWidth: 250 }}>
-              <Search size={18} style={{ position: 'absolute', left: 16, top: 13, color: '#9ca3af' }} />
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="relative flex-1">
+              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
                 type="text" 
                 placeholder="Search products..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ width: '100%', padding: '12px 16px 12px 42px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 15 }}
+                className="w-full py-3 pl-11 pr-4 border border-slate-300 rounded-xl text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
               />
             </div>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0 md:max-w-[60%]">
               {['All Products', 'NFC Cards', 'Accessories', 'Stickers', 'Bundles'].map(cat => (
                 <button 
                   key={cat} 
                   onClick={() => setFilter(cat)}
-                  style={{ whiteSpace: 'nowrap', padding: '8px 16px', borderRadius: 20, border: `1px solid ${filter === cat ? '#1e40af' : '#d1d5db'}`, background: filter === cat ? '#1e40af' : '#fff', color: filter === cat ? '#fff' : '#374151', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}
+                  className={`whitespace-nowrap px-4 py-2.5 rounded-full border text-sm font-bold transition-all shrink-0 ${filter === cat ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
                 >
                   {cat}
                 </button>
@@ -142,29 +142,29 @@ export default function FrontendShop() {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((p: any) => (
-              <div key={p.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', position: 'relative', transition: 'all 0.2s', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+              <div key={p.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden relative transition-all duration-200 hover:shadow-xl hover:-translate-y-1 flex flex-col group">
                 <button 
                   onClick={() => toggleWishlist(p.id)}
-                  style={{ position: 'absolute', top: 12, right: 12, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: wishlist.includes(p.id) ? '#ef4444' : '#9ca3af' }}
+                  className={`absolute top-3 right-3 bg-white/80 backdrop-blur border border-slate-200 rounded-full w-9 h-9 flex items-center justify-center cursor-pointer transition-colors z-10 ${wishlist.includes(p.id) ? 'text-red-500' : 'text-slate-400 hover:text-red-400'}`}
                 >
-                  <Heart size={18} fill={wishlist.includes(p.id) ? '#ef4444' : 'none'} />
+                  <Heart size={18} className={wishlist.includes(p.id) ? 'fill-red-500' : ''} />
                 </button>
-                <div onClick={() => { setSelectedProduct(p); setView('product'); }} style={{ height: 180, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, cursor: 'pointer' }}>
+                <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="h-48 md:h-56 bg-slate-100 flex items-center justify-center text-6xl md:text-7xl cursor-pointer group-hover:scale-105 transition-transform duration-300">
                   {p.icon}
                 </div>
-                <div style={{ padding: 20 }}>
-                  <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>{p.category}</div>
-                  <div onClick={() => { setSelectedProduct(p); setView('product'); }} style={{ fontSize: 16, fontWeight: 700, color: '#111827', marginBottom: 8, cursor: 'pointer', minHeight: 40 }}>{p.name}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: '#1e40af' }}>{siteSettings.currency} {p.price}</div>
+                <div className="p-5 flex flex-col flex-1 bg-white relative z-10">
+                  <div className="text-[10px] md:text-xs text-blue-600 uppercase tracking-widest font-extrabold mb-1.5">{p.category}</div>
+                  <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="text-base md:text-lg font-extrabold text-slate-900 mb-2 cursor-pointer line-clamp-2 min-h-[3rem]">{p.name}</div>
+                  <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-100">
+                    <div className="text-lg md:text-xl font-black text-slate-900">{siteSettings.currency} {p.price}</div>
                     <button 
                       onClick={() => addToCart(p)}
                       disabled={p.stock === 0}
-                      style={{ background: p.stock === 0 ? '#d1d5db' : '#111827', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: p.stock === 0 ? 'not-allowed' : 'pointer' }}
+                      className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${p.stock === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                     >
-                      {p.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                      {p.stock === 0 ? 'Out of Stock' : 'Add'}
                     </button>
                   </div>
                 </div>
@@ -175,8 +175,8 @@ export default function FrontendShop() {
       )}
 
       {view === 'product' && selectedProduct && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1fr', gap: 40, background: '#fff', padding: 32, borderRadius: 16, border: '1px solid #e5e7eb' }}>
-           <div style={{ height: 400, background: '#f3f4f6', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 120 }}>
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-6 md:gap-10 bg-white p-6 md:p-8 rounded-2xl border border-slate-200">
+           <div className="h-64 md:h-96 bg-slate-100 rounded-2xl flex items-center justify-center text-8xl md:text-9xl">
               {selectedProduct.icon}
            </div>
            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -208,34 +208,34 @@ export default function FrontendShop() {
       )}
 
       {view === 'cart' && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 32 }}>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
           {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-              <ShoppingCart size={64} style={{ color: '#d1d5db', margin: '0 auto 24px' }} />
-              <h3 style={{ fontSize: 20, color: '#374151', marginBottom: 16 }}>Your cart is empty</h3>
-              <button onClick={() => setView('catalog')} style={{ background: '#111827', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 8, cursor: 'pointer' }}>Continue Shopping</button>
+            <div className="text-center py-16 px-4">
+              <ShoppingCart size={64} className="text-slate-300 mx-auto mb-6" />
+              <h3 className="text-xl text-slate-700 mb-6 font-semibold">Your cart is empty</h3>
+              <button onClick={() => setView('catalog')} className="bg-slate-900 hover:bg-slate-800 text-white border-none py-3 px-6 rounded-xl cursor-pointer font-bold transition-colors">Continue Shopping</button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: 32 }}>
+            <div className="flex flex-col md:grid md:grid-cols-[1fr_350px] gap-8">
               <div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, borderBottom: '1px solid #e5e7eb', paddingBottom: 16 }}>Shopping Cart ({cart.length} items)</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <h3 className="text-lg md:text-xl font-extrabold mb-6 border-b border-slate-200 pb-4">Shopping Cart ({cart.length} items)</h3>
+                <div className="flex flex-col gap-5">
                   {cart.map(item => (
-                    <div key={item.product.id} style={{ display: 'flex', gap: 16, border: '1px solid #f3f4f6', padding: 16, borderRadius: 12 }}>
-                      <div style={{ width: 80, height: 80, background: '#f3f4f6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>{item.product.icon}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                          <div style={{ fontWeight: 700, color: '#111827' }}>{item.product.name}</div>
-                          <div style={{ fontWeight: 800, color: '#1e40af' }}>{siteSettings.currency} {item.product.price * item.qty}</div>
+                    <div key={item.product.id} className="flex flex-col sm:flex-row gap-4 border border-slate-100 p-4 rounded-xl items-start sm:items-center">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 rounded-lg flex items-center justify-center text-3xl sm:text-4xl shrink-0">{item.product.icon}</div>
+                      <div className="flex-1 w-full">
+                        <div className="flex justify-between mb-2">
+                          <div className="font-bold text-slate-900">{item.product.name}</div>
+                          <div className="font-black text-blue-700">{siteSettings.currency} {item.product.price * item.qty}</div>
                         </div>
-                        <div style={{ color: '#6b7280', fontSize: 14 }}>{siteSettings.currency} {item.product.price} each</div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #d1d5db', borderRadius: 6, padding: 4 }}>
-                            <button onClick={() => updateCartQty(item.product.id, -1)} style={{ width: 28, height: 28, border: 'none', background: '#f3f4f6', borderRadius: 4, cursor: 'pointer' }}>-</button>
-                            <span style={{ fontWeight: 600, width: 20, textAlign: 'center' }}>{item.qty}</span>
-                            <button onClick={() => updateCartQty(item.product.id, 1)} style={{ width: 28, height: 28, border: 'none', background: '#f3f4f6', borderRadius: 4, cursor: 'pointer' }}>+</button>
+                        <div className="text-slate-500 text-sm mb-3">{siteSettings.currency} {item.product.price} each</div>
+                        <div className="flex justify-between items-center sm:items-start flex-wrap gap-3">
+                          <div className="flex items-center gap-3 border border-slate-300 rounded-lg p-1">
+                            <button onClick={() => updateCartQty(item.product.id, -1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-bold flex items-center justify-center transition-colors">-</button>
+                            <span className="font-bold w-5 text-center text-sm">{item.qty}</span>
+                            <button onClick={() => updateCartQty(item.product.id, 1)} className="w-7 h-7 bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-bold flex items-center justify-center transition-colors">+</button>
                           </div>
-                          <button onClick={() => removeFromCart(item.product.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600 }}>
+                          <button onClick={() => removeFromCart(item.product.id)} className="bg-transparent border-none text-red-500 hover:text-red-700 cursor-pointer flex items-center gap-1.5 text-sm font-bold transition-colors">
                             <Trash2 size={16} /> Remove
                           </button>
                         </div>
@@ -245,25 +245,25 @@ export default function FrontendShop() {
                 </div>
               </div>
               
-              <div style={{ background: '#f9fafb', padding: 24, borderRadius: 16, border: '1px solid #e5e7eb', height: 'fit-content' }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Order Summary</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: '#4b5563' }}>
+              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 h-fit mt-2 md:mt-0">
+                <h3 className="text-lg font-bold mb-5 text-slate-900">Order Summary</h3>
+                <div className="flex justify-between mb-3 text-slate-600 font-medium">
                   <span>Subtotal</span>
                   <span>{siteSettings.currency} {subtotal}</span>
                 </div>
                 {discount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: '#059669' }}>
+                  <div className="flex justify-between mb-3 text-emerald-600 font-medium">
                     <span>Discount</span>
                     <span>-{siteSettings.currency} {discount}</span>
                   </div>
                 )}
-                <div style={{ borderTop: '1px solid #d1d5db', margin: '16px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, fontWeight: 800, fontSize: 18, color: '#111827' }}>
+                <div className="border-t border-slate-300 my-4" />
+                <div className="flex justify-between mb-6 font-black text-lg md:text-xl text-slate-900">
                   <span>Total</span>
                   <span>{siteSettings.currency} {total}</span>
                 </div>
                 
-                <button onClick={() => setView('checkout')} style={{ width: '100%', background: '#111827', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
+                <button onClick={() => setView('checkout')} className="w-full bg-slate-900 hover:bg-slate-800 text-white border-none py-3.5 rounded-xl font-bold transition-colors">
                   Proceed to Checkout
                 </button>
               </div>
@@ -273,22 +273,22 @@ export default function FrontendShop() {
       )}
 
       {view === 'checkout' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', gap: 32 }}>
-          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 32 }}>
-            <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 32 }}>Checkout</h2>
+        <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 order-2 lg:order-1">
+            <h2 className="text-xl md:text-2xl font-black mb-8 text-slate-900">Checkout</h2>
             
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <MapPin size={20} color="#2563eb" />
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Shipping Address</h3>
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin size={20} className="text-blue-600" />
+                <h3 className="text-lg font-bold m-0 text-slate-900">Shipping Address</h3>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="flex flex-col gap-3">
                 {addresses.map((addr: any) => (
-                  <label key={addr.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 16, border: `2px solid ${selectedAddress === addr.id ? '#2563eb' : '#e5e7eb'}`, borderRadius: 12, cursor: 'pointer', background: selectedAddress === addr.id ? '#eff6ff' : '#fff' }}>
-                    <input type="radio" name="address" checked={selectedAddress === addr.id} onChange={() => setSelectedAddress(addr.id)} style={{ marginTop: 4 }} />
+                  <label key={addr.id} className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${selectedAddress === addr.id ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
+                    <input type="radio" name="address" checked={selectedAddress === addr.id} onChange={() => setSelectedAddress(addr.id)} className="mt-1" />
                     <div>
-                      <div style={{ fontWeight: 700, marginBottom: 4 }}>{addr.type} {addr.isDefault && <span style={{ fontSize: 10, background: '#e5e7eb', padding: '2px 6px', borderRadius: 4, marginLeft: 8 }}>Default</span>}</div>
-                      <div style={{ color: '#4b5563', fontSize: 14 }}>{addr.address}</div>
+                      <div className="font-bold mb-1 flex items-center text-slate-900">{addr.type} {addr.isDefault && <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-xs ml-2 font-bold uppercase tracking-wider">Default</span>}</div>
+                      <div className="text-slate-600 text-sm leading-relaxed">{addr.address}</div>
                     </div>
                   </label>
                 ))}
@@ -296,71 +296,71 @@ export default function FrontendShop() {
             </div>
 
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <CreditCard size={20} color="#2563eb" />
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Payment Method</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <CreditCard size={20} className="text-blue-600" />
+                <h3 className="text-lg font-bold m-0 text-slate-900">Payment Method</h3>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, border: `2px solid ${paymentMethod === 'wallet' ? '#2563eb' : '#e5e7eb'}`, borderRadius: 12, cursor: 'pointer' }}>
-                  <input type="radio" name="payment" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} />
-                  <Wallet size={20} color="#6b7280" />
-                  <div style={{ flex: 1, fontWeight: 600 }}>DBC Wallet</div>
-                  <div style={{ fontWeight: 700, color: walletBalance >= total ? '#059669' : '#ef4444' }}>Balance: {siteSettings.currency} {walletBalance}</div>
+              <div className="flex flex-col gap-3">
+                <label className={`flex flex-wrap sm:flex-nowrap items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${paymentMethod === 'wallet' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
+                  <input type="radio" name="payment" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="shrink-0" />
+                  <Wallet size={20} className="text-slate-500 shrink-0" />
+                  <div className="flex-1 font-bold text-slate-900 whitespace-nowrap">DBC Wallet</div>
+                  <div className={`font-bold ml-auto text-sm sm:text-base w-full sm:w-auto text-right mt-2 sm:mt-0 ${walletBalance >= total ? 'text-emerald-600' : 'text-red-500'}`}>Balance: {siteSettings.currency} {walletBalance}</div>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 16, border: `2px solid ${paymentMethod === 'card' ? '#2563eb' : '#e5e7eb'}`, borderRadius: 12, cursor: 'pointer' }}>
-                  <input type="radio" name="payment" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} />
-                  <CreditCard size={20} color="#6b7280" />
-                  <div style={{ fontWeight: 600 }}>Credit / Debit Card</div>
+                <label className={`flex items-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-colors ${paymentMethod === 'card' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-white hover:border-blue-200'}`}>
+                  <input type="radio" name="payment" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="shrink-0" />
+                  <CreditCard size={20} className="text-slate-500 shrink-0" />
+                  <div className="font-bold text-slate-900">Credit / Debit Card</div>
                 </label>
               </div>
             </div>
           </div>
           
-          <div style={{ height: 'fit-content', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                <Tag size={20} color="#2563eb" />
-                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Apply Coupon</h3>
+          <div className="h-fit flex flex-col gap-6 order-1 lg:order-2">
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Tag size={20} className="text-blue-600" />
+                <h3 className="text-base font-bold m-0 text-slate-900">Apply Coupon</h3>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="flex gap-2">
                 <input 
                   type="text" 
                   placeholder="Enter code (try DBC10)" 
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
-                  style={{ flex: 1, padding: '10px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+                  className="flex-1 px-4 py-2.5 border border-slate-300 rounded-lg text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all uppercase"
                 />
-                <button onClick={handleApplyCoupon} style={{ background: '#111827', color: '#fff', border: 'none', padding: '0 16px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Apply</button>
+                <button onClick={handleApplyCoupon} className="bg-slate-900 hover:bg-slate-800 text-white border-none px-4 py-2.5 rounded-lg font-bold transition-colors shadow-sm">Apply</button>
               </div>
             </div>
 
-            <div style={{ background: '#f9fafb', padding: 24, borderRadius: 16, border: '1px solid #e5e7eb' }}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Order Summary</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 className="text-lg font-bold mb-5 text-slate-900">Order Summary</h3>
+              <div className="flex flex-col gap-3 mb-5">
                 {cart.map(item => (
-                  <div key={item.product.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                    <span style={{ color: '#4b5563' }}>{item.qty}x {item.product.name}</span>
-                    <span style={{ fontWeight: 600 }}>{siteSettings.currency} {item.product.price * item.qty}</span>
+                  <div key={item.product.id} className="flex justify-between text-sm text-slate-600 font-medium">
+                    <span className="truncate pr-4">{item.qty}x {item.product.name}</span>
+                    <span className="font-bold text-slate-900 whitespace-nowrap">{siteSettings.currency} {item.product.price * item.qty}</span>
                   </div>
                 ))}
               </div>
-              <div style={{ borderTop: '1px solid #d1d5db', margin: '16px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: '#4b5563' }}>
+              <div className="border-t border-slate-300 my-4" />
+              <div className="flex justify-between mb-3 text-slate-600 font-medium text-sm md:text-base">
                 <span>Subtotal</span>
                 <span>{siteSettings.currency} {subtotal}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: '#4b5563' }}>
+              <div className="flex justify-between mb-3 text-slate-600 font-medium text-sm md:text-base">
                 <span>Shipping</span>
                 <span>Free</span>
               </div>
               {discount > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, color: '#059669' }}>
+                <div className="flex justify-between mb-3 text-emerald-600 font-medium text-sm md:text-base">
                   <span>Discount</span>
                   <span>-{siteSettings.currency} {discount}</span>
                 </div>
               )}
-              <div style={{ borderTop: '1px solid #d1d5db', margin: '16px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, fontWeight: 800, fontSize: 18, color: '#111827' }}>
+              <div className="border-t border-slate-300 my-4" />
+              <div className="flex justify-between mb-6 font-black text-lg md:text-xl text-slate-900">
                 <span>Total</span>
                 <span>{siteSettings.currency} {total}</span>
               </div>
@@ -368,7 +368,7 @@ export default function FrontendShop() {
               <button 
                 onClick={handleCheckout}
                 disabled={paymentMethod === 'wallet' && walletBalance < total}
-                style={{ width: '100%', background: (paymentMethod === 'wallet' && walletBalance < total) ? '#d1d5db' : '#2563eb', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontWeight: 700, fontSize: 16, cursor: (paymentMethod === 'wallet' && walletBalance < total) ? 'not-allowed' : 'pointer' }}
+                className={`w-full text-white border-none py-3.5 rounded-xl font-bold transition-colors shadow-sm ${paymentMethod === 'wallet' && walletBalance < total ? 'bg-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 Place Order
               </button>
@@ -378,38 +378,38 @@ export default function FrontendShop() {
       )}
 
       {view === 'orders' && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 32 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24 }}>My Orders</h2>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
+          <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-slate-900">My Orders</h2>
           {userOrders.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>No orders yet.</div>
+            <div className="text-center py-10 px-4 text-slate-500 font-medium">No orders yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="flex flex-col gap-4 md:gap-6">
               {userOrders.map((order: any, idx: number) => (
-                <div key={idx} style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, borderBottom: '1px solid #f3f4f6', paddingBottom: 16 }}>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Order ID</div>
-                      <div style={{ fontWeight: 700 }}>{order.id}</div>
+                <div key={idx} className="border border-slate-200 rounded-xl p-4 md:p-6 bg-slate-50">
+                  <div className="flex flex-wrap sm:flex-nowrap justify-between mb-4 border-b border-slate-200 pb-4 gap-4">
+                    <div className="w-1/2 sm:w-auto">
+                      <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wider">Order ID</div>
+                      <div className="font-bold text-slate-900">{order.id}</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Date</div>
-                      <div style={{ fontWeight: 600 }}>{order.date}</div>
+                    <div className="w-1/2 sm:w-auto text-right sm:text-left">
+                      <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wider">Date</div>
+                      <div className="font-bold text-slate-700">{order.date}</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Total</div>
-                      <div style={{ fontWeight: 700, color: '#1e40af' }}>{siteSettings.currency} {order.total}</div>
+                    <div className="w-full sm:w-auto sm:text-right mt-2 sm:mt-0">
+                      <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wider hidden sm:block">Total</div>
+                      <div className="font-black text-blue-700 text-lg">{siteSettings.currency} {order.total}</div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Status</div>
-                      <div style={{ fontWeight: 600, color: '#059669', background: '#dcfce7', padding: '4px 12px', borderRadius: 20, fontSize: 12 }}>{order.status}</div>
+                    <div className="w-full sm:w-auto mt-2 sm:mt-0 text-right">
+                      <div className="text-xs text-slate-500 mb-1 font-semibold uppercase tracking-wider">Status</div>
+                      <div className="font-bold text-emerald-700 bg-emerald-100 px-3 py-1 pb-1.5 rounded-full text-xs inline-block">{order.status}</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="flex flex-col gap-3 mt-4">
                     {order.items.map((item: any, i: number) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 40, height: 40, background: '#f3f4f6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>{item.product.icon}</div>
-                        <div style={{ flex: 1, fontSize: 14 }}>{item.qty}x {item.product.name}</div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#4b5563' }}>{siteSettings.currency} {item.product.price * item.qty}</div>
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-xl shrink-0">{item.product.icon}</div>
+                        <div className="flex-1 text-sm font-medium text-slate-700">{item.qty}x {item.product.name}</div>
+                        <div className="text-sm font-bold text-slate-900">{siteSettings.currency} {item.product.price * item.qty}</div>
                       </div>
                     ))}
                   </div>
@@ -421,34 +421,34 @@ export default function FrontendShop() {
       )}
 
       {view === 'wishlist' && (
-        <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #e5e7eb', padding: 32 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24 }}>My Wishlist</h2>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8">
+          <h2 className="text-xl md:text-2xl font-black mb-6 md:mb-8 text-slate-900">My Wishlist</h2>
           {wishlist.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>Your wishlist is empty.</div>
+            <div className="text-center py-10 px-4 text-slate-500 font-medium">Your wishlist is empty.</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.filter(p => wishlist.includes(p.id)).map((p: any) => (
-                <div key={p.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+                <div key={p.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden relative transition-all duration-200 hover:shadow-xl hover:-translate-y-1 flex flex-col group">
                   <button 
                     onClick={() => toggleWishlist(p.id)}
-                    style={{ position: 'absolute', top: 12, right: 12, background: '#fff', border: '1px solid #e5e7eb', borderRadius: '50%', width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
+                    className="absolute top-3 right-3 bg-white/80 backdrop-blur border border-slate-200 rounded-full w-9 h-9 flex items-center justify-center cursor-pointer transition-colors z-10 text-red-500 hover:text-red-600"
                   >
-                    <Heart size={18} fill="#ef4444" />
+                    <Heart size={18} className="fill-red-500" />
                   </button>
-                  <div onClick={() => { setSelectedProduct(p); setView('product'); }} style={{ height: 180, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 60, cursor: 'pointer' }}>
+                  <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="h-48 md:h-56 bg-slate-100 flex items-center justify-center text-6xl md:text-7xl cursor-pointer group-hover:scale-105 transition-transform duration-300">
                     {p.icon}
                   </div>
-                  <div style={{ padding: 20 }}>
-                    <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>{p.category}</div>
-                    <div onClick={() => { setSelectedProduct(p); setView('product'); }} style={{ fontSize: 16, fontWeight: 700, color: '#111827', marginBottom: 8, cursor: 'pointer', minHeight: 40 }}>{p.name}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#1e40af' }}>{siteSettings.currency} {p.price}</div>
+                  <div className="p-5 flex flex-col flex-1 bg-white relative z-10">
+                    <div className="text-[10px] md:text-xs text-blue-600 uppercase tracking-widest font-extrabold mb-1.5">{p.category}</div>
+                    <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="text-base md:text-lg font-extrabold text-slate-900 mb-2 cursor-pointer line-clamp-2 min-h-[3rem]">{p.name}</div>
+                    <div className="flex justify-between items-center mt-auto pt-4 border-t border-slate-100">
+                      <div className="text-lg md:text-xl font-black text-slate-900">{siteSettings.currency} {p.price}</div>
                       <button 
                         onClick={() => addToCart(p)}
                         disabled={p.stock === 0}
-                        style={{ background: p.stock === 0 ? '#d1d5db' : '#111827', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontWeight: 600, cursor: p.stock === 0 ? 'not-allowed' : 'pointer' }}
+                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${p.stock === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                       >
-                        Add to Cart
+                        {p.stock === 0 ? 'Out of Stock' : 'Add'}
                       </button>
                     </div>
                   </div>

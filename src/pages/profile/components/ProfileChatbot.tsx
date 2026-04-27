@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, X, Briefcase, Languages, Trash2 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { Send, Bot, X, Briefcase, Languages, Trash2, CalendarCheck, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from "motion/react";
+import { db } from '../../../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { GoogleGenAI, Type } from "@google/genai";
 
 export default function ProfileChatbot({ profile }: { profile: any }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,27 +12,73 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<'hi' | 'en' | 'ar' | null>(null);
   
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const greetings = {
-    hi: `Namaste! Main ${profile?.name} ka AI assistant hoon. Main aapki kaise madad kar sakta hoon?`,
+    hi: `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`,
     en: `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`,
     ar: `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`
   };
 
   const prompts = {
-    hi: `Aap ${profile?.name} ke AI assistant hain. Aapko hamesha North India ki aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo Delhi style mein boli jati hai.
-Polite rahein aur 'Aap' ka use karein, lekin bohot zyada mushkil Urdu words use na karein. 
-Simple words zyada use karein, sanskrit-heavy words (jaise 'vistar', 'mukhya', 'adhik') bilkul use na karein. Unki jagah 'zyada info', 'khas', 'zyada' use karein.
-Lehja (tone) friendly aur helpful hona chahiye.
-Context: Aap ${profile?.name} (Title: ${profile?.title} at ${profile?.company}) ko represent karte hain.
-Bio: ${profile?.bio}.`,
-    en: `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
-Your tone should be helpful, clear, and professional. 
-Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.phone}.`,
-    ar: `أنت مساعد ذكي محترف لـ ${profile?.name} (المسمى الوظيفي: ${profile?.title} في ${profile?.company}).
-يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة خليجية بيضاء أو فصحى مهذبة).
-السياق: ${profile?.bio}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`
+    hi: `Aap ${profile?.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+
+SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
+- No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
+- No formal Hindi/Sanskrit: 'vistar', 'mukhya', 'adhik', 'yogdaan', 'parinaam' - Yeh sab bhi use na karein.
+
+INKI JAGAH YE EK DUM SIMPLE WORDS USE KAREIN:
+- 'baat-cheet' (guftagu ki jagah)
+- 'help / madad' (khidmat ki jagah)
+- 'details / info' (vistar ki jagah)
+- 'kaam' (silsile ki jagah)
+- 'khass' (mukhya ki jagah)
+- 'zyada' (adhik ki jagah)
+- 'aaj kal ka' (naye daur ki jagah)
+- 'talent / hunar' (maharat ki jagah)
+
+Aapka andaaz bilkul friendly aur normal insaan jaisa hona chahiye, koi shayarana ya bohot formal baat nahi karni.
+
+Greeting Style:
+"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? Kya aap ${profile?.name} sir se kisi khass topic pe baat-cheet karna chahte hain, ya humari company ${profile?.company} ki services ke baare mein kuch jaanna chahte hain?"
+
+Business Details:
+- Name: ${profile?.name}
+- Work: ${profile?.title}
+- Company: ${profile?.company}
+- Bio: ${profile?.bio}
+- Services: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}
+- Contact: Email ${profile?.email}, Phone ${profile?.phone}`,
+    en: `You are a professional AI business assistant for ${profile?.name}.
+Your tone should be helpful, clear, and professional.
+
+Full Profile Context:
+- Name: ${profile?.name}
+- Title: ${profile?.title}
+- Company: ${profile?.company}
+- Bio: ${profile?.bio}
+- Skills: ${profile?.skills?.join(', ') || 'N/A'}
+- Experience: ${profile?.experience}
+- Address: ${profile?.address}
+- Services: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}
+- Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
+- Socials: ${JSON.stringify(profile?.socials || {})}
+
+Assist visitors with inquiries about the business, services, and contact information.`,
+    ar: `أنت مساعد ذكي محترف لـ ${profile?.name}.
+يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة بيضاء مهذبة).
+
+معلومات العمل:
+- الاسم: ${profile?.name}
+- المسمى الوظيفي: ${profile?.title}
+- الشركة: ${profile?.company}
+- الخبرات: ${profile?.experience}
+- الخدمات: ${profile?.services?.map((s: any) => `${s.title}`).join('، ') || 'N/A'}
+- التواصل: ${profile?.email}, ${profile?.phone}
+
+ساعد الزوار في التعرف على الخدمات والتواصل.`
   };
 
   // Persist language and history
@@ -62,8 +110,9 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
 
   const clearChat = () => {
     if (window.confirm('Delete chat history?')) {
-      setMessages([{ role: 'model', content: greetings[selectedLang || 'en'] }]);
-      localStorage.removeItem(`chat_history_${profile?.id}`);
+      const initialMsg = greetings[selectedLang || 'en'];
+      setMessages([{ role: 'model', content: initialMsg }]);
+      localStorage.setItem(`chat_history_${profile?.id}`, JSON.stringify([{ role: 'model', content: initialMsg }]));
     }
   };
 
@@ -79,34 +128,97 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
     if (!textToSend || loading || !selectedLang) return;
     
     if (customMessage === undefined) setInput('');
-    const newMessages = [...messages, { role: 'user' as const, content: textToSend }];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, { role: 'user', content: textToSend }]);
     setLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      const contents = newMessages.map(msg => ({
+      const history = messages.map(msg => ({
         role: msg.role === 'model' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       }));
-      
+
+      const modelName = 'gemini-flash-latest';
+      const systemInstruction = profile?.aiPrompt || prompts[selectedLang];
+
       const response = await ai.models.generateContent({
-        model: "gemini-flash-latest",
+        model: modelName,
+        contents: [...history, { role: 'user', parts: [{ text: textToSend }] }],
         config: {
-          systemInstruction: profile?.aiPrompt || prompts[selectedLang],
-        },
-        contents: contents,
+          systemInstruction: systemInstruction,
+          tools: [{
+            functionDeclarations: [
+              {
+                name: "book_appointment",
+                description: "Book an appointment. Requires name, email, date (YYYY-MM-DD), and time (HH:mm).",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    email: { type: Type.STRING },
+                    date: { type: Type.STRING },
+                    time: { type: Type.STRING },
+                    service: { type: Type.STRING }
+                  },
+                  required: ["name", "email", "date", "time"]
+                }
+              },
+              {
+                name: "send_inquiry",
+                description: "Send a contact inquiry. Requires name, email, and message.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING },
+                    email: { type: Type.STRING },
+                    message: { type: Type.STRING }
+                  },
+                  required: ["name", "email", "message"]
+                }
+              }
+            ]
+          }]
+        }
       });
 
-      if (response.text) {
+      if (response.functionCalls) {
+        const results = [];
+        for (const fc of response.functionCalls) {
+          const col = fc.name === 'book_appointment' ? 'appointments' : 'leads';
+          try {
+            await addDoc(collection(db, col), {
+              ...fc.args,
+              profileId: profile.id,
+              createdAt: serverTimestamp(),
+              status: fc.name === 'book_appointment' ? 'Pending' : 'New',
+              source: 'AI Chatbot'
+            });
+            results.push({ name: fc.name, response: { success: true } });
+          } catch (e) {
+            results.push({ name: fc.name, response: { success: false, error: "DB Error" } });
+          }
+        }
+
+        // Send results back to AI
+        const finalResponse = await ai.models.generateContent({
+          model: modelName,
+          contents: [
+            ...history, 
+            { role: 'user', parts: [{ text: textToSend }] },
+            { role: 'model', parts: response.functionCalls.map(fc => ({ functionCall: fc })) },
+            { role: 'user', parts: results.map(r => ({ functionResponse: r })) }
+          ],
+          config: { systemInstruction }
+        });
+
+        if (finalResponse.text) {
+          setMessages(prev => [...prev, { role: 'model', content: finalResponse.text || '' }]);
+        }
+      } else if (response.text) {
         setMessages(prev => [...prev, { role: 'model', content: response.text || '' }]);
-      } else {
-        setMessages(prev => [...prev, { role: 'model', content: 'Connection issue.' }]);
       }
     } catch (err: any) {
       console.error("Gemini Error:", err);
-      setMessages(prev => [...prev, { role: 'model', content: 'Error connecting to AI.' }]);
+      setMessages(prev => [...prev, { role: 'model', content: 'Maaf kijiyega, kuch problem aa rahi hai.' }]);
     }
     setLoading(false);
   };

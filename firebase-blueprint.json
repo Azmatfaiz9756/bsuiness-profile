@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Business Profile",
+      "description": "Public business profile data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "bio": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" }
+      }
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Booking request from client",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "profileId": { "type": "string" }
+      },
+      "required": ["customerName", "customerEmail", "date", "time", "profileId"]
+    },
+    "Inquiry": {
+      "title": "Lead/Inquiry",
+      "description": "Contact message from client",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "message": { "type": "string" },
+        "profileId": { "type": "string" }
+      },
+      "required": ["name", "email", "message", "profileId"]
+    }
+  },
+  "firestore": {
+    "/profiles/{uid}": {
+      "schema": "Profile",
+      "description": "Professional profiles"
+    },
+    "/appointments/{id}": {
+      "schema": "Appointment",
+      "description": "Client bookings"
+    },
+    "/leads/{id}": {
+      "schema": "Inquiry",
+      "description": "Contact inquiries"
+    }
+  }
+}

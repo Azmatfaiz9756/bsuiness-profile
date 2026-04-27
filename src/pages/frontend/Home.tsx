@@ -38,48 +38,48 @@ export default function FrontendHome() {
   });
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: 60, fontFamily: 'Inter, sans-serif' }}>
+    <div className="bg-slate-50 min-h-screen pb-16 font-sans">
       {/* Brand Hero Section */}
-      <div style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', color: '#fff', padding: '80px 20px 60px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-         <div style={{ position: 'absolute', top: -100, left: -100, width: 300, height: 300, background: 'rgba(56, 189, 248, 0.1)', borderRadius: '50%', filter: 'blur(40px)' }} />
-         <div style={{ position: 'absolute', bottom: -100, right: -100, width: 300, height: 300, background: 'rgba(56, 189, 248, 0.1)', borderRadius: '50%', filter: 'blur(40px)' }} />
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white pt-20 pb-16 px-4 md:px-8 text-center relative overflow-hidden">
+         <div className="absolute -top-24 -left-24 w-72 h-72 bg-sky-400/10 rounded-full blur-[40px]" />
+         <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-sky-400/10 rounded-full blur-[40px]" />
          
-         <div style={{ maxWidth: 800, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: 999, fontSize: 13, fontWeight: 600, letterSpacing: 1, marginBottom: 24, border: '1px solid rgba(255,255,255,0.2)' }}>
+         <div className="max-w-3xl mx-auto relative z-10">
+            <div className="inline-block bg-white/10 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest mb-6 border border-white/20">
               THE PREMIER BUSINESS DIRECTORY
             </div>
-            <h1 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, lineHeight: 1.1, marginBottom: 20, letterSpacing: -1 }}>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-5 tracking-tight">
               Discover Leading <br />
-              <span style={{ color: '#38bdf8' }}>Brands & Professionals</span>
+              <span className="text-sky-400">Brands & Professionals</span>
             </h1>
-            <p style={{ fontSize: 18, color: '#94a3b8', maxWidth: 600, margin: '0 auto 40px', lineHeight: 1.6 }}>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed px-4 md:px-0">
               Connect with verified experts, executives, and top-tier companies. Explore their interactive digital profiles and portfolios.
             </p>
 
             {/* Global Search Bar */}
-            <div style={{ display: 'flex', maxWidth: 600, margin: '0 auto', background: '#fff', borderRadius: 12, padding: 8, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '0 16px' }}>
-                <span style={{ fontSize: 20, marginRight: 12 }}>🔍</span>
+            <div className="flex max-w-2xl mx-auto bg-white rounded-xl p-2 shadow-xl shrink-0 mx-4 md:mx-auto">
+              <div className="flex-1 flex items-center px-4">
+                <span className="text-xl mr-3">🔍</span>
                 <input 
                   type="text" 
-                  placeholder="Search by name, profession, or company..." 
+                  placeholder="Search space..." 
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  style={{ width: '100%', border: 'none', padding: '12px 0', fontSize: 16, outline: 'none', color: '#0f172a' }} 
+                  className="w-full border-none py-3 text-base outline-none text-slate-900"
                 />
               </div>
             </div>
          </div>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: '-20px auto 0', position: 'relative', zIndex: 10, padding: '0 20px' }}>
+      <div className="max-w-7xl -mt-6 mx-auto relative z-20 px-4 md:px-6">
          {/* Filters & View Toggle */}
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 shrink-0">
                <select 
                  value={activeCategory} 
                  onChange={e => setActiveCategory(e.target.value)}
-                 style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#0f172a', fontWeight: 600, outline: 'none' }}
+                 className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 font-semibold outline-none shrink-0"
                >
                  {categories.map(cat => (
                    <option key={cat} value={cat}>{cat}</option>
@@ -89,7 +89,7 @@ export default function FrontendHome() {
                <select 
                  value={activeCity} 
                  onChange={e => setActiveCity(e.target.value)}
-                 style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#0f172a', fontWeight: 600, outline: 'none' }}
+                 className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 font-semibold outline-none shrink-0"
                >
                  {cities.map(city => (
                    <option key={city} value={city}>{city}</option>
@@ -97,16 +97,16 @@ export default function FrontendHome() {
                </select>
             </div>
             
-            <div style={{ display: 'flex', background: '#fff', borderRadius: 8, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+            <div className="hidden md:flex bg-white rounded-lg overflow-hidden border border-slate-200 shrink-0">
                <button 
                  onClick={() => setViewMode('grid')}
-                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 14px', border: 'none', background: viewMode === 'grid' ? '#0f172a' : 'transparent', color: viewMode === 'grid' ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s' }}
+                 className={`flex items-center justify-center px-3.5 py-2.5 transition-colors ${viewMode === 'grid' ? 'bg-slate-900 text-white' : 'bg-transparent text-slate-500 hover:bg-slate-50'}`}
                >
                  <LayoutGrid size={18} />
                </button>
                <button 
                  onClick={() => setViewMode('list')}
-                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 14px', border: 'none', background: viewMode === 'list' ? '#0f172a' : 'transparent', color: viewMode === 'list' ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s' }}
+                 className={`flex items-center justify-center px-3.5 py-2.5 transition-colors ${viewMode === 'list' ? 'bg-slate-900 text-white' : 'bg-transparent text-slate-500 hover:bg-slate-50'}`}
                >
                  <List size={18} />
                </button>
@@ -114,87 +114,86 @@ export default function FrontendHome() {
          </div>
 
          {/* Directory Display */}
-         <div style={
-           viewMode === 'grid' 
-             ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 24 }
-             : { display: 'flex', flexDirection: 'column', gap: 16 }
-         }>
+         <div className={`
+           ${viewMode === 'grid' 
+             ? 'grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 w-full'
+             : 'flex flex-col gap-4' }
+          `}>
            {filteredProfiles.length > 0 ? filteredProfiles.map((p, idx) => (
-              <div key={p.id} style={
-                viewMode === 'grid'
-                 ? { background: '#fff', borderRadius: 20, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', transition: 'transform 0.2s, box-shadow 0.2s' }
-                 : { background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', padding: 20 }
-              } 
-              onMouseEnter={e => { if (viewMode==='grid') { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0,0,0,0.1)'; } else { e.currentTarget.style.background = '#f8fafc'; } }} 
-              onMouseLeave={e => { if (viewMode==='grid') { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)'; } else { e.currentTarget.style.background = '#fff'; } }}
+              <div key={p.id} className={`
+                ${viewMode === 'grid'
+                 ? 'bg-white rounded-[20px] overflow-hidden border border-slate-200 hover:-translate-y-1 hover:shadow-xl transition-all duration-200'
+                 : 'bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center p-5 hover:bg-slate-50 transition-colors'
+                }
+              `} 
               >
                 {viewMode === 'grid' ? (
                   <>
                     {/* Card Header Background */}
-                    <div style={{ height: 100, background: 'linear-gradient(90deg, #f1f5f9, #e2e8f0)', position: 'relative', overflow: 'hidden' }}>
+                    <div className="h-24 bg-gradient-to-r from-slate-100 to-slate-200 relative overflow-hidden">
                       {p.bannerVideo ? (
-                        <video autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }}>
+                        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-80">
                           <source src={p.bannerVideo} type="video/mp4" />
                         </video>
                       ) : (
-                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', opacity: 0.8 }} />
+                        <div className="w-full h-full bg-gradient-to-br from-sky-500 to-indigo-500 opacity-80" />
                       )}
-                      {idx === 0 && <div style={{ position: 'absolute', top: 16, right: 16, background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 10px', borderRadius: 20, letterSpacing: 1, boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>FEATURED</div>}
+                      {idx === 0 && <div className="absolute top-4 right-4 bg-amber-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full tracking-widest shadow-sm shadow-black/20 z-10">FEATURED</div>}
                     </div>
                     
-                    <div style={{ padding: '0 24px 24px', position: 'relative' }}>
+                    <div className="px-5 pb-6 relative flex-col">
                       {/* Avatar */}
-                      <div style={{ width: 80, height: 80, background: '#fff', borderRadius: '50%', padding: 4, position: 'absolute', top: -40, left: 24, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                        <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #0f172a, #334155)', borderRadius: '50%', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800 }}>
+                      <div className="w-20 h-20 bg-white rounded-full p-1 absolute -top-10 left-5 shadow-sm">
+                        <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-700 rounded-full text-white flex items-center justify-center text-3xl font-extrabold">
                           {p.avatar || p.name.substring(0,2).toUpperCase()}
                         </div>
                       </div>
                       
-                      <div style={{ marginTop: 50 }}>
-                        <div style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div className="pt-12">
+                        <div className="text-xl font-extrabold text-slate-900 mb-1 flex items-center gap-1.5 truncate">
                           {p.name}
-                          <span style={{ fontSize: 14, color: '#38bdf8' }}>✓</span>
+                          <span className="text-sm text-sky-400">✓</span>
                         </div>
-                        <div style={{ fontSize: 14, color: '#475569', fontWeight: 500, marginBottom: 2 }}>{p.title || 'Professional'}</div>
-                        <div style={{ fontSize: 14, color: '#0f172a', fontWeight: 700, marginBottom: 16 }}>{p.company || 'DBC Member'}</div>
+                        <div className="text-sm text-slate-600 font-medium truncate mb-0.5">{p.title || 'Professional'}</div>
+                        <div className="text-sm text-slate-900 font-bold mb-4 truncate">{p.company || 'DBC Member'}</div>
                         
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-                           <div style={{ fontSize: 12, background: '#f1f5f9', color: '#475569', padding: '4px 12px', borderRadius: 6, fontWeight: 600 }}>
+                        <div className="flex items-center gap-2 mb-6 flex-wrap">
+                           <div className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded font-semibold whitespace-nowrap">
                              {p.views > 1000 ? (p.views/1000).toFixed(1) + 'k' : p.views} Views
                            </div>
                            {p.address && (
-                             <div style={{ fontSize: 12, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                             <div className="text-xs text-slate-500 flex items-center gap-1 whitespace-nowrap truncate max-w-full">
                                📍 {p.address.split(',')[0]}
                              </div>
                            )}
                         </div>
                         
-                        <Link to={`/profile/${p.slug || p.id}`} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textDecoration: 'none', background: '#0f172a', color: '#fff', padding: '12px', borderRadius: 8, fontWeight: 600, fontSize: 14, transition: 'background 0.2s' }} onMouseEnter={e => (e.currentTarget as any).style.background='#1e293b'} onMouseLeave={e => (e.currentTarget as any).style.background='#0f172a'}>
-                          View Digital Profile <span style={{ marginLeft: 8 }}>→</span>
+                        <Link to={`/profile/${p.slug || p.id}`} className="flex justify-center items-center bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-lg font-semibold text-sm transition-colors w-full">
+                          View Digital Profile <span className="ml-2">→</span>
                         </Link>
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div style={{ width: 64, height: 64, background: 'linear-gradient(135deg, #0f172a, #334155)', borderRadius: '50%', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, marginRight: 24, flexShrink: 0 }}>
+                    <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-slate-700 rounded-full text-white flex items-center justify-center text-2xl font-extrabold mr-0 sm:mr-6 shrink-0 mb-4 sm:mb-0 shadow-sm">
                       {p.avatar || p.name.substring(0,2).toUpperCase()}
                     </div>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div className="flex-1 flex flex-col gap-1 w-full text-center sm:text-left">
+                      <div className="text-lg font-extrabold text-slate-900 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                         {p.name}
-                        {idx === 0 && <span style={{ background: '#f59e0b', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 12, marginLeft: 8 }}>FEATURED</span>}
+                        {idx === 0 && <span className="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold ml-0 sm:ml-2">FEATURED</span>}
                       </div>
-                      <div style={{ fontSize: 14, color: '#475569' }}>{p.title || 'Professional'} @ <span style={{ fontWeight: 600, color: '#0f172a' }}>{p.company || 'DBC Member'}</span></div>
+                      <div className="text-sm text-slate-600 truncate">{p.title || 'Professional'} @ <span className="font-bold text-slate-900">{p.company || 'DBC Member'}</span></div>
                       {p.address && (
-                        <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>📍 {p.address}</div>
+                        <div className="text-sm text-slate-500 mt-1 truncate">📍 {p.address}</div>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                      <div style={{ fontSize: 12, background: '#f1f5f9', color: '#475569', padding: '6px 12px', borderRadius: 6, fontWeight: 600 }}>
+                    <div className="flex items-center gap-4 mt-4 sm:mt-0 flex-col sm:flex-row w-full sm:w-auto shrink-0 justify-center sm:justify-end">
+                      <div className="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-md font-bold whitespace-nowrap">
                          {p.views > 1000 ? (p.views/1000).toFixed(1) + 'k' : p.views} Views
                       </div>
-                      <Link to={`/profile/${p.slug || p.id}`} style={{ textDecoration: 'none', background: '#0f172a', color: '#fff', padding: '10px 20px', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>
+                      <Link to={`/profile/${p.slug || p.id}`} className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm w-full sm:w-auto text-center transition-colors shadow-sm">
                         View Profile
                       </Link>
                     </div>
@@ -211,29 +210,29 @@ export default function FrontendHome() {
          </div>
 
          {/* Call to Action for joining directory */}
-         <div style={{ marginTop: 60, background: 'linear-gradient(135deg, #fff, #f8fafc)', borderRadius: 24, padding: '60px 40px', textAlign: 'center', border: '1px solid #e2e8f0', position: 'relative', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' }}>
-           <div style={{ position: 'relative', zIndex: 1 }}>
-             <h2 style={{ fontSize: 32, fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Claim your Brand Profile</h2>
-             <p style={{ fontSize: 16, color: '#475569', maxWidth: 600, margin: '0 auto 32px', lineHeight: 1.6 }}>
+         <div className="mt-16 bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 md:p-16 text-center border border-slate-200 relative overflow-hidden shadow-sm">
+           <div className="relative z-10">
+             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Claim your Brand Profile</h2>
+             <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto mb-8 leading-relaxed">
                Join thousands of professionals and brands in the official UAE directory. Create interactive NFC-enabled digital cards with advanced analytics.
              </p>
-             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {user ? (
-                  <Link to="/dashboard" style={{ textDecoration: 'none', background: '#38bdf8', color: '#fff', padding: '14px 28px', borderRadius: 8, fontWeight: 600, fontSize: 16, boxShadow: '0 4px 6px rgba(56, 189, 248, 0.2)' }}>
+                  <Link to="/dashboard" className="bg-sky-400 hover:bg-sky-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-lg shadow-sky-400/20 transition-all text-center">
                     Enter Dashboard
                   </Link>
                 ) : (
                   <button onClick={async () => {
                     import('../../firebase').then(m => m.loginWithGoogle());
-                  }} style={{ cursor: 'pointer', border: 'none', background: '#38bdf8', color: '#fff', padding: '14px 28px', borderRadius: 8, fontWeight: 600, fontSize: 16, boxShadow: '0 4px 6px rgba(56, 189, 248, 0.2)' }}>
+                  }} className="cursor-pointer bg-sky-400 hover:bg-sky-500 text-white border-none px-8 py-3.5 rounded-xl font-bold text-base shadow-lg shadow-sky-400/20 transition-all">
                     Sign in with Google to Start
                   </button>
                 )}
              </div>
            </div>
            {/* Decorative elements */}
-           <div style={{ position: 'absolute', top: -20, left: -20, fontSize: 150, opacity: 0.02, transform: 'rotate(-15deg)' }}>📱</div>
-           <div style={{ position: 'absolute', bottom: -20, right: -20, fontSize: 150, opacity: 0.02, transform: 'rotate(15deg)' }}>🤝</div>
+           <div className="absolute -top-10 -left-10 text-[120px] opacity-5 -rotate-12 select-none">📱</div>
+           <div className="absolute -bottom-10 -right-10 text-[120px] opacity-5 rotate-12 select-none">🤝</div>
          </div>
 
       </div>
