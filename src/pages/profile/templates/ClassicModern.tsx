@@ -5,17 +5,44 @@ import {
   Linkedin, Twitter, Instagram, Facebook, Youtube, Github, 
   PhoneCall, Mail, Globe, MapPin, FileDown, CalendarDays, 
   CreditCard, Wallet, ShoppingBag, Send, Link as LinkIcon, 
-  Sparkles, Contact2, Video, MessageSquare
+  Sparkles, Contact2, Video, MessageSquare, Download, FileText, Link2, MessageCircle, Calendar
 } from 'lucide-react';
-import { FaLinkedin, FaTwitter, FaInstagram, FaTiktok, FaFacebook, FaYoutube, FaGithub } from 'react-icons/fa';
+import { FaLinkedin, FaTwitter, FaInstagram, FaTiktok, FaFacebook, FaYoutube, FaGithub, FaWhatsapp } from 'react-icons/fa';
 
 import AppointmentBooking from '../components/AppointmentBooking';
+import LeadCapture from '../components/LeadCapture';
 import ProfileChatbot from '../components/ProfileChatbot';
 
 export default function ClassicModern({ profile, onExit }: { profile: any, onExit: () => void }) {
-  const [activeTab, setActiveTab] = useState('contact');
+  const [activeTab, setActiveTab] = useState<string | null>('contact');
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
+
+  const toggleTab = (tab: string) => {
+    setActiveTab(activeTab === tab ? null : tab);
+  };
+
+  const AccordionItem = ({ id, icon, title, children }: any) => {
+    const isOpen = activeTab === id;
+    return (
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+        <button onClick={() => toggleTab(id)} style={{ width: '100%', padding: '16px 20px', background: isOpen ? '#f8fafc' : '#fff', border: 'none', borderBottom: isOpen ? '1px solid #e5e7eb' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: '#1e3a8a' }}>
+            {icon}
+            {title}
+          </div>
+          <div style={{ color: '#6b7280', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </button>
+        {isOpen && (
+          <div style={{ padding: '20px', background: '#f8fafc' }}>
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const handleSave = () => {
     const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL:${profile.phone}\nEMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
@@ -103,13 +130,22 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
         </div>
 
         <div style={{ textAlign: 'center', padding: '16px 20px' }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1a1a2e' }}>{profile.name}</h1>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+            {profile.name}
+            {(profile.isVerified || profile.plan === 'Pro' || profile.plan === 'Enterprise') && <span style={{ color: '#38bdf8', fontSize: '18px' }}>✓</span>}
+          </h1>
           <div style={{ fontSize: 14, color: '#1a56db', fontWeight: 600, marginTop: 4 }}>{profile.title}</div>
           <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>{profile.company}</div>
           
           {profile.bio && (
             <div style={{ fontSize: 13, color: '#4b5563', marginTop: 12, lineHeight: 1.5 }}>
               {profile.bio}
+            </div>
+          )}
+
+          {profile.announcement && (
+            <div style={{ marginTop: 16, background: '#fee2e2', color: '#b91c1c', padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, display: 'inline-block' }}>
+              🎁 {profile.announcement}
             </div>
           )}
 
@@ -129,18 +165,50 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
             <button onClick={handleSave} style={{ flex: 1, background: '#1a1a2e', color: '#fff', border: 'none', padding: '12px', borderRadius: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Contact2 size={16} /> Save Contact</button>
             <button onClick={() => setShowShareModal(true)} style={{ flex: 1, background: '#f3f4f6', color: '#1f2937', border: 'none', padding: '12px', borderRadius: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Send size={16} /> Share Profile</button>
           </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+            <button onClick={() => alert('Downloading Apple Wallet pass... (Simulation)')} style={{ flex: 1, background: '#000', color: '#fff', border: 'none', padding: '12px', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 14 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M18.7 13.9C18.7 10.3 21.6 8.5 21.7 8.5C20.1 6.1 17.5 5.8 16.6 5.7C14.7 5.5 12.8 6.8 11.8 6.8C10.8 6.8 9.2 5.6 7.6 5.6C5.6 5.6 3.8 6.8 2.8 8.6C0.7 12.2 2.2 17.6 4.3 20.6C5.3 22 6.5 23.6 8 23.5C9.5 23.4 10 22.5 11.8 22.5C13.5 22.5 14 23.5 15.6 23.4C17.2 23.4 18.2 22 19.2 20.5C20.3 18.8 20.8 17.2 20.8 17.1C20.8 17 18.7 16.2 18.7 13.9Z"/><path d="M15.4 3.8C16.2 2.8 16.7 1.4 16.6 0C15.4 0.1 13.9 0.8 13.1 1.8C12.4 2.6 11.8 4 12 5.4C13.3 5.5 14.6 4.7 15.4 3.8Z"/></svg>
+              Apple Wallet
+            </button>
+            <button onClick={() => alert('Downloading Google Wallet pass... (Simulation)')} style={{ flex: 1, background: '#e8f0fe', color: '#1967d2', border: 'none', padding: '12px', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 14 }}>
+              <Wallet size={18} />
+              Google Wallet
+            </button>
+          </div>
 
-          {profile.meetingUrl ? (
-            <div style={{ marginTop: 12 }}>
-              <a href={profile.meetingUrl} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none', background: '#1a56db', color: '#fff', padding: '12px', borderRadius: 12, fontWeight: 700 }}>
-                <CalendarDays size={18} /> Book a Meeting
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+            {profile.meetingUrl && (
+              <a href={profile.meetingUrl} target="_blank" rel="noreferrer" style={{ background: '#2563eb', color: '#fff', padding: 14, borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                <Calendar size={18} /> Book a Meeting
               </a>
-            </div>
-          ) : (
+            )}
+            {profile.documentUrl && (
+              <a href={profile.documentUrl} target="_blank" rel="noreferrer" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#334155', padding: 14, borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                <FileText size={18} /> {profile.documentButtonText || 'Download Document'}
+              </a>
+            )}
+            {profile.customButtons && profile.customButtons.map((btn: any, index: number) => (
+              <a key={index} href={btn.url} target="_blank" rel="noreferrer" style={{ background: btn.isPrimary ? '#2563eb' : '#f8fafc', border: btn.isPrimary ? 'none' : '1px solid #e2e8f0', color: btn.isPrimary ? '#fff' : '#334155', padding: 14, borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textDecoration: 'none' }}>
+                {btn.icon === 'Globe' && <Globe size={18} />}
+                {btn.icon === 'Calendar' && <Calendar size={18} />}
+                {btn.icon === 'FileText' && <FileText size={18} />}
+                {btn.icon === 'Download' && <Download size={18} />}
+                {btn.icon === 'MessageCircle' && <MessageCircle size={18} />}
+                {(!btn.icon || btn.icon === 'Link') && <Link2 size={18} />}
+                {btn.label}
+              </a>
+            ))}
+          </div>
+
+          {!profile.meetingUrl && (
             <div style={{ marginTop: 20, textAlign: 'left' }}>
               <AppointmentBooking profile={profile} />
             </div>
           )}
+
+          <div style={{ marginTop: 12 }}>
+            <LeadCapture profile={profile} />
+          </div>
         </div>
 
         <div style={{ padding: '0 20px', marginTop: 10 }}>
@@ -153,35 +221,8 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, padding: 20 }}>
-          <div onClick={() => setActiveTab('contact')} style={{ background: activeTab === 'contact' ? '#dbeafe' : '#f3f4f6', border: `1px solid ${activeTab === 'contact' ? '#93c5fd' : '#e5e7eb'}`, padding: '12px 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ marginBottom: 4, color: activeTab === 'contact' ? '#1e40af' : '#6b7280', display: 'flex', justifyContent: 'center' }}><PhoneCall size={20} /></div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e3a8a' }}>CONTACT</div>
-          </div>
-          <div onClick={() => setActiveTab('services')} style={{ background: activeTab === 'services' ? '#dbeafe' : '#f3f4f6', border: `1px solid ${activeTab === 'services' ? '#93c5fd' : '#e5e7eb'}`, padding: '12px 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ marginBottom: 4, color: activeTab === 'services' ? '#1e40af' : '#6b7280', display: 'flex', justifyContent: 'center' }}><Sparkles size={20} /></div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e3a8a' }}>SERVICES</div>
-          </div>
-          <div onClick={() => setActiveTab('referral')} style={{ background: activeTab === 'referral' ? '#dbeafe' : '#f3f4f6', border: `1px solid ${activeTab === 'referral' ? '#93c5fd' : '#e5e7eb'}`, padding: '12px 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ marginBottom: 4, color: activeTab === 'referral' ? '#1e40af' : '#6b7280', display: 'flex', justifyContent: 'center' }}><LinkIcon size={20} /></div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e3a8a' }}>REFER</div>
-          </div>
-          <div onClick={() => setActiveTab('wallet')} style={{ background: activeTab === 'wallet' ? '#dbeafe' : '#f3f4f6', border: `1px solid ${activeTab === 'wallet' ? '#93c5fd' : '#e5e7eb'}`, padding: '12px 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ marginBottom: 4, color: activeTab === 'wallet' ? '#1e40af' : '#6b7280', display: 'flex', justifyContent: 'center' }}><Wallet size={20} /></div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e3a8a' }}>WALLET</div>
-          </div>
-          <div onClick={() => setActiveTab('shop')} style={{ background: activeTab === 'shop' ? '#dbeafe' : '#f3f4f6', border: `1px solid ${activeTab === 'shop' ? '#93c5fd' : '#e5e7eb'}`, padding: '12px 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ marginBottom: 4, color: activeTab === 'shop' ? '#1e40af' : '#6b7280', display: 'flex', justifyContent: 'center' }}><ShoppingBag size={20} /></div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e3a8a' }}>SHOP</div>
-          </div>
-          <div onClick={() => setActiveTab('inquiry')} style={{ background: activeTab === 'inquiry' ? '#dbeafe' : '#f3f4f6', border: `1px solid ${activeTab === 'inquiry' ? '#93c5fd' : '#e5e7eb'}`, padding: '12px 6px', borderRadius: 12, cursor: 'pointer', textAlign: 'center' }}>
-            <div style={{ marginBottom: 4, color: activeTab === 'inquiry' ? '#1e40af' : '#6b7280', display: 'flex', justifyContent: 'center' }}><Mail size={20} /></div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#1e3a8a' }}>INQUIRY</div>
-          </div>
-        </div>
-
-        <div style={{ padding: '0 20px 20px' }}>
-          {activeTab === 'contact' && (
+        <div style={{ padding: '20px' }}>
+          <AccordionItem id="contact" title="Contact & Location" icon={<PhoneCall size={18} />}>
              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <a href={`tel:${profile.phone}`} style={{ textDecoration: 'none', background: '#f9fafb', border: '1px solid #e5e7eb', padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ background: '#dcfce7', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}><PhoneCall size={20} /></div>
@@ -209,13 +250,26 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
                     <div><div style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>Directions</div><div style={{ fontSize: 12, color: '#6b7280' }}>{profile.address}</div></div>
                   </a>
                 )}
-                <div onClick={() => alert('Downloading...')} style={{ background: '#f9fafb', border: '1px solid #e5e7eb', padding: 16, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
-                  <div style={{ background: '#f3f4f6', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563' }}><FileDown size={20} /></div>
-                  <div><div style={{ fontSize: 14, fontWeight: 600, color: '#1f2937' }}>Download Resume</div><div style={{ fontSize: 12, color: '#6b7280' }}>PDF Document</div></div>
-                </div>
+                {profile.hours && Object.keys(profile.hours).length > 0 && (
+                  <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', marginTop: 8 }}>
+                    <div style={{ background: '#f8fafc', padding: '12px 16px', fontSize: 14, fontWeight: 700, color: '#1e3a8a', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 8 }}><PhoneCall size={16} /> Business Hours</div>
+                    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => {
+                        const h = profile.hours[day];
+                        if (!h) return null;
+                        return (
+                           <div key={day} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#4b5563', paddingBottom: 8, borderBottom: day !== 'Sunday' ? '1px dashed #e2e8f0' : 'none' }}>
+                             <span style={{ fontWeight: 600 }}>{day}</span>
+                             <span>{h.closed ? <span style={{ color: '#ef4444' }}>Closed</span> : `${h.open} - ${h.close}`}</span>
+                           </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
              </div>
-          )}
-          {activeTab === 'services' && (
+          </AccordionItem>
+          <AccordionItem id="services" title="Services" icon={<Sparkles size={18} />}>
              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {profile.services && profile.services.length > 0 ? profile.services.map((svc: any, i: number) => (
                   <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 16, borderRadius: 12 }}>
@@ -282,8 +336,8 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
                    </div>
                 )}
              </div>
-          )}
-          {activeTab === 'inquiry' && (
+          </AccordionItem>
+          <AccordionItem id="inquiry" title="Send Inquiry" icon={<Mail size={18} />}>
              <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 20, borderRadius: 16 }}>
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Send an Inquiry</div>
                 <input type="text" placeholder="Your Name" style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #d1d5db', marginBottom: 12, boxSizing: 'border-box' }} />
@@ -291,8 +345,8 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
                 <textarea placeholder="Message" rows={4} style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #d1d5db', marginBottom: 16, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
                 <button onClick={() => alert('Message Sent!')} style={{ width: '100%', background: '#1a1a2e', color: '#fff', border: 'none', padding: 12, borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Submit</button>
              </div>
-          )}
-          {activeTab === 'wallet' && (
+          </AccordionItem>
+          <AccordionItem id="wallet" title="Wallet" icon={<Wallet size={18} />}>
              <>
                <div style={{ background: '#1a1a2e', padding: 24, borderRadius: 16, color: '#fff' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: 1 }}>WALLET BALANCE</div>
@@ -317,23 +371,105 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
                  </div>
                )}
              </>
-          )}
-          {activeTab === 'shop' && (
-             <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 20 }}>
-               <div style={{ fontSize: 16, fontWeight: 800, color: '#1f2937', marginBottom: 16 }}>Exclusive Member Shop</div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #f3f4f6' }}>
-                  <div style={{ color: '#1a56db' }}><CreditCard size={32} /></div>
-                  <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 700 }}>NFC Gold Card</div><div style={{ fontSize: 12, color: '#1a56db', fontWeight: 600 }}>AED 200</div></div>
-                  <button style={{ background: '#1f2937', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>Add</button>
-               </div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ color: '#1a56db' }}><MapPin size={32} /></div>
-                  <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 700 }}>NFC Sticker</div><div style={{ fontSize: 12, color: '#1a56db', fontWeight: 600 }}>AED 50</div></div>
-                  <button style={{ background: '#1f2937', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: 11, cursor: 'pointer' }}>Add</button>
-               </div>
+          </AccordionItem>
+          <AccordionItem id="shop" title="Store" icon={<ShoppingBag size={18} />}>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {profile.products && profile.products.length > 0 ? profile.products.map((prod: any, i: number) => (
+                  <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden' }}>
+                    {prod.image && <img src={prod.image} alt={prod.name} style={{ width: '100%', height: 160, objectFit: 'cover' }} />}
+                    <div style={{ padding: 16 }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: '#1f2937' }}>{prod.name}</div>
+                      <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{prod.description}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: '#1a56db' }}>{prod.price}</div>
+                        {prod.link ? (
+                          <a href={prod.link} target="_blank" rel="noreferrer" style={{ background: '#1a1a2e', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Buy Now</a>
+                        ) : (
+                          <a href={`https://wa.me/${profile.phone?.replace(/[^0-9]/g, '')}?text=Hi, I would like to order: ${prod.name}`} target="_blank" rel="noreferrer" style={{ background: '#25D366', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Order via WhatsApp</a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: 20, color: '#6b7280', fontSize: 14 }}>No products in the store yet.</div>
+                )}
              </div>
+          </AccordionItem>
+          <AccordionItem id="reviews" title="Reviews" icon={<MessageSquare size={18} />}>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {profile.testimonials && profile.testimonials.length > 0 ? profile.testimonials.map((test: any, i: number) => (
+                  <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 16, borderRadius: 16 }}>
+                    <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                      {[...Array(test.rating || 5)].map((_, i) => <span key={i} style={{ color: '#fbbf24', fontSize: 14 }}>★</span>)}
+                    </div>
+                    <div style={{ fontSize: 14, color: '#4b5563', fontStyle: 'italic', marginBottom: 12 }}>"{test.quote}"</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#1f2937' }}>{test.name}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>{test.role}</div>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: 20, color: '#6b7280', fontSize: 14 }}>No reviews available.</div>
+                )}
+             </div>
+          </AccordionItem>
+          <AccordionItem id="faq" title="FAQs" icon={<MessageSquare size={18} />}>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {profile.faqs && profile.faqs.length > 0 ? profile.faqs.map((faq: any, i: number) => (
+                  <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 16, borderRadius: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: '#1e3a8a', marginBottom: 8 }}>Q: {faq.question}</div>
+                    <div style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.5 }}>A: {faq.answer}</div>
+                  </div>
+                )) : (
+                  <div style={{ textAlign: 'center', padding: 20, color: '#6b7280', fontSize: 14 }}>No FAQs available.</div>
+                )}
+             </div>
+          </AccordionItem>
+          {((profile.paymentLinks && profile.paymentLinks.length > 0) || (profile.bankAccounts && profile.bankAccounts.length > 0)) && (
+            <AccordionItem id="payment" title="Payments" icon={<Wallet size={18} />}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+               {profile.paymentLinks && profile.paymentLinks.length > 0 && (
+                 <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 20 }}>
+                   <div style={{ fontSize: 14, fontWeight: 700, color: '#1e3a8a', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Direct Payment Links</div>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                     {profile.paymentLinks.map((link: any, i: number) => (
+                        <div key={`pl-${i}`} style={{ border: '1px solid #f3f4f6', padding: 12, borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontWeight: 600, color: '#1f2937' }}>{link.platform}</div>
+                          {link.qrCodeUrl ? (
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <a href={link.qrCodeUrl} target="_blank" rel="noreferrer" style={{ background: '#f3f4f6', color: '#1f2937', padding: '6px 12px', borderRadius: 8, fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>Show QR</a>
+                              <a href={link.url} target="_blank" rel="noreferrer" style={{ background: '#1a56db', color: '#fff', padding: '6px 12px', borderRadius: 8, fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>Pay Now</a>
+                            </div>
+                          ) : (
+                            <a href={link.url} target="_blank" rel="noreferrer" style={{ background: '#1a56db', color: '#fff', padding: '6px 16px', borderRadius: 8, fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>Pay Now</a>
+                          )}
+                        </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
+
+               {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+                 <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, padding: 20 }}>
+                   <div style={{ fontSize: 14, fontWeight: 700, color: '#1e3a8a', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>Bank Details</div>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                     {profile.bankAccounts.map((acc: any, i: number) => (
+                       <div key={i} style={{ background: '#f8fafc', padding: 16, borderRadius: 12 }}>
+                         <div style={{ fontSize: 15, fontWeight: 700, color: '#1f2937' }}>{acc.bankName} - {acc.country}</div>
+                         <div style={{ fontSize: 13, color: '#4b5563', marginTop: 4 }}>Account: {acc.accountName}</div>
+                         <div style={{ fontSize: 14, fontFamily: 'monospace', fontWeight: 600, color: '#1f2937', marginTop: 8, background: '#e2e8f0', padding: '6px 10px', borderRadius: 6 }}>{acc.accountNumber}</div>
+                         {acc.iban && <div style={{ fontSize: 13, color: '#4b5563', marginTop: 8 }}><strong>IBAN:</strong> {acc.iban}</div>}
+                         {acc.swift && <div style={{ fontSize: 13, color: '#4b5563', marginTop: 4 }}><strong>SWIFT:</strong> {acc.swift}</div>}
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
+               {(!profile.paymentLinks?.length && !profile.bankAccounts?.length) && (
+                 <div style={{ textAlign: 'center', padding: 20, color: '#6b7280', fontSize: 14 }}>No payment methods available.</div>
+               )}
+             </div>
+            </AccordionItem>
           )}
-          {activeTab === 'referral' && (
+          <AccordionItem id="referral" title="Referral" icon={<LinkIcon size={18} />}>
              <div style={{ background: '#1a56db', padding: 24, borderRadius: 16, color: '#fff', textAlign: 'center' }}>
                 <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>Get Your Own Digital Profile</div>
                 <div style={{ fontSize: 13, color: '#dbeafe', marginBottom: 16 }}>Join the DBC network using my referral code. We both earn rewards!</div>
@@ -342,7 +478,7 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
                 </div>
                 <Link to="/plans" style={{ display: 'inline-block', textDecoration: 'none', background: '#1e3a8a', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Sign Up Now</Link>
              </div>
-          )}
+          </AccordionItem>
         </div>
 
         {/* Share Modal */}
@@ -362,6 +498,16 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
               </div>
 
               <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#4b5563', marginBottom: 12 }}>Share on Social Media</div>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                  <a href={`https://wa.me/?text=Check out this profile: ${window.location.href}`} target="_blank" rel="noreferrer" style={{ width: 44, height: 44, background: '#25D366', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}><FaWhatsapp size={20} /></a>
+                  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${window.location.href}`} target="_blank" rel="noreferrer" style={{ width: 44, height: 44, background: '#0077b5', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}><FaLinkedin size={20} /></a>
+                  <a href={`https://twitter.com/intent/tweet?url=${window.location.href}&text=Check out this profile!`} target="_blank" rel="noreferrer" style={{ width: 44, height: 44, background: '#1da1f2', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}><FaTwitter size={20} /></a>
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`} target="_blank" rel="noreferrer" style={{ width: 44, height: 44, background: '#1877f2', color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}><FaFacebook size={20} /></a>
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#4b5563', marginBottom: 12 }}>Scan QR Code</div>
                 <div style={{ background: '#fff', padding: 16, display: 'inline-block', borderRadius: 12, border: '1px solid #e5e7eb' }}>
                   <QRCode id="profile-qr" value={window.location.href} size={150} />
@@ -374,6 +520,12 @@ export default function ClassicModern({ profile, onExit }: { profile: any, onExi
             </div>
           </div>
         )}
+
+        <div style={{ marginTop: 40, padding: 24, textAlign: 'center', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>Powered by Digital Business Cards</div>
+          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>Create your own free digital profile today</div>
+          <Link to="/register" style={{ textDecoration: 'none', background: '#0f172a', color: '#fff', padding: '10px 24px', borderRadius: 20, fontWeight: 700, fontSize: 13, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>Get My Free Card</Link>
+        </div>
 
         <ProfileChatbot profile={profile} />
       </div>

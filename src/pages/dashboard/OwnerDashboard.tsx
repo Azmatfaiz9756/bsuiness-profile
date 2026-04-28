@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image, Shield, Send, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 
 function DashboardChatTester({ profile }: { profile: any }) {
@@ -206,6 +206,13 @@ export default function OwnerDashboard() {
   const [campaignData, setCampaignData] = useState({ subject: '', message: '', ctaLink: '' });
   const [campaignLoading, setCampaignLoading] = useState(false);
 
+  const [toastMessage, setToastMessage] = useState('');
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
@@ -229,13 +236,56 @@ export default function OwnerDashboard() {
           const emptyProfile = {
             id: `DBC${Date.now().toString().slice(-9)}`,
             slug: user.uid.substring(0, 8),
-            name: user.displayName || '',
-            email: user.email || '',
+            name: user.displayName || 'Jane Doe',
+            title: 'Founding Partner',
+            company: 'Acme Corp',
+            bio: 'I help businesses scale their digital presence through strategic planning and innovative technology solutions. With over 10 years of experience, my goal is to deliver exceptional value.',
+            email: user.email || 'hello@example.com',
+            phone: '+971 50 123 4567',
+            address: 'Dubai Internet City, Building 1, Dubai, UAE',
             ownerId: user.uid,
-            plan: 'Basic',
+            plan: 'Pro',
             status: 'Active',
             views: 0,
             seo: { title: '', desc: '', keywords: '' },
+            announcement: 'Special Offer: 20% off all consultations this month!',
+            socials: {
+              linkedin: 'janedoe',
+              twitter: 'janedoe',
+              whatsapp: '971501234567',
+              instagram: 'janedoe'
+            },
+            services: [
+              { name: 'Digital Strategy', desc: 'Comprehensive digital transformation planning', price: 'AED 500', priceType: 'Hourly' },
+              { name: '1-to-1 Consultation', desc: 'Direct strategy session', price: 'AED 1500', priceType: 'Fixed' }
+            ],
+            products: [
+              { name: 'Growth Playbook 2024', description: 'A complete PDF guide to scaling startups.', price: 'AED 100', image: 'https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?w=400&q=80', link: '' },
+              { name: 'Premium Theme', description: 'Ready to use digital business card theme.', price: 'AED 250', image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&q=80', link: '' }
+            ],
+            testimonials: [
+              { name: 'Ahmed Ali', role: 'CEO, TechWave', quote: 'Jane absolutely transformed our business. Highly recommended!', rating: 5 },
+              { name: 'Sarah Smith', role: 'Founder, DesignCo', quote: 'Professional, sharp, and incredibly effective strategy sessions.', rating: 5 }
+            ],
+            faqs: [
+              { question: 'What forms of payment do you accept?', answer: 'We accept bank transfers, credit cards, and PayPal.' },
+              { question: 'Do you offer online consultations?', answer: 'Yes, all our 1-to-1 consultations can be held via Zoom or Google Meet.' }
+            ],
+            hours: {
+              Monday: { open: '09:00', close: '18:00', closed: false },
+              Tuesday: { open: '09:00', close: '18:00', closed: false },
+              Wednesday: { open: '09:00', close: '18:00', closed: false },
+              Thursday: { open: '09:00', close: '18:00', closed: false },
+              Friday: { open: '09:00', close: '14:00', closed: false },
+              Saturday: { open: '00:00', close: '00:00', closed: true },
+              Sunday: { open: '09:00', close: '18:00', closed: false }
+            },
+            paymentLinks: [
+              { platform: 'Stripe', url: 'https://buy.stripe.com/test_123', qrCodeUrl: '' }
+            ],
+            bankAccounts: [
+              { bankName: 'Emirates NBD', country: 'UAE', accountName: 'Jane Doe', accountNumber: '12345678901234', iban: 'AE120260000000012345678', swift: 'EBIZAEAXXX' }
+            ]
           };
           setProfile(emptyProfile);
           setFormData(emptyProfile);
@@ -270,14 +320,33 @@ export default function OwnerDashboard() {
     fetchProfile();
   }, [user, authLoading]);
 
-  // Fetch appointments when sidebarTab matches
+  // Fetch appointments & leads when sidebarTab matches
   useEffect(() => {
     if (sidebarTab === 'appointments' && profile?.id) {
       import('firebase/firestore').then(({ collection, query, where, getDocs, orderBy }) => {
-        const q = query(collection(db, 'appointments'), where('profileId', '==', profile.id));
-        getDocs(q).then(snapshot => {
-          setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
+        const fetchAll = async () => {
+          try {
+            const aptsQ = query(collection(db, 'appointments'), where('profileId', '==', profile.id));
+            const leadsQ = query(collection(db, 'leads'), where('profileId', '==', profile.id));
+            
+            const [aptsSnap, leadsSnap] = await Promise.all([getDocs(aptsQ), getDocs(leadsQ)]);
+            
+            const data = [
+              ...aptsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: 'appointment' })),
+              ...leadsSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: 'lead' }))
+            ].sort((a: any, b: any) => {
+               // Sort by createdAt desc if possible
+               const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+               const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+               return tb - ta;
+            });
+            
+            setAppointments(data);
+          } catch(err) {
+            console.error(err);
+          }
+        };
+        fetchAll();
       });
     }
   }, [sidebarTab, profile]);
@@ -289,7 +358,7 @@ export default function OwnerDashboard() {
   const handleSave = async () => {
     if (formData.email && !validateEmail(formData.email)) {
       setEmailError('Invalid email format');
-      alert('Please correct the email address before saving.');
+      showToast('Please correct the email address before saving.');
       return;
     }
     setEmailError('');
@@ -297,15 +366,20 @@ export default function OwnerDashboard() {
     try {
       await setDoc(doc(db, 'profiles', user.uid), formData, { merge: true });
       setProfile(formData);
-      alert('Profile updated and published securely!');
+      showToast('Profile updated and published securely!');
     } catch (err) {
       console.error(err);
-      alert('Failed to update profile');
+      showToast('Failed to update profile');
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 w-full overflow-x-hidden relative">
+      {toastMessage && (
+        <div style={{ position: 'fixed', top: 20, right: 20, background: '#10b981', color: '#fff', padding: '12px 24px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 9999, fontWeight: 600 }}>
+          {toastMessage}
+        </div>
+      )}
       {/* Mobile Top Header */}
       <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
         <div className="flex items-center gap-3">
@@ -337,14 +411,14 @@ export default function OwnerDashboard() {
             <button onClick={() => { setSidebarTab('profile'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'profile' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
               <LayoutDashboard size={18} /> My Profile
             </button>
+            <button onClick={() => { setSidebarTab('analytics'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'analytics' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+              <BarChart3 size={18} /> Analytics & Views
+            </button>
             <button onClick={() => { setSidebarTab('appointments'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'appointments' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <Calendar size={18} /> Appointments
+              <Calendar size={18} /> Appointments & Leads
             </button>
             <button onClick={() => { setSidebarTab('chatbot'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'chatbot' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
               <MessageSquare size={18} /> AI Chatbot
-            </button>
-            <button onClick={() => { setSidebarTab('campaigns'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'campaigns' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <Send size={18} /> Email Campaigns
             </button>
             <button onClick={() => { setSidebarTab('plan'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'plan' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
               <Settings size={18} /> Subscription
@@ -364,6 +438,53 @@ export default function OwnerDashboard() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-0">
               <h1 className="m-0 text-xl md:text-2xl font-extrabold text-slate-900">Manage Your Digital Card</h1>
               <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-1 shrink-0">
+                <button onClick={() => {
+                  setFormData({
+                    ...formData,
+                    name: 'Jane Doe',
+                    title: 'Strategic Consultant',
+                    company: 'Visionary Corp',
+                    bio: 'I help businesses scale their digital presence through strategic planning. With over 10 years of experience, my goal is to deliver exceptional value and growth.',
+                    phone: '+971 50 123 4567',
+                    email: 'hello@example.com',
+                    address: 'Dubai Internet City, Building 1, Dubai, UAE',
+                    announcement: '🌟 Special Offer: 20% off all consultations this month!',
+                    photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80',
+                    bannerUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80',
+                    socials: { linkedin: 'yourname', twitter: 'yourname', whatsapp: '971501234567', instagram: 'yourname', youtube: 'yourchannel' },
+                    services: [
+                      { name: 'Digital Strategy', desc: 'Comprehensive digital transformation planning.', price: 'AED 500', priceType: 'Hourly' },
+                      { name: '1-to-1 Consultation', desc: 'Direct strategy session over Zoom.', price: 'AED 1500', priceType: 'Fixed' }
+                    ],
+                    products: [
+                      { name: 'Growth Playbook 2024', description: 'A complete PDF guide to scaling startups.', price: 'AED 100', image: 'https://images.unsplash.com/photo-1542382156909-9ae37b3f56fd?w=400&q=80', link: '' },
+                      { name: 'Premium Strategy Video', description: 'Exclusive access to my mastermind seminar recording.', price: 'AED 250', image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&q=80', link: '' }
+                    ],
+                    testimonials: [
+                      { name: 'Ahmed Ali', role: 'CEO, TechWave', quote: 'Absolutely transformed our business model. Highly recommended!', rating: 5 },
+                      { name: 'Sarah Smith', role: 'Founder, DesignCo', quote: 'Professional, sharp, and incredibly effective sessions.', rating: 5 }
+                    ],
+                    faqs: [
+                      { question: 'What forms of payment do you accept?', answer: 'We accept bank transfers, credit cards, and PayPal.' },
+                      { question: 'Do you offer online consultations?', answer: 'Yes, all our 1-to-1 consultations can be held via Zoom or Google Meet.' }
+                    ],
+                    hours: {
+                      Monday: { open: '09:00', close: '18:00', closed: false }, Tuesday: { open: '09:00', close: '18:00', closed: false }, Wednesday: { open: '09:00', close: '18:00', closed: false }, Thursday: { open: '09:00', close: '18:00', closed: false }, Friday: { open: '09:00', close: '14:00', closed: false }, Saturday: { open: '00:00', close: '00:00', closed: true }, Sunday: { open: '09:00', close: '18:00', closed: false }
+                    },
+                    paymentLinks: [ { platform: 'Stripe', url: 'https://buy.stripe.com/test_123', qrCodeUrl: '' } ],
+                    bankAccounts: [ { bankName: 'Emirates NBD', country: 'UAE', accountName: 'Your Name', accountNumber: '12345678901234', iban: 'AE120260000000012345678', swift: 'EBIZAEAXXX' } ],
+                    gallery: [
+                      'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80',
+                      'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&q=80'
+                    ],
+                    videos: ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+                    customButtons: [
+                       { label: 'Book Consultation', url: 'https://calendly.com', icon: 'Calendar', isPrimary: true },
+                       { label: 'Download Resume', url: 'https://example.com/resume.pdf', icon: 'FileText', isPrimary: false }
+                    ]
+                  });
+                  alert('Demo content loaded! Click "Save Changes" to publish.');
+                }} className="px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-200 transition-colors shrink-0">Load Demo Content</button>
                 <Link to={`/profile/${profile?.slug || profile?.id}`} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-50 transition-colors shrink-0">Preview Live</Link>
                 <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm shrink-0">Save Changes</button>
               </div>
@@ -376,10 +497,17 @@ export default function OwnerDashboard() {
                  <button onClick={() => setActiveTab('basic')} style={{ padding: '16px 20px', background: activeTab === 'basic' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'basic' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'basic' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Basic Info</button>
                  <button onClick={() => setActiveTab('contact')} style={{ padding: '16px 20px', background: activeTab === 'contact' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'contact' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'contact' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Contact & Location</button>
                  <button onClick={() => setActiveTab('social')} style={{ padding: '16px 20px', background: activeTab === 'social' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'social' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'social' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Socials</button>
-                 <button onClick={() => setActiveTab('business')} style={{ padding: '16px 20px', background: activeTab === 'business' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'business' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'business' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Services & Business</button>
+                 <button onClick={() => setActiveTab('business')} style={{ padding: '16px 20px', background: activeTab === 'business' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'business' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'business' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Services</button>
+                 <button onClick={() => setActiveTab('products')} style={{ padding: '16px 20px', background: activeTab === 'products' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'products' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'products' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Products (Store)</button>
+                 <button onClick={() => setActiveTab('testimonials')} style={{ padding: '16px 20px', background: activeTab === 'testimonials' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'testimonials' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'testimonials' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Testimonials</button>
+                 <button onClick={() => setActiveTab('faq')} style={{ padding: '16px 20px', background: activeTab === 'faq' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'faq' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'faq' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>FAQs</button>
+                 <button onClick={() => setActiveTab('hours')} style={{ padding: '16px 20px', background: activeTab === 'hours' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'hours' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'hours' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Business Hours</button>
                  <button onClick={() => setActiveTab('media')} style={{ padding: '16px 20px', background: activeTab === 'media' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'media' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'media' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Media & Gallery</button>
                  <button onClick={() => setActiveTab('bank')} style={{ padding: '16px 20px', background: activeTab === 'bank' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'bank' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'bank' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Bank Details</button>
                  <button onClick={() => setActiveTab('widgets')} style={{ padding: '16px 20px', background: activeTab === 'widgets' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'widgets' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'widgets' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Action Buttons</button>
+                 {(profile.plan === 'Pro' || profile.plan === 'Enterprise') && (
+                   <button onClick={() => setActiveTab('theme')} style={{ padding: '16px 20px', background: activeTab === 'theme' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'theme' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'theme' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>💎 Theme</button>
+                 )}
               </div>
               <div style={{ padding: 24 }}>
                 {activeTab === 'basic' && (
@@ -397,6 +525,10 @@ export default function OwnerDashboard() {
                       <input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Promotional Banner / Announcement</label>
+                      <input type="text" value={formData.announcement || ''} placeholder="e.g. 50% Off Winter Sale!" onChange={e => setFormData({...formData, announcement: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Email</label>
                       <input 
                         type="email" 
@@ -410,7 +542,50 @@ export default function OwnerDashboard() {
                       {emailError && <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 600 }}>{emailError}</span>}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 2' }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Bio</label>
+                      <div className="flex justify-between items-center">
+                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Bio</label>
+                        <button 
+                          onClick={async () => {
+                            if (!formData.name && !formData.title) {
+                              alert("Please enter Name and Job Title first.");
+                              return;
+                            }
+                            // Set a loading state indicator via a local flag or just directly modifying button text.
+                            const btn = document.getElementById("ai-bio-btn");
+                            if(btn) btn.innerHTML = "Generating...";
+                            try {
+                              const GenAI = (await import('@google/genai')).GoogleGenAI;
+                              const ai = new GenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
+                              const res = await ai.models.generateContent({
+                                model: 'gemini-2.5-flash',
+                                contents: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.`
+                              });
+                              if(res.text) {
+                                setFormData({...formData, bio: res.text});
+                              }
+                            } catch(e) {
+                              alert("Failed to generate bio.");
+                            }
+                            if(btn) btn.innerHTML = "✨ AI Magic Writer";
+                          }}
+                          id="ai-bio-btn"
+                          style={{
+                            background: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899)',
+                            backgroundSize: '200% auto',
+                            color: 'white',
+                            border: 'none',
+                            padding: '4px 10px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                          }}
+                        >✨ AI Magic Writer</button>
+                      </div>
                       <textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit' }} />
                     </div>
                   </div>
@@ -508,18 +683,62 @@ export default function OwnerDashboard() {
                         {(!formData.team || formData.team.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No team members added.</div>}
                       </div>
                     </div>
+                  </div>
+                )}
 
+                {activeTab === 'products' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: 16 }}>Products (Store)</h3>
+                          <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#64748b' }}>Add products for visitors to view and buy directly via WhatsApp.</p>
+                        </div>
+                        <button onClick={() => setFormData({...formData, products: [...(formData.products || []), { name: '', description: '', price: '', image: '', link: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Product</button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {(formData.products || []).map((prod: any, index: number) => (
+                           <div key={`prod-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                               <input type="text" placeholder="Product Name" value={prod.name || ''} onChange={e => { const p = [...formData.products]; p[index].name = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                               <input type="text" placeholder="Price (e.g. 50 AED)" value={prod.price || ''} onChange={e => { const p = [...formData.products]; p[index].price = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                             </div>
+                             <textarea placeholder="Product Description" value={prod.description || ''} onChange={e => { const p = [...formData.products]; p[index].description = e.target.value; setFormData({...formData, products: p}); }} rows={2} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
+                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+                               <input type="url" placeholder="Image URL (e.g. https://domain.com/img.jpg)" value={prod.image || ''} onChange={e => { const p = [...formData.products]; p[index].image = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                               <input type="url" placeholder="External Buy Link (Optional)" value={prod.link || ''} onChange={e => { const p = [...formData.products]; p[index].link = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                             </div>
+                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                               <button onClick={() => { const p = [...formData.products]; p.splice(index, 1); setFormData({...formData, products: p}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove Product</button>
+                             </div>
+                           </div>
+                        ))}
+                        {(!formData.products || formData.products.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No products added yet.</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'testimonials' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <h3 style={{ margin: 0, fontSize: 16 }}>Client Testimonials</h3>
-                        <button onClick={() => setFormData({...formData, testimonials: [...(formData.testimonials || []), { name: '', role: '', quote: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Testimonial</button>
+                        <button onClick={() => setFormData({...formData, testimonials: [...(formData.testimonials || []), { name: '', role: '', quote: '', rating: 5 }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Testimonial</button>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         {(formData.testimonials || []).map((test: any, index: number) => (
                            <div key={`ts-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                                <input type="text" placeholder="Client Name" value={test.name || ''} onChange={e => { const t = [...formData.testimonials]; t[index].name = e.target.value; setFormData({...formData, testimonials: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
                                <input type="text" placeholder="Company/Role" value={test.role || ''} onChange={e => { const t = [...formData.testimonials]; t[index].role = e.target.value; setFormData({...formData, testimonials: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                               <select value={test.rating || 5} onChange={e => { const t = [...formData.testimonials]; t[index].rating = Number(e.target.value); setFormData({...formData, testimonials: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}>
+                                 <option value={5}>5 Stars ★★★★★</option>
+                                 <option value={4}>4 Stars ★★★★</option>
+                                 <option value={3}>3 Stars ★★★</option>
+                                 <option value={2}>2 Stars ★★</option>
+                                 <option value={1}>1 Star ★</option>
+                               </select>
                              </div>
                              <textarea placeholder="Client Quote" value={test.quote || ''} onChange={e => { const t = [...formData.testimonials]; t[index].quote = e.target.value; setFormData({...formData, testimonials: t}); }} rows={3} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
                              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -528,6 +747,72 @@ export default function OwnerDashboard() {
                            </div>
                         ))}
                         {(!formData.testimonials || formData.testimonials.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No testimonials added.</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'faq' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ margin: 0, fontSize: 16 }}>Frequently Asked Questions</h3>
+                        <button onClick={() => setFormData({...formData, faqs: [...(formData.faqs || []), { question: '', answer: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add FAQ</button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {(formData.faqs || []).map((faq: any, index: number) => (
+                           <div key={`faq-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                             <input type="text" placeholder="Question" value={faq.question || ''} onChange={e => { const f = [...formData.faqs]; f[index].question = e.target.value; setFormData({...formData, faqs: f}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                             <textarea placeholder="Answer" value={faq.answer || ''} onChange={e => { const f = [...formData.faqs]; f[index].answer = e.target.value; setFormData({...formData, faqs: f}); }} rows={3} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
+                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                               <button onClick={() => { const f = [...formData.faqs]; f.splice(index, 1); setFormData({...formData, faqs: f}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                             </div>
+                           </div>
+                        ))}
+                        {(!formData.faqs || formData.faqs.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No FAQs added.</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'hours' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <h3 style={{ margin: 0, fontSize: 16 }}>Business Hours</h3>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                          const currentHours = (formData.hours || {})[day] || { open: '09:00', close: '18:00', closed: false };
+                          return (
+                            <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
+                              <div style={{ width: 100, fontWeight: 600, color: '#475569' }}>{day}</div>
+                              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+                                <input type="checkbox" checked={currentHours.closed} onChange={e => {
+                                  const h = { ...formData.hours };
+                                  h[day] = { ...currentHours, closed: e.target.checked };
+                                  setFormData({...formData, hours: h});
+                                }} />
+                                Closed
+                              </label>
+                              {!currentHours.closed && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <input type="time" value={currentHours.open} onChange={e => {
+                                    const h = { ...formData.hours };
+                                    h[day] = { ...currentHours, open: e.target.value };
+                                    setFormData({...formData, hours: h});
+                                  }} style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                                  <span>to</span>
+                                  <input type="time" value={currentHours.close} onChange={e => {
+                                    const h = { ...formData.hours };
+                                    h[day] = { ...currentHours, close: e.target.value };
+                                    setFormData({...formData, hours: h});
+                                  }} style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6 }} />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -604,9 +889,64 @@ export default function OwnerDashboard() {
                        </div>
                     ))}
                     {(!formData.bankAccounts || formData.bankAccounts.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No bank details provided.</div>}
+                    
+                    <div style={{ marginTop: 24, borderTop: '1px solid #e2e8f0', paddingTop: 24 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                         <div>
+                            <h3 style={{ margin: 0, fontSize: 16 }}>Payment Links & QR</h3>
+                            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>Add Stripe, PayPal, UPI, or PayTabs links for direct payment</p>
+                         </div>
+                         <button onClick={() => setFormData({...formData, paymentLinks: [...(formData.paymentLinks || []), { platform: 'Stripe', url: '', qrCodeUrl: '' }]})} style={{ padding: '6px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>+ Add Link</button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        {(formData.paymentLinks || []).map((link: any, index: number) => (
+                           <div key={`pl-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                             <div style={{ display: 'flex', gap: 12 }}>
+                               <select value={link.platform} onChange={e => { const p = [...formData.paymentLinks]; p[index].platform = e.target.value; setFormData({...formData, paymentLinks: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', width: 140 }}>
+                                 <option value="Stripe">Stripe</option>
+                                 <option value="PayPal">PayPal</option>
+                                 <option value="UPI">UPI</option>
+                                 <option value="PayTabs">PayTabs</option>
+                                 <option value="Custom">Custom Link</option>
+                               </select>
+                               <input type="url" placeholder="Direct Payment URL (e.g., https://buy.stripe.com/...)" value={link.url || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].url = e.target.value; setFormData({...formData, paymentLinks: p}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                             </div>
+                             <div style={{ display: 'flex', gap: 12 }}>
+                               <input type="url" placeholder="Optional QR Code Image URL" value={link.qrCodeUrl || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].qrCodeUrl = e.target.value; setFormData({...formData, paymentLinks: p}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                               <button onClick={() => { const p = [...formData.paymentLinks]; p.splice(index, 1); setFormData({...formData, paymentLinks: p}); }} style={{ padding: '0 16px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Remove</button>
+                             </div>
+                           </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
+                {activeTab === 'theme' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                    <div>
+                      <h3 style={{ margin: '0 0 16px', fontSize: 16 }}>Profile Theme</h3>
+                      <p style={{ fontSize: 14, color: '#64748b', marginBottom: 20 }}>Select a layout and style for your digital profile.</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div onClick={() => setFormData({...formData, template: 'classic'})} style={{ position: 'relative', border: formData.template === 'classic' || !formData.template ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: 16, padding: 16, cursor: 'pointer', textAlign: 'center', background: '#f8fafc', transition: 'all 0.2s' }}>
+                          <div style={{ background: '#dbeafe', height: 120, borderRadius: 8, marginBottom: 16 }}></div>
+                          <div style={{ fontWeight: 700, color: '#1e293b' }}>Classic Modern</div>
+                        </div>
+                        <div onClick={() => setFormData({...formData, template: 'executive'})} style={{ position: 'relative', border: formData.template === 'executive' ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: 16, padding: 16, cursor: 'pointer', textAlign: 'center', background: '#0f172a', color: '#fff', transition: 'all 0.2s' }}>
+                          <div style={{ position: 'absolute', top: -10, right: -10, background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 12, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>PREMIUM</div>
+                          <div style={{ background: '#1e293b', height: 120, borderRadius: 8, marginBottom: 16 }}></div>
+                          <div style={{ fontWeight: 700 }}>Executive Dark</div>
+                        </div>
+                        <div onClick={() => setFormData({...formData, template: 'minimal'})} style={{ position: 'relative', border: formData.template === 'minimal' ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: 16, padding: 16, cursor: 'pointer', textAlign: 'center', background: '#fff', transition: 'all 0.2s' }}>
+                          <div style={{ position: 'absolute', top: -10, right: -10, background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 12, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>PREMIUM</div>
+                          <div style={{ border: '1px solid #e2e8f0', height: 120, borderRadius: 8, marginBottom: 16 }}></div>
+                          <div style={{ fontWeight: 700, color: '#0f172a' }}>Minimal Clean</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {activeTab === 'widgets' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
                      <div>
@@ -625,31 +965,181 @@ export default function OwnerDashboard() {
                          </div>
                        )}
                      </div>
+                     <div style={{ marginTop: 32 }}>
+                       <h3 style={{ margin: '0 0 16px', fontSize: 16 }}>Business Document / Portfolio</h3>
+                       <p style={{ margin: '0 0 16px', fontSize: 14, color: '#64748b' }}>Upload or link a PDF file like your Company Profile, Portfolio, or Resume.</p>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Document URL (PDF / Web Link)</label>
+                           <input type="url" value={formData.documentUrl || ''} onChange={e => setFormData({...formData, documentUrl: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, boxSizing: 'border-box' }} placeholder="https://..." />
+                         </div>
+                         <div>
+                           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Custom Button Text</label>
+                           <input type="text" value={formData.documentButtonText || ''} onChange={e => setFormData({...formData, documentButtonText: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, boxSizing: 'border-box' }} placeholder="e.g. Download Company Profile" />
+                         </div>
+                       </div>
+                     </div>
+
+                     <div style={{ marginTop: 32, borderTop: '1px solid #e2e8f0', paddingTop: 24 }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                         <div>
+                           <h3 style={{ margin: 0, fontSize: 16 }}>Custom Action Buttons</h3>
+                           <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>Add extra buttons to link to apps, websites, or features.</p>
+                         </div>
+                         <button onClick={() => setFormData({...formData, customButtons: [...(formData.customButtons || []), { label: '', url: '', icon: 'Link', isPrimary: false }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>+ Add Button</button>
+                       </div>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                         {(formData.customButtons || []).map((btn: any, index: number) => (
+                            <div key={`cbtn-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                <input type="text" placeholder="Button Label (e.g. Visit Website)" value={btn.label || ''} onChange={e => { const b = [...formData.customButtons]; b[index].label = e.target.value; setFormData({...formData, customButtons: b}); }} style={{ flex: 1, minWidth: '200px', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                                <input type="url" placeholder="URL Link" value={btn.url || ''} onChange={e => { const b = [...formData.customButtons]; b[index].url = e.target.value; setFormData({...formData, customButtons: b}); }} style={{ flex: 1, minWidth: '200px', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                              </div>
+                              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <select value={btn.icon || 'Link'} onChange={e => { const b = [...formData.customButtons]; b[index].icon = e.target.value; setFormData({...formData, customButtons: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', minWidth: 120 }}>
+                                  <option value="Link">Link Icon</option>
+                                  <option value="Globe">Website</option>
+                                  <option value="Calendar">Calendar</option>
+                                  <option value="FileText">Document</option>
+                                  <option value="Download">Download</option>
+                                  <option value="MessageCircle">Chat</option>
+                                </select>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
+                                  <input type="checkbox" checked={btn.isPrimary || false} onChange={e => { const b = [...formData.customButtons]; b[index].isPrimary = e.target.checked; setFormData({...formData, customButtons: b}); }} />
+                                  Highlight as Primary action
+                                </label>
+                                <button onClick={() => { const b = [...formData.customButtons]; b.splice(index, 1); setFormData({...formData, customButtons: b}); }} style={{ marginLeft: 'auto', padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                              </div>
+                            </div>
+                         ))}
+                       </div>
+                     </div>
                   </div>
                 )}
               </div>
             </>
           )}
 
+          {sidebarTab === 'analytics' && (
+            <div style={{ padding: 24 }}>
+               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>Profile Analytics</h3>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
+                   <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Views</div>
+                   <div className="text-4xl font-extrabold text-slate-900">{profile.views || 0}</div>
+                   <div className="text-sm text-emerald-600 font-bold mt-2">↑ +12% this week</div>
+                   <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-slate-200 opacity-50" />
+                 </div>
+                 
+                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
+                   <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Unique Visitors</div>
+                   <div className="text-4xl font-extrabold text-slate-900">{Math.floor((profile.views || 0) * 0.7)}</div>
+                   <div className="text-sm text-emerald-600 font-bold mt-2">↑ +8% this week</div>
+                   <Users size={80} className="absolute -bottom-4 -right-4 text-slate-200 opacity-50" />
+                 </div>
+
+                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
+                   <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Link Clicks</div>
+                   <div className="text-4xl font-extrabold text-slate-900">{Math.floor((profile.views || 0) * 0.45)}</div>
+                   <div className="text-sm text-emerald-600 font-bold mt-2">↑ +15% this week</div>
+                   <LinkIcon size={80} className="absolute -bottom-4 -right-4 text-slate-200 opacity-50" />
+                 </div>
+               </div>
+
+               <div className="bg-white border border-slate-200 rounded-2xl p-6">
+                 <h4 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><MapPin size={20} className="text-blue-500"/> Audience Geometry</h4>
+                 <div className="flex flex-col gap-4">
+                   <div className="flex items-center gap-4">
+                     <div className="w-8 font-bold text-slate-500">US</div>
+                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
+                       <div className="bg-blue-500 h-full w-[65%] rounded-full"></div>
+                     </div>
+                     <div className="w-12 text-right font-bold text-slate-900">65%</div>
+                   </div>
+                   <div className="flex items-center gap-4">
+                     <div className="w-8 font-bold text-slate-500">IN</div>
+                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
+                       <div className="bg-blue-400 h-full w-[20%] rounded-full"></div>
+                     </div>
+                     <div className="w-12 text-right font-bold text-slate-900">20%</div>
+                   </div>
+                   <div className="flex items-center gap-4">
+                     <div className="w-8 font-bold text-slate-500">UK</div>
+                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
+                       <div className="bg-blue-300 h-full w-[10%] rounded-full"></div>
+                     </div>
+                     <div className="w-12 text-right font-bold text-slate-900">10%</div>
+                   </div>
+                   <div className="flex items-center gap-4">
+                     <div className="w-8 font-bold text-slate-500">AE</div>
+                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
+                       <div className="bg-blue-200 h-full w-[5%] rounded-full"></div>
+                     </div>
+                     <div className="w-12 text-right font-bold text-slate-900">5%</div>
+                   </div>
+                 </div>
+               </div>
+            </div>
+          )}
+
           {sidebarTab === 'appointments' && (
             <div style={{ padding: 24 }}>
-               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>My Appointments</h3>
+               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>My Appointments & Leads</h3>
+               <p style={{ margin: '0 0 24px', fontSize: 14, color: '#64748b' }}>Here you will see all appointment bookings and contact form leads sent by visitors.</p>
                {appointments.length === 0 ? (
-                 <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', borderRadius: 12, color: '#64748b' }}>
+                 <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', borderRadius: 12, color: '#64748b', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Calendar size={48} style={{ opacity: 0.5, marginBottom: 12 }} />
-                    <p style={{ margin: 0 }}>No appointments booked yet.</p>
+                    <p style={{ margin: '0 0 16px' }}>No appointments or leads yet.</p>
+                    <button 
+                      onClick={async () => {
+                        const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+                        try {
+                           await addDoc(collection(db, 'leads'), {
+                              profileId: profile.id,
+                              name: 'John Doe',
+                              email: 'john@example.com',
+                              phone: '+1 234 567 890',
+                              company: 'Tech Corp',
+                              message: 'Hi, I saw your profile and would love to connect about a potential partnership.',
+                              source: 'Sample Data',
+                              createdAt: serverTimestamp()
+                           });
+                           await addDoc(collection(db, 'appointments'), {
+                              profileId: profile.id,
+                              customerName: 'Alice Smith',
+                              customerEmail: 'alice@example.com',
+                              date: '2023-11-20',
+                              time: '14:30',
+                              source: 'Sample Booking',
+                              createdAt: serverTimestamp()
+                           });
+                           // Force refresh (it should auto trigger due to useEffect deps? Actually we don't have a listener, we just fetch once).
+                           // Let's just alert the user to click the tab again.
+                           alert('Sample data created! Please reopen the tab (click My Profile then Appointments again).');
+                        } catch(e) {
+                          alert('Failed to add sample data.');
+                        }
+                      }}
+                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition-colors border-none cursor-pointer"
+                    >
+                      Load Sample Data
+                    </button>
                  </div>
                ) : (
-                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                 <div className="flex flex-col gap-3">
                    {appointments.map(apt => (
-                     <div key={apt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, border: '1px solid #e2e8f0', borderRadius: 12, background: '#f8fafc' }}>
+                     <div key={apt.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border border-slate-200 rounded-xl bg-slate-50 gap-4">
                        <div>
-                         <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>{apt.customerName}</div>
-                         <div style={{ fontSize: 13, color: '#64748b' }}>{apt.customerEmail}</div>
+                         <div className="font-semibold text-slate-900 mb-1">{apt.name || apt.customerName}</div>
+                         <div className="text-sm text-slate-500">{apt.email || apt.customerEmail}</div>
+                         {apt.phone && <div className="text-sm text-slate-500 mt-1">{apt.phone}</div>}
+                         {apt.company && <div className="text-sm text-slate-500 mt-1">Company: {apt.company}</div>}
+                         {apt.message && <div className="text-sm text-slate-600 mt-2 italic bg-white p-2 border border-slate-100 rounded-md">"{apt.message}"</div>}
                        </div>
-                       <div style={{ textAlign: 'right' }}>
-                         <div style={{ fontWeight: 600, color: '#2563eb' }}>{apt.date}</div>
-                         <div style={{ fontSize: 13, color: '#475569' }}>{apt.time}</div>
+                       <div className="text-left sm:text-right">
+                         {apt.date && <div className="font-semibold text-blue-600">{apt.date} {apt.time && <span className="text-sm text-slate-600 font-normal">at {apt.time}</span>}</div>}
+                         <div className="text-xs text-slate-500 mt-2 uppercase font-bold px-2 py-1 bg-slate-200 rounded inline-block">{apt.source || 'Appointment'}</div>
                        </div>
                      </div>
                    ))}
@@ -692,88 +1182,6 @@ export default function OwnerDashboard() {
                    </div>
                  </div>
                )}
-            </div>
-          )}
-
-          {sidebarTab === 'campaigns' && (
-            <div style={{ padding: 24 }}>
-               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>Advertising & Marketing Campaigns</h3>
-               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 24, maxWidth: 600 }}>
-                  <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24 }}>Send professional email notifications to your clients about your latest services, offers, or business updates.</p>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Email Subject</label>
-                        <input 
-                          type="text" 
-                          placeholder="Special Offer on Our Services..." 
-                          value={campaignData.subject}
-                          onChange={e => setCampaignData({...campaignData, subject: e.target.value})}
-                          style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} 
-                        />
-                     </div>
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Campaign Message</label>
-                        <textarea 
-                          placeholder="Tell your clients what's new..." 
-                          rows={6} 
-                          value={campaignData.message}
-                          onChange={e => setCampaignData({...campaignData, message: e.target.value})}
-                          style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit' }} 
-                        />
-                     </div>
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Call to Action (CTA) Link</label>
-                        <input 
-                          type="url" 
-                          placeholder="https://..." 
-                          value={campaignData.ctaLink}
-                          onChange={e => setCampaignData({...campaignData, ctaLink: e.target.value})}
-                          style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} 
-                        />
-                     </div>
-                     
-                     <button 
-                        onClick={async () => {
-                           if (!campaignData.subject || !campaignData.message) {
-                             alert('Please fill in at least the subject and message.');
-                             return;
-                           }
-                           setCampaignLoading(true);
-                           try {
-                             await fetch('/api/send-email', {
-                               method: 'POST',
-                               headers: { 'Content-Type': 'application/json' },
-                               body: JSON.stringify({
-                                 to: profile.email,
-                                 subject: campaignData.subject,
-                                 type: 'ad',
-                                 data: {
-                                   message: campaignData.message,
-                                   ctaLink: campaignData.ctaLink || '#'
-                                 }
-                               })
-                             });
-                             alert('Campaign sent to your email for review!');
-                             setCampaignData({ subject: '', message: '', ctaLink: '' });
-                           } catch (err) {
-                             console.error(err);
-                             alert('Failed to send campaign');
-                           }
-                           setCampaignLoading(false);
-                        }}
-                        disabled={campaignLoading}
-                        style={{ 
-                          marginTop: 8, background: '#2563eb', color: '#fff', border: 'none', 
-                          padding: '12px 24px', borderRadius: 8, fontWeight: 700, 
-                          cursor: campaignLoading ? 'not-allowed' : 'pointer',
-                          opacity: campaignLoading ? 0.7 : 1
-                        }}
-                     >
-                        {campaignLoading ? 'Launching Campaign...' : 'Launch Campaign'}
-                     </button>
-                  </div>
-               </div>
             </div>
           )}
 

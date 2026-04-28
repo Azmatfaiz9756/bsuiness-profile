@@ -113,6 +113,20 @@ export default function FrontendHome() {
             </div>
          </div>
 
+         {/* AI Matchmaking Dashboard (Mock) */}
+          {searchTerm && filteredProfiles.length > 0 && (
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-8 flex items-start gap-4">
+               <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0">
+                 <Sparkles size={20} />
+               </div>
+               <div>
+                 <div className="font-bold text-indigo-900 mb-1">AI Recommendation</div>
+                 <div className="text-sm text-indigo-800">Based on your search for "{searchTerm}", you share similar B2B interests. We recommend connecting with <span className="font-bold">{filteredProfiles[0].name}</span>!</div>
+                 <Link to={`/profile/${filteredProfiles[0].slug || filteredProfiles[0].id}`} className="inline-block mt-3 bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition">View Profile</Link>
+               </div>
+            </div>
+          )}
+
          {/* Directory Display */}
          <div className={`
            ${viewMode === 'grid' 
@@ -152,7 +166,7 @@ export default function FrontendHome() {
                       <div className="pt-12">
                         <div className="text-xl font-extrabold text-slate-900 mb-1 flex items-center gap-1.5 truncate">
                           {p.name}
-                          <span className="text-sm text-sky-400">✓</span>
+                          {(p.isVerified || p.plan === 'Pro' || p.plan === 'Enterprise') && <span className="text-sm text-sky-400">✓</span>}
                         </div>
                         <div className="text-sm text-slate-600 font-medium truncate mb-0.5">{p.title || 'Professional'}</div>
                         <div className="text-sm text-slate-900 font-bold mb-4 truncate">{p.company || 'DBC Member'}</div>
