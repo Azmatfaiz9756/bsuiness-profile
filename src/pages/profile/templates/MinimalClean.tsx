@@ -49,59 +49,22 @@ export default function MinimalClean({
     setActiveTab(activeTab === tab ? null : tab);
   };
 
-  const AccordionItem = ({ id, title, children }: any) => {
-    const isOpen = activeTab === id;
+  const AccordionItem = ({ title, children }: any) => {
     return (
-      <div style={{ marginBottom: 16 }}>
-        <button
-          onClick={() => toggleTab(id)}
+      <div style={{ marginBottom: 32 }}>
+        <div
           style={{
-            width: "100%",
-            padding: "16px 0",
-            background: "transparent",
-            border: "none",
-            borderBottom: "1px solid #e4e4e7",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            cursor: "pointer",
-            textAlign: "left",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#a1a1aa",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            marginBottom: 16,
           }}
         >
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#a1a1aa",
-              letterSpacing: 1,
-              textTransform: "uppercase",
-            }}
-          >
-            {title}
-          </div>
-          <div
-            style={{
-              color: "#a1a1aa",
-              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.2s",
-              display: "flex",
-            }}
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </div>
-        </button>
-        {isOpen && <div style={{ paddingTop: "20px" }}>{children}</div>}
+          {title}
+        </div>
+        <div>{children}</div>
       </div>
     );
   };
