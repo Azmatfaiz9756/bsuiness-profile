@@ -144,6 +144,10 @@ export default function AdminProfiles() {
                    </div>
                    <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Company / Organization</label><input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
                    <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Bio</label><textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, fontFamily: 'inherit' }} /></div>
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, background: '#f9fafb', padding: 16, borderRadius: 8, border: '1px solid #e5e7eb' }}>
+                     <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Total Visits (Profile Views)</label><input type="number" value={formData.views || 0} onChange={e => setFormData({...formData, views: parseInt(e.target.value, 10)})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
+                     <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Demo Followers (Adds to actual)</label><input type="number" value={formData.fakeFollowers || 0} onChange={e => setFormData({...formData, fakeFollowers: parseInt(e.target.value, 10)})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
+                   </div>
                  </div>
                )}
 

@@ -149,7 +149,6 @@ export default function FullProfile() {
                {tName.toUpperCase()}
              </button>
            ))}
-           <button onClick={() => navigate('/dashboard')} className="ml-auto text-white text-xs font-semibold hover:text-blue-400 transition-colors">Exit Preview</button>
         </div>
       )}
 

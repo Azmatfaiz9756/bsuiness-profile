@@ -29,6 +29,7 @@ import {
   Link as LinkIcon,
   UserPlus,
   Share2,
+  Bird
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -173,26 +174,12 @@ export default function ExecutiveDark({
           style={{
             padding: "20px",
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             background: "#000",
             borderBottom: "1px solid #222",
           }}
         >
-          <button
-            onClick={onExit}
-            style={{
-              background: "#222",
-              border: "1px solid #444",
-              color: "#fff",
-              padding: "6px 12px",
-              borderRadius: 4,
-              cursor: "pointer",
-              fontSize: 12,
-            }}
-          >
-            Exit Preview
-          </button>
           <div
             style={{
               background: "#b45309",
@@ -311,7 +298,15 @@ export default function ExecutiveDark({
             {(profile.isVerified ||
               profile.plan === "Pro" ||
               profile.plan === "Enterprise") && (
-              <span style={{ color: "#38bdf8", fontSize: "18px" }}>✓</span>
+              <span style={{ display: "inline-flex", marginLeft: 4 }}>
+                <img 
+                  src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
+                  alt="Verified" 
+                  width={24} 
+                  height={24} 
+                  style={{ transform: "scaleX(-1)" }} 
+                />
+              </span>
             )}
           </h1>
           <div
@@ -334,6 +329,11 @@ export default function ExecutiveDark({
             }}
           >
             {profile.company}
+          </div>
+          
+          <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "#111", padding: "4px 12px", borderRadius: 20, border: "1px solid #333" }}>
+             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }}></span>
+             <span style={{ fontSize: 11, fontWeight: 700, color: "#ccc", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
           </div>
 
           {profile.bio && (
@@ -517,31 +517,60 @@ export default function ExecutiveDark({
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
             {profile.address && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  width: "100%",
-                  background: "#16a34a",
-                  color: "#fff",
-                  padding: "14px",
-                  borderRadius: 4,
-                  fontWeight: 700,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  textDecoration: "none",
-                  boxShadow: "0 4px 12px rgba(22,163,74,0.3)",
-                  fontSize: 14
-                }}
-              >
-                <MapPin size={18} /> Get Directions
-              </a>
+              <>
+                <div
+                  style={{
+                    background: "#262626",
+                    border: "1px solid #404040",
+                    color: "#f5f5f5",
+                    padding: "14px",
+                    borderRadius: 4,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <MapPin size={20} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
+                    <div style={{ fontSize: 14, lineHeight: 1.5 }}>
+                      {profile.address}
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    width: "100%",
+                    background: "#16a34a",
+                    color: "#fff",
+                    padding: "14px",
+                    borderRadius: 4,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    textDecoration: "none",
+                    boxShadow: "0 4px 12px rgba(22,163,74,0.3)",
+                    fontSize: 14,
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <MapPin size={18} /> Get Directions
+                </a>
+              </>
             )}
             <button
-               onClick={handleSave}
+               onClick={() => {
+                 window.scrollTo({
+                   top: document.body.scrollHeight,
+                   behavior: 'smooth'
+                 });
+               }}
                style={{
                  width: "100%",
                  background: "#2563eb",
@@ -559,7 +588,7 @@ export default function ExecutiveDark({
                  boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
                }}
             >
-              <UserPlus size={18} /> Exchange Contact
+              <UserPlus size={18} /> Save Contact
             </button>
             {profile.documentUrl && (
               <a
@@ -1044,113 +1073,11 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          {((profile.paymentLinks && profile.paymentLinks.length > 0) ||
-            (profile.bankAccounts && profile.bankAccounts.length > 0)) && (
+          {profile.bankAccounts && profile.bankAccounts.length > 0 && (
             <SectionContainer title="Payments" icon={<Wallet size={18} />}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
-                {profile.paymentLinks && profile.paymentLinks.length > 0 && (
-                  <div
-                    style={{
-                      background: "#1a1a1a",
-                      border: "1px solid #2a2a2a",
-                      borderRadius: 8,
-                      padding: 20,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "#b45309",
-                        marginBottom: 16,
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
-                    >
-                      Direct Payment Links
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 12,
-                      }}
-                    >
-                      {profile.paymentLinks.map((link: any, i: number) => (
-                        <div
-                          key={`pl-${i}`}
-                          style={{
-                            border: "1px solid #333",
-                            padding: 12,
-                            borderRadius: 8,
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div style={{ fontWeight: 600, color: "#eee" }}>
-                            {link.platform}
-                          </div>
-                          {link.qrCodeUrl ? (
-                            <div style={{ display: "flex", gap: 8 }}>
-                              <a
-                                href={link.qrCodeUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  background: "#333",
-                                  color: "#eee",
-                                  padding: "6px 12px",
-                                  borderRadius: 6,
-                                  fontSize: 13,
-                                  textDecoration: "none",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Show QR
-                              </a>
-                              <a
-                                href={link.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  background: "#b45309",
-                                  color: "#fff",
-                                  padding: "6px 12px",
-                                  borderRadius: 6,
-                                  fontSize: 13,
-                                  textDecoration: "none",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Pay Now
-                              </a>
-                            </div>
-                          ) : (
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                background: "#b45309",
-                                color: "#fff",
-                                padding: "6px 16px",
-                                borderRadius: 6,
-                                fontSize: 13,
-                                textDecoration: "none",
-                                fontWeight: 600,
-                              }}
-                            >
-                              Pay Now
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {profile.bankAccounts && profile.bankAccounts.length > 0 && (
                   <div
@@ -1464,38 +1391,6 @@ export default function ExecutiveDark({
                   {profile.id}
                 </div>
               </div>
-              <div
-                style={{
-                  background: "#1a1a1a",
-                  border: "1px solid #2a2a2a",
-                  padding: 20,
-                  borderRadius: 8,
-                  color: "#fff",
-                  marginBottom: 16,
-                }}
-              >
-                <div
-                  style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}
-                >
-                  Executive Wallet
-                </div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#666",
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                    marginBottom: 4,
-                  }}
-                >
-                  CURRENT BALANCE
-                </div>
-                <div
-                  style={{ fontSize: 32, fontWeight: 800, color: "#b45309" }}
-                >
-                  AED 340
-                </div>
-              </div>
               {profile.bankAccounts && profile.bankAccounts.length > 0 && (
                 <div
                   style={{
@@ -1588,9 +1483,10 @@ export default function ExecutiveDark({
                     fontWeight: 700,
                     fontSize: 16,
                     marginBottom: 16,
+                    wordBreak: "break-all",
                   }}
                 >
-                  businessprofile.webdevelop.ae/ref/{profile.id ? profile.id.slice(-6).toUpperCase() : "LINK"}
+                  {window.location.origin}/plans?ref={profile.id || ""}
                 </div>
                 <Link
                   to="/plans"

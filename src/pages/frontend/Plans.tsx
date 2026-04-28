@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import { PaymentModal } from '../../components/PaymentModal';
 
 export default function FrontendPlans() {
-  const { siteSettings } = useAppContext();
+  const { siteSettings, user, setIsLoginModalOpen } = useAppContext();
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
   const trialPeriod = siteSettings.trialPeriod || '1 Month';
   const plans = siteSettings.plans || [
     { name: 'Standard', price: 'AED 299', popular: false, badge: 'STANDARD' },
@@ -10,8 +14,23 @@ export default function FrontendPlans() {
     { name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO' }
   ];
 
+  const handleStartTrial = (plan: any) => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    setSelectedPlan(plan);
+    setIsPaymentModalOpen(true);
+  };
+
   return (
     <div className="px-4 py-8 md:py-16 bg-slate-50 min-h-screen">
+      <PaymentModal 
+        isOpen={isPaymentModalOpen} 
+        onClose={() => setIsPaymentModalOpen(false)} 
+        plan={selectedPlan} 
+      />
+      
       <div className="text-center mb-10">
         <div className="inline-block bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 text-xs font-bold text-emerald-700 mb-4 tracking-wide uppercase">
           {trialPeriod} FREE TRIAL
@@ -41,7 +60,7 @@ export default function FrontendPlans() {
                </div>
             </div>
             
-            <button className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>
+            <button onClick={() => handleStartTrial(plan)} className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>
               Start Free Trial
             </button>
           </div>

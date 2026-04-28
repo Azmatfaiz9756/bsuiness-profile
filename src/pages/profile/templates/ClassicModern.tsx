@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
+import { db } from "../../../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import {
   Linkedin,
   Twitter,
@@ -30,6 +32,9 @@ import {
   Calendar,
   UserPlus,
   Share2,
+  X,
+  Users,
+  Bird
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -58,6 +63,28 @@ export default function ClassicModern({
   const [activeTab, setActiveTab] = useState('home');
   const [userRating, setUserRating] = useState(0);
   const [isRatingSubmitted, setIsRatingSubmitted] = useState(false);
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followerInfo, setFollowerInfo] = useState({ name: '', phone: '', email: '' });
+  const [followLoading, setFollowLoading] = useState(false);
+  const [isFollowed, setIsFollowed] = useState(false);
+
+  const handleFollow = async () => {
+    if (!followerInfo.email) return alert("Please provide your email to follow.");
+    setFollowLoading(true);
+    try {
+      await addDoc(collection(db, 'followers'), {
+        profileId: profile.id,
+        ...followerInfo,
+        createdAt: serverTimestamp()
+      });
+      setIsFollowed(true);
+      setTimeout(() => setShowFollowModal(false), 2000);
+    } catch (e) {
+      alert("Error following business. Please try again.");
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   const handleRatingSubmit = (rating: number) => {
     setUserRating(rating);
@@ -76,7 +103,6 @@ export default function ClassicModern({
     { id: 'home', label: 'Home', icon: <Contact2 size={20} />, show: true },
     { id: 'services', label: 'Services', icon: <Sparkles size={20} />, show: profile.services && profile.services.length > 0 },
     { id: 'shop', label: 'Store', icon: <ShoppingBag size={20} />, show: profile.products && profile.products.length > 0 },
-    { id: 'wallet', label: 'Wallet', icon: <Wallet size={20} />, show: true },
     { id: 'inquiry', label: 'Inquiry', icon: <Mail size={20} />, show: true }
   ].filter(item => item.show);
 
@@ -177,25 +203,10 @@ export default function ClassicModern({
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             padding: "12px 16px",
           }}
         >
-          <button
-            onClick={onExit}
-            style={{
-              background: "rgba(0,0,0,0.05)",
-              color: "#1a1a2e",
-              border: "none",
-              padding: "6px 12px",
-              borderRadius: 20,
-              cursor: "pointer",
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          >
-            ← Exit Preview
-          </button>
           <div
             style={{
               background: "#dbeafe",
@@ -315,7 +326,15 @@ export default function ClassicModern({
             {(profile.isVerified ||
               profile.plan === "Pro" ||
               profile.plan === "Enterprise") && (
-              <span style={{ color: "#38bdf8", fontSize: "18px" }}>✓</span>
+              <span style={{ display: "inline-flex", marginLeft: 4 }}>
+                <img 
+                  src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
+                  alt="Verified" 
+                  width={24} 
+                  height={24} 
+                  style={{ transform: "scaleX(-1)" }} 
+                />
+              </span>
             )}
           </h1>
           <div
@@ -330,6 +349,11 @@ export default function ClassicModern({
           </div>
           <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>
             {profile.company}
+          </div>
+          
+          <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "#f8fafc", padding: "4px 12px", borderRadius: 20, border: "1px solid #e2e8f0" }}>
+             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.4)" }}></span>
+             <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 12 }}>
@@ -561,7 +585,7 @@ export default function ClassicModern({
             }}
           >
             <button
-              onClick={handleSave}
+              onClick={() => setActiveTab('inquiry')}
               style={{
                 flex: 1,
                 background: "#000",
@@ -577,7 +601,7 @@ export default function ClassicModern({
                 gap: 8,
               }}
             >
-              <UserPlus size={18} /> Save Contact
+              <UserPlus size={18} /> Exchange Contact
             </button>
             <button
               onClick={() => setShowShareModal(true)}
@@ -599,6 +623,36 @@ export default function ClassicModern({
               <Send size={16} /> Share Profile
             </button>
           </div>
+
+          <div style={{ padding: "0 20px", marginTop: 12 }}>
+            <button
+              onClick={() => setShowFollowModal(true)}
+              disabled={isFollowed}
+              style={{
+                width: "100%",
+                background: isFollowed ? "#ecfdf5" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                color: isFollowed ? "#059669" : "#fff",
+                border: isFollowed ? "1px solid #10b981" : "none",
+                padding: "16px",
+                borderRadius: 16,
+                fontWeight: 800,
+                cursor: isFollowed ? "default" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                fontSize: 15,
+                boxShadow: isFollowed ? "none" : "0 8px 20px rgba(37,99,235,0.2)",
+                transition: "all 0.3s ease"
+              }}
+            >
+              <Users size={20} /> {isFollowed ? "Following Business" : "Follow Business Updates"}
+            </button>
+            <p style={{ textAlign: 'center', fontSize: 10, color: '#94a3b8', marginTop: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Get one-click WhatsApp & Push notifications
+            </p>
+          </div>
+
           <div
             style={{
               display: "flex",
@@ -750,6 +804,27 @@ export default function ClassicModern({
             <>
               {profile.address && (
                 <div style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      background: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      color: "#1f2937",
+                      padding: "16px",
+                      borderRadius: 12,
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <MapPin size={20} color="#6b7280" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
+                      <div style={{ fontSize: 14, lineHeight: 1.5, color: "#374151" }}>
+                        {profile.address}
+                      </div>
+                    </div>
+                  </div>
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
                     target="_blank"
@@ -767,7 +842,8 @@ export default function ClassicModern({
                       gap: 8,
                       textDecoration: "none",
                       boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
-                      fontSize: 14
+                      fontSize: 14,
+                      boxSizing: "border-box",
                     }}
                   >
                     <MapPin size={18} /> Get Directions
@@ -794,7 +870,7 @@ export default function ClassicModern({
                     boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
                   }}
                 >
-                  <UserPlus size={18} /> Exchange Contact
+                  <UserPlus size={18} /> Save Contact
                 </button>
               </div>
               <SectionContainer
@@ -1016,7 +1092,7 @@ export default function ClassicModern({
                         color: "#1f2937",
                       }}
                     >
-                      Directions
+                      Address
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {profile.address}
@@ -1968,9 +2044,10 @@ export default function ClassicModern({
                   fontWeight: 700,
                   fontSize: 16,
                   marginBottom: 12,
+                  wordBreak: "break-all",
                 }}
               >
-                businessprofile.webdevelop.ae/ref/{profile.id ? profile.id.slice(-6).toUpperCase() : "LINK"}
+                {window.location.origin}/plans?ref={profile.id || ""}
               </div>
               <Link
                 to="/plans"
@@ -2313,6 +2390,133 @@ export default function ClassicModern({
                   Download QR Code
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Follow Modal */}
+        {showFollowModal && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              background: "rgba(0,0,0,0.8)",
+              backdropFilter: "blur(8px)",
+              zIndex: 2000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 24,
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                width: "100%",
+                maxWidth: 400,
+                borderRadius: 32,
+                padding: 32,
+                position: "relative",
+                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+              }}
+            >
+               <button 
+                onClick={() => setShowFollowModal(false)}
+                style={{ position: 'absolute', top: 20, right: 20, background: '#f1f5f9', border: 'none', width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X size={20} />
+              </button>
+              
+              {isFollowed ? (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                   <div style={{ width: 80, height: 80, background: '#ecfdf5', color: '#10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                     <Sparkles size={40} />
+                   </div>
+                   <h3 style={{ margin: '0 0 12px', fontSize: 26, fontWeight: 900, color: '#0f172a' }}>Dhanaywad!</h3>
+                   <p style={{ margin: 0, fontSize: 15, color: '#64748b', fontWeight: 500, lineHeight: 1.6 }}>You are now following {profile.name}. Aapko updates aur offers milte rahenge!</p>
+                   <button 
+                    onClick={() => setShowFollowModal(false)}
+                    style={{ marginTop: 32, width: '100%', padding: 16, background: '#0f172a', color: '#fff', border: 'none', borderRadius: 16, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ width: 56, height: 56, background: '#eff6ff', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, color: '#2563eb' }}>
+                    <Users size={28} />
+                  </div>
+                  <h3 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>Follow {profile.name}</h3>
+                  <p style={{ margin: '0 0 28px', fontSize: 14, color: '#64748b', lineHeight: 1.6, fontWeight: 500 }}>Paaiye best deals, naye products aur announcements seedhe apne WhatsApp ya phone par.</p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5 }}>Full Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="Your Name" 
+                        value={followerInfo.name}
+                        onChange={e => setFollowerInfo({...followerInfo, name: e.target.value})}
+                        style={{ padding: '14px 16px', border: '1px solid #e2e8f0', borderRadius: 14, outline: 'none', fontSize: 14, width: '100%', background: '#f8fafc', transition: 'all 0.2s' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5 }}>WhatsApp Number</label>
+                      <input 
+                        type="tel" 
+                        placeholder="e.g. 971501234567" 
+                        value={followerInfo.phone}
+                        onChange={e => setFollowerInfo({...followerInfo, phone: e.target.value})}
+                        style={{ padding: '14px 16px', border: '1px solid #e2e8f0', borderRadius: 14, outline: 'none', fontSize: 14, width: '100%', background: '#f8fafc' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5 }}>Email Address</label>
+                      <input 
+                        type="email" 
+                        placeholder="you@email.com" 
+                        value={followerInfo.email}
+                        onChange={e => setFollowerInfo({...followerInfo, email: e.target.value})}
+                        style={{ padding: '14px 16px', border: '1px solid #e2e8f0', borderRadius: 14, outline: 'none', fontSize: 14, width: '100%', background: '#f8fafc' }}
+                      />
+                    </div>
+
+                    <button 
+                      onClick={handleFollow}
+                      disabled={followLoading || !followerInfo.email}
+                      style={{ 
+                        marginTop: 12,
+                        padding: 18, 
+                        background: '#2563eb', 
+                        color: '#fff', 
+                        border: 'none', 
+                        borderRadius: 18, 
+                        fontWeight: 800, 
+                        fontSize: 15,
+                        cursor: (followLoading || !followerInfo.email) ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 12px 30px rgba(37,99,235,0.25)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 12,
+                        transition: 'all 0.2s',
+                        opacity: (followLoading || !followerInfo.email) ? 0.6 : 1
+                      }}
+                    >
+                      {followLoading ? "Sending..." : "Follow Business Now"} <Send size={20} />
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8 }}>
+                       <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#25d366' }}></span>
+                       <p style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', margin: 0, fontWeight: 600 }}>
+                         Safe & Secure • No Spam
+                       </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

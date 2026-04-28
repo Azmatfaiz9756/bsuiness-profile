@@ -27,6 +27,7 @@ import {
   UserPlus,
   Send,
   Share2,
+  Bird
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -160,26 +161,11 @@ export default function MinimalClean({
           style={{
             padding: "24px",
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             background: "#fff",
           }}
         >
-          <button
-            onClick={onExit}
-            style={{
-              background: "#f4f4f5",
-              color: "#52525b",
-              border: "none",
-              padding: "8px 16px",
-              borderRadius: 999,
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 500,
-            }}
-          >
-            ← Exit Preview
-          </button>
           <div
             style={{
               color: "#09090b",
@@ -283,7 +269,15 @@ export default function MinimalClean({
             {(profile.isVerified ||
               profile.plan === "Pro" ||
               profile.plan === "Enterprise") && (
-              <span style={{ color: "#38bdf8", fontSize: "24px" }}>✓</span>
+              <span style={{ display: "inline-flex", marginLeft: 4 }}>
+                <img 
+                  src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
+                  alt="Verified" 
+                  width={24} 
+                  height={24} 
+                  style={{ transform: "scaleX(-1)" }} 
+                />
+              </span>
             )}
           </h1>
           <div style={{ fontSize: 16, color: "#52525b", marginTop: 12 }}>
@@ -291,6 +285,11 @@ export default function MinimalClean({
           </div>
           <div style={{ fontSize: 16, color: "#a1a1aa", marginTop: 4 }}>
             {profile.company}
+          </div>
+          
+          <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "#f4f4f5", padding: "4px 12px", borderRadius: 20, border: "1px solid #e4e4e7" }}>
+             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.4)" }}></span>
+             <span style={{ fontSize: 12, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
           </div>
 
           {profile.bio && (
@@ -326,7 +325,7 @@ export default function MinimalClean({
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 32 }}>
             <div style={{ display: "flex", gap: 12 }}>
               <button
-                onClick={handleSave}
+                onClick={() => setActiveTab('inquiry')}
                 style={{
                   flex: 1,
                   background: "#09090b",
@@ -343,7 +342,7 @@ export default function MinimalClean({
                   border: "none",
                 }}
               >
-                <UserPlus size={16} /> Save Contact
+                <UserPlus size={16} /> Exchange Contact
               </button>
               <button
                 onClick={() => setShowShareModal(true)}
@@ -390,28 +389,52 @@ export default function MinimalClean({
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
             {profile.address && (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  width: "100%",
-                  background: "#16a34a",
-                  color: "#fff",
-                  padding: "14px",
-                  borderRadius: 999,
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  textDecoration: "none",
-                  fontSize: 15,
-                  boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
-                }}
-              >
-                <MapPin size={18} /> Get Directions
-              </a>
+              <>
+                <div
+                  style={{
+                    background: "#f4f4f5",
+                    border: "1px solid #e4e4e7",
+                    color: "#09090b",
+                    padding: "16px",
+                    borderRadius: 16,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    marginBottom: 12,
+                  }}
+                >
+                  <MapPin size={20} color="#52525b" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
+                    <div style={{ fontSize: 14, lineHeight: 1.5, color: "#27272a" }}>
+                      {profile.address}
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    width: "100%",
+                    background: "#16a34a",
+                    color: "#fff",
+                    padding: "14px",
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    textDecoration: "none",
+                    fontSize: 15,
+                    boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <MapPin size={18} /> Get Directions
+                </a>
+              </>
             )}
             <button
               onClick={handleSave}
@@ -432,7 +455,7 @@ export default function MinimalClean({
                 boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
               }}
             >
-              <UserPlus size={18} /> Exchange Contact
+              <UserPlus size={18} /> Save Contact
             </button>
           </div>
         </div>
@@ -1091,129 +1114,28 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {(profile.paymentLinks?.length > 0 ||
-            profile.bankAccounts?.length > 0) && (
-            <AccordionItem id="payments" title="Payment Options">
+          {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+            <AccordionItem id="payments" title="Bank Accounts">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
-                {profile.paymentLinks && profile.paymentLinks.length > 0 && (
+                <div
+                  style={{
+                    border: "1px solid #e4e4e7",
+                    borderRadius: 16,
+                    padding: 20,
+                  }}
+                >
                   <div
                     style={{
-                      border: "1px solid #e4e4e7",
-                      borderRadius: 16,
-                      padding: 20,
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#09090b",
+                      marginBottom: 16,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: "#09090b",
-                        marginBottom: 16,
-                      }}
-                    >
-                      Direct Payment Links
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 12,
-                      }}
-                    >
-                      {profile.paymentLinks.map((link: any, i: number) => (
-                        <div
-                          key={`pl-${i}`}
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div style={{ fontWeight: 600, color: "#52525b" }}>
-                            {link.platform}
-                          </div>
-                          {link.qrCodeUrl ? (
-                            <div style={{ display: "flex", gap: 8 }}>
-                              <a
-                                href={link.qrCodeUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  background: "#f4f4f5",
-                                  color: "#09090b",
-                                  border: "none",
-                                  padding: "6px 12px",
-                                  borderRadius: 8,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  textDecoration: "none",
-                                }}
-                              >
-                                QR Code
-                              </a>
-                              <a
-                                href={link.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  background: "#09090b",
-                                  color: "#fff",
-                                  border: "none",
-                                  padding: "6px 12px",
-                                  borderRadius: 8,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  textDecoration: "none",
-                                }}
-                              >
-                                Pay Link
-                              </a>
-                            </div>
-                          ) : (
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                background: "#09090b",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 16px",
-                                borderRadius: 8,
-                                fontSize: 13,
-                                fontWeight: 600,
-                                textDecoration: "none",
-                              }}
-                            >
-                              Pay Link
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    Bank Transfers
                   </div>
-                )}
-
-                {profile.bankAccounts && profile.bankAccounts.length > 0 && (
-                  <div
-                    style={{
-                      border: "1px solid #e4e4e7",
-                      borderRadius: 16,
-                      padding: 20,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 14,
-                        fontWeight: 700,
-                        color: "#09090b",
-                        marginBottom: 16,
-                      }}
-                    >
-                      Bank Transfers
-                    </div>
                     <div
                       style={{
                         display: "flex",
@@ -1304,7 +1226,6 @@ export default function MinimalClean({
                       ))}
                     </div>
                   </div>
-                )}
               </div>
             </AccordionItem>
           )}
@@ -1464,50 +1385,23 @@ export default function MinimalClean({
               </div>
 
               <div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "#a1a1aa",
-                    letterSpacing: 1,
-                    textTransform: "uppercase",
-                    marginBottom: 12,
-                  }}
-                >
-                  DBC Wallet & Bank
-                </div>
+                {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#a1a1aa",
+                      letterSpacing: 1,
+                      textTransform: "uppercase",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Bank Details
+                  </div>
+                )}
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 12 }}
                 >
-                  <div
-                    style={{
-                      background: "#f4f4f5",
-                      padding: 16,
-                      borderRadius: 12,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 500,
-                        color: "#09090b",
-                      }}
-                    >
-                      Wallet Balance
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 600,
-                        color: "#09090b",
-                      }}
-                    >
-                      AED 340
-                    </span>
-                  </div>
                   {profile.bankAccounts &&
                     profile.bankAccounts.map((acc: any, i: number) => (
                       <div
@@ -1597,9 +1491,10 @@ export default function MinimalClean({
                         textAlign: "center",
                         fontWeight: 600,
                         marginBottom: 12,
+                        wordBreak: "break-all",
                       }}
                     >
-                      businessprofile.webdevelop.ae/ref/{profile.id ? profile.id.slice(-6).toUpperCase() : "LINK"}
+                      {window.location.origin}/plans?ref={profile.id || ""}
                     </div>
                     <Link
                       to="/plans"

@@ -16,6 +16,7 @@ import AdminWallets from './pages/admin/Wallets';
 import AdminSettings from './pages/admin/Settings';
 import AdminReferrals from './pages/admin/Referrals';
 import AdminDirectory from './pages/admin/Directory';
+import AdminLeads from './pages/admin/Leads';
 
 // Frontend Pages
 import FrontendHome from './pages/frontend/Home';
@@ -54,6 +55,7 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="profiles" element={<AdminProfiles />} />
+            <Route path="leads" element={<AdminLeads />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="shop-orders" element={<AdminShopOrders />} />
             <Route path="promo-codes" element={<AdminPromoCodes />} />

@@ -3,7 +3,8 @@ import { useAppContext } from '../../context/AppContext';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone } from 'lucide-react';
+import { motion } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 
 function DashboardChatTester({ profile }: { profile: any }) {
@@ -201,10 +202,12 @@ export default function OwnerDashboard() {
   const [formData, setFormData] = useState<any>({});
   const [activeTab, setActiveTab] = useState('basic');
   const [sidebarTab, setSidebarTab] = useState('profile');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [emailError, setEmailError] = useState('');
-  const [campaignData, setCampaignData] = useState({ subject: '', message: '', ctaLink: '' });
+  const [campaignData, setCampaignData] = useState({ subject: '', message: '', imageUrl: '', type: 'WhatsApp' });
   const [campaignLoading, setCampaignLoading] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
 
   const [toastMessage, setToastMessage] = useState('');
 
@@ -351,7 +354,24 @@ export default function OwnerDashboard() {
     }
   }, [sidebarTab, profile]);
 
-  if (authLoading || loading) return <div style={{padding: 40}}>Loading Dashboard...</div>;
+  // Fetch followers count and campaigns
+  useEffect(() => {
+    if (sidebarTab === 'marketing' && profile?.id) {
+       import('firebase/firestore').then(({ collection, query, where, getDocs, getCountFromServer }) => {
+         const fetchMarketingData = async () => {
+           try {
+              const fColl = collection(db, 'followers');
+              const q = query(fColl, where('profileId', '==', profile.id));
+              const snapshot = await getCountFromServer(q);
+              setFollowersCount(snapshot.data().count);
+           } catch(e) { console.error(e); }
+         };
+         fetchMarketingData();
+       });
+    }
+  }, [sidebarTab, profile]);
+
+  if (authLoading || loading) return <div className="p-10 flex items-center justify-center min-h-screen font-black text-slate-400 uppercase tracking-widest animate-pulse">Loading Dashboard...</div>;
   if (!user) return <Navigate to="/" />;
   if (!profile && !loading) return <div style={{padding: 40}}>Error: Profile could not be loaded. Please check your permissions or try again.</div>;
 
@@ -381,53 +401,59 @@ export default function OwnerDashboard() {
         </div>
       )}
       {/* Mobile Top Header */}
-      <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
+      <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-[60]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs">DBC</div>
-          <span className="font-bold text-white text-lg">Business Portal</span>
+          <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs uppercase">DBC</div>
+          <span className="font-bold text-white text-base">Business Portal</span>
         </div>
-        <button className="text-slate-400 hover:text-white" onClick={() => setActiveTab(activeTab === 'mobile-menu' ? 'basic' : 'mobile-menu')}>
-          {activeTab === 'mobile-menu' ? <X size={24} /> : <Menu size={24} />}
+        <button className="text-slate-400 hover:text-white p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar Overlay for Mobile */}
-        {activeTab === 'mobile-menu' && (
-          <div className="md:hidden fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm" onClick={() => setActiveTab('basic')}></div>
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
         )}
 
         {/* Sidebar */}
         <div className={`
-          absolute md:relative z-50 flex flex-col w-[260px] h-full bg-slate-900 border-r border-slate-800 transition-transform duration-300
-          ${activeTab === 'mobile-menu' ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          fixed md:relative z-50 flex flex-col w-[280px] h-[calc(100vh-64px)] md:h-full bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out
+          ${isMobileMenuOpen ? 'left-0' : '-left-[280px] md:left-0'}
         `}>
-          <div className="hidden md:flex flex-col px-5 py-6 border-b border-slate-800">
-            <h2 className="m-0 text-lg font-extrabold text-white">Business Portal</h2>
-            <span className="text-xs text-slate-400 mt-1">DBC Access</span>
+          <div className="hidden md:flex flex-col px-6 py-8 border-b border-slate-800">
+            <h2 className="m-0 text-xl font-black text-white tracking-tight">Business Portal</h2>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Dubai Digital Connect</span>
           </div>
 
-          <div className="flex flex-col flex-1 py-4 overflow-y-auto">
-            <button onClick={() => { setSidebarTab('profile'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'profile' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <LayoutDashboard size={18} /> My Profile
+          <div className="flex flex-col flex-1 py-6 overflow-y-auto px-3 gap-1">
+            <button onClick={() => { setSidebarTab('profile'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <LayoutDashboard size={20} /> <span className="flex-1">My Digital Profile</span>
             </button>
-            <button onClick={() => { setSidebarTab('analytics'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'analytics' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <BarChart3 size={18} /> Analytics & Views
+            <button onClick={() => { setSidebarTab('analytics'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <BarChart3 size={20} /> <span className="flex-1">Analytics & Stats</span>
             </button>
-            <button onClick={() => { setSidebarTab('appointments'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'appointments' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <Calendar size={18} /> Appointments & Leads
+            <button onClick={() => { setSidebarTab('appointments'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Calendar size={20} /> <span className="flex-1">Appointments & Leads</span>
             </button>
-            <button onClick={() => { setSidebarTab('chatbot'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'chatbot' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <MessageSquare size={18} /> AI Chatbot
+            <button onClick={() => { setSidebarTab('marketing'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Megaphone size={20} /> <span className="flex-1">Broadcast Marketing</span>
             </button>
-            <button onClick={() => { setSidebarTab('plan'); if(activeTab === 'mobile-menu') setActiveTab('basic'); }} className={`px-5 py-3 flex items-center gap-3 text-left transition-colors border-l-4 ${sidebarTab === 'plan' ? 'bg-slate-800 border-blue-500 text-white' : 'border-transparent text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
-              <Settings size={18} /> Subscription
+            <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <MessageSquare size={20} /> <span className="flex-1">Smart AI Chatbot</span>
+            </button>
+            <button onClick={() => { setSidebarTab('plan'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Shield size={20} /> <span className="flex-1">Plan & Billing</span>
+            </button>
+            <button onClick={() => { setSidebarTab('referrals'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Users size={20} /> <span className="flex-1">Referral Program</span>
             </button>
           </div>
           
-          <div className="p-5 border-t border-slate-800 shrink-0">
-            <Link to="/" className="text-slate-400 hover:text-white text-sm flex items-center gap-2 transition-colors">
-              ← Back to Site
+          <div className="p-6 border-t border-slate-800 shrink-0">
+            <Link to="/" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider">
+               Back to Home
             </Link>
           </div>
         </div>
@@ -493,80 +519,80 @@ export default function OwnerDashboard() {
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {sidebarTab === 'profile' && (
             <>
-              <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-                 <button onClick={() => setActiveTab('basic')} style={{ padding: '16px 20px', background: activeTab === 'basic' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'basic' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'basic' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Basic Info</button>
-                 <button onClick={() => setActiveTab('contact')} style={{ padding: '16px 20px', background: activeTab === 'contact' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'contact' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'contact' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Contact & Location</button>
-                 <button onClick={() => setActiveTab('social')} style={{ padding: '16px 20px', background: activeTab === 'social' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'social' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'social' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Socials</button>
-                 <button onClick={() => setActiveTab('business')} style={{ padding: '16px 20px', background: activeTab === 'business' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'business' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'business' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Services</button>
-                 <button onClick={() => setActiveTab('products')} style={{ padding: '16px 20px', background: activeTab === 'products' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'products' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'products' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Products (Store)</button>
-                 <button onClick={() => setActiveTab('testimonials')} style={{ padding: '16px 20px', background: activeTab === 'testimonials' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'testimonials' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'testimonials' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Testimonials</button>
-                 <button onClick={() => setActiveTab('faq')} style={{ padding: '16px 20px', background: activeTab === 'faq' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'faq' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'faq' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>FAQs</button>
-                 <button onClick={() => setActiveTab('hours')} style={{ padding: '16px 20px', background: activeTab === 'hours' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'hours' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'hours' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Business Hours</button>
-                 <button onClick={() => setActiveTab('media')} style={{ padding: '16px 20px', background: activeTab === 'media' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'media' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'media' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Media & Gallery</button>
-                 <button onClick={() => setActiveTab('bank')} style={{ padding: '16px 20px', background: activeTab === 'bank' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'bank' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'bank' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Bank Details</button>
-                 <button onClick={() => setActiveTab('widgets')} style={{ padding: '16px 20px', background: activeTab === 'widgets' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'widgets' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'widgets' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>Action Buttons</button>
+              <div className="flex border-b border-slate-200 bg-slate-50 overflow-x-auto scrollbar-hide whitespace-nowrap">
+                 <button onClick={() => setActiveTab('basic')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'basic' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Basic Info</button>
+                 <button onClick={() => setActiveTab('contact')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'contact' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Contact & Location</button>
+                 <button onClick={() => setActiveTab('social')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'social' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Socials</button>
+                 <button onClick={() => setActiveTab('business')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'business' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Services</button>
+                 <button onClick={() => setActiveTab('products')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'products' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Products (Store)</button>
+                 <button onClick={() => setActiveTab('testimonials')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'testimonials' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Testimonials</button>
+                 <button onClick={() => setActiveTab('faq')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'faq' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>FAQs</button>
+                 <button onClick={() => setActiveTab('hours')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'hours' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Business Hours</button>
+                 <button onClick={() => setActiveTab('media')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'media' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Media & Gallery</button>
+                 <button onClick={() => setActiveTab('bank')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'bank' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Bank Details</button>
+                 <button onClick={() => setActiveTab('widgets')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Action Buttons</button>
                  {(profile.plan === 'Pro' || profile.plan === 'Enterprise') && (
-                   <button onClick={() => setActiveTab('theme')} style={{ padding: '16px 20px', background: activeTab === 'theme' ? '#fff' : 'transparent', border: 'none', borderBottom: activeTab === 'theme' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: activeTab === 'theme' ? '#2563eb' : '#64748b', cursor: 'pointer' }}>💎 Theme</button>
+                   <button onClick={() => setActiveTab('theme')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'theme' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>💎 Theme</button>
                  )}
               </div>
-              <div style={{ padding: 24 }}>
+              <div className="p-4 md:p-6 lg:p-8">
                 {activeTab === 'basic' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Profile Name</label>
-                      <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Name</label>
+                      <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Profile Photo URL</label>
-                      <div className="flex gap-2">
-                        <input type="text" placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} style={{ flex: 1, padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
-                           {formData.photoUrl && <img src={formData.photoUrl} className="w-full h-full object-cover" />}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo URL</label>
+                      <div className="flex gap-3">
+                        <input type="text" placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                           {formData.photoUrl ? <img src={formData.photoUrl} className="w-full h-full object-cover" /> : <div className="text-[10px] text-slate-400">No Img</div>}
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Banner Image URL</label>
-                      <input type="text" placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image URL</label>
+                      <input type="text" placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Job Title</label>
-                      <input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Title</label>
+                      <input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Business Category</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Business Category</label>
                       <select 
                         value={formData.category || 'Technology'} 
                         onChange={e => setFormData({...formData, category: e.target.value})} 
-                        style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}
+                        className="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                       >
                         {['Technology', 'Real Estate', 'Finance', 'Consulting', 'Design', 'Medical', 'Retail', 'Education'].map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>City (UAE)</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">City (UAE)</label>
                       <select 
                         value={formData.city || 'Dubai'} 
                         onChange={e => setFormData({...formData, city: e.target.value})} 
-                        style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}
+                        className="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                       >
                         {['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Fujairah', 'Ras Al Khaimah', 'Umm Al Quwain'].map(city => (
                           <option key={city} value={city}>{city}</option>
                         ))}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Company</label>
-                      <input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company</label>
+                      <input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Promotional Banner / Announcement</label>
-                      <input type="text" value={formData.announcement || ''} placeholder="e.g. 50% Off Winter Sale!" onChange={e => setFormData({...formData, announcement: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-wrap">Promotional Banner / Announcement</label>
+                      <input type="text" value={formData.announcement || ''} placeholder="e.g. 50% Off Winter Sale!" onChange={e => setFormData({...formData, announcement: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Email</label>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
                       <input 
                         type="email" 
                         value={formData.email || ''} 
@@ -574,20 +600,19 @@ export default function OwnerDashboard() {
                           setFormData({...formData, email: e.target.value});
                           if (emailError) setEmailError('');
                         }} 
-                        style={{ padding: 12, border: emailError ? '1.5px solid #ef4444' : '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} 
+                        className={`w-full p-3 border rounded-lg outline-none transition-all ${emailError ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'}`} 
                       />
-                      {emailError && <span style={{ fontSize: 11, color: '#ef4444', fontWeight: 600 }}>{emailError}</span>}
+                      {emailError && <span className="text-[10px] text-red-500 font-bold mt-1 uppercase">{emailError}</span>}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 2' }}>
-                      <div className="flex justify-between items-center">
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Bio</label>
+                    <div className="flex flex-col gap-1.5 md:col-span-2">
+                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bio</label>
                         <button 
                           onClick={async () => {
                             if (!formData.name && !formData.title) {
                               alert("Please enter Name and Job Title first.");
                               return;
                             }
-                            // Set a loading state indicator via a local flag or just directly modifying button text.
                             const btn = document.getElementById("ai-bio-btn");
                             if(btn) btn.innerHTML = "Generating...";
                             try {
@@ -605,48 +630,34 @@ export default function OwnerDashboard() {
                             if(btn) btn.innerHTML = "✨ AI Magic Writer";
                           }}
                           id="ai-bio-btn"
-                          style={{
-                            background: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899)',
-                            backgroundSize: '200% auto',
-                            color: 'white',
-                            border: 'none',
-                            padding: '4px 10px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                          }}
+                          className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer flex items-center gap-1.5 shadow-sm hover:opacity-90 transition-opacity"
                         >✨ AI Magic Writer</button>
                       </div>
-                      <textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit' }} />
+                      <textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none" />
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'contact' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Phone Number</label>
-                        <input type="text" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="+971 50 123 4567" />
+                  <div className="flex flex-col gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
+                        <input type="text" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971 50 123 4567" />
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>WhatsApp Number</label>
-                        <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="Include country code without +" />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number</label>
+                        <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Include country code without +" />
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Personal/Business Website</label>
-                        <input type="url" value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="https://..." />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Personal/Business Website</label>
+                        <input type="url" value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://..." />
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <div className="flex justify-between items-center">
-                          <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Building / Office Address</label>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Building / Office Address</label>
                           <button 
-                            onClick={() => {
+                            onClick={async () => {
                               if (!navigator.geolocation) {
                                 alert("Geolocation is not supported by your browser");
                                 return;
@@ -656,9 +667,16 @@ export default function OwnerDashboard() {
                               navigator.geolocation.getCurrentPosition(async (position) => {
                                 const { latitude, longitude } = position.coords;
                                 try {
-                                  // Simplified reverse geocoding mock or real if we had an API key
-                                  // For now, let's at least set the coordinates if we can't get address string easily
-                                  const address = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+                                  let address = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+                                  try {
+                                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                                    const data = await res.json();
+                                    if (data && data.display_name) {
+                                      address = data.display_name;
+                                    }
+                                  } catch (e) {
+                                    console.error("Reverse geocoding failed", e);
+                                  }
                                   setFormData({
                                     ...formData, 
                                     address: address,
@@ -671,138 +689,149 @@ export default function OwnerDashboard() {
                                 }
                               }, (err) => {
                                 alert("GPS Error: " + err.message);
+                                const btn = document.getElementById("gps-btn");
                                 if(btn) btn.innerHTML = "📍 Use My GPS";
                               });
                             }}
                             id="gps-btn"
-                            style={{ fontSize: 11, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
+                            className="text-[10px] bg-slate-100 border border-slate-300 px-2 py-0.5 rounded font-bold text-slate-600 hover:bg-slate-200 transition-colors"
                           >📍 Use My GPS</button>
                         </div>
-                        <input type="text" value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="Office 123, Tower..." />
+                        <input type="text" value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Office 123, Tower..." />
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 2' }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Google Maps Link (Get Directions)</label>
-                        <input type="url" value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="https://maps.google.com/..." />
+                      <div className="flex flex-col gap-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions)</label>
+                        <input type="url" value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://maps.google.com/..." />
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'social' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 500 }}>
-                     {['linkedin', 'twitter', 'instagram', 'facebook', 'youtube', 'tiktok', 'github'].map(network => (
-                         <div key={network} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', textTransform: 'capitalize' }}>{network}</label>
-                           <input type="text" value={formData.socials?.[network] || ''} onChange={e => setFormData({...formData, socials: {...(formData.socials || {}), [network]: e.target.value}})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} placeholder={`${network} username/link...`} />
-                         </div>
-                     ))}
+                  <div className="flex flex-col gap-4 max-w-2xl">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {['linkedin', 'twitter', 'instagram', 'facebook', 'youtube', 'tiktok', 'github'].map(network => (
+                            <div key={network} className="flex flex-col gap-1.5">
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider capitalize">{network}</label>
+                              <input type="text" value={formData.socials?.[network] || ''} onChange={e => setFormData({...formData, socials: {...(formData.socials || {}), [network]: e.target.value}})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder={`${network} username/link...`} />
+                            </div>
+                        ))}
+                     </div>
                   </div>
                 )}
 
                 {activeTab === 'business' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-8">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>Services & Products</h3>
-                        <button onClick={() => setFormData({...formData, services: [...(formData.services || []), { name: '', desc: '', price: '', priceType: 'Fixed' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Service</button>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">Services & Products</h3>
+                        <button onClick={() => setFormData({...formData, services: [...(formData.services || []), { name: '', desc: '', price: '', priceType: 'Fixed' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Service</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div className="flex flex-col gap-4">
                         {(formData.services || []).map((svc: any, index: number) => (
-                           <div key={`svc-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <div style={{ display: 'flex', gap: 12 }}>
-                               <input type="text" placeholder="Service Name" value={svc.name || ''} onChange={e => { const s = [...formData.services]; s[index].name = e.target.value; setFormData({...formData, services: s}); }} style={{ flex: 2, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <select value={svc.priceType || 'Fixed'} onChange={e => { const s = [...formData.services]; s[index].priceType = e.target.value; setFormData({...formData, services: s}); }} style={{ width: '150px', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}>
-                                 <option value="Fixed">Fixed Price</option>
-                                 <option value="Hourly">Hourly Rate</option>
-                                 <option value="Call for Price">Call for Price</option>
-                                 <option value="Custom">Custom</option>
-                               </select>
-                               {(!svc.priceType || svc.priceType === 'Fixed' || svc.priceType === 'Hourly') && (
-                                 <input type="text" placeholder={svc.priceType === 'Hourly' ? "Rate (e.g. AED 150)" : "Price (e.g. AED 500)"} value={svc.price || ''} onChange={e => { const s = [...formData.services]; s[index].price = e.target.value; setFormData({...formData, services: s}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               )}
+                           <div key={`svc-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                               <div className="md:col-span-6">
+                                 <input type="text" placeholder="Service Name" value={svc.name || ''} onChange={e => { const s = [...formData.services]; s[index].name = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               </div>
+                               <div className="md:col-span-3">
+                                 <select value={svc.priceType || 'Fixed'} onChange={e => { const s = [...formData.services]; s[index].priceType = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
+                                   <option value="Fixed">Fixed Price</option>
+                                   <option value="Hourly">Hourly Rate</option>
+                                   <option value="Call for Price">Call for Price</option>
+                                   <option value="Custom">Custom</option>
+                                 </select>
+                               </div>
+                               <div className="md:col-span-3">
+                                 {(!svc.priceType || svc.priceType === 'Fixed' || svc.priceType === 'Hourly') && (
+                                   <input type="text" placeholder={svc.priceType === 'Hourly' ? "Rate (e.g. AED 150)" : "Price (e.g. AED 500)"} value={svc.price || ''} onChange={e => { const s = [...formData.services]; s[index].price = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                                 )}
+                               </div>
                              </div>
-                             <textarea placeholder="Service Description..." value={svc.desc || ''} onChange={e => { const s = [...formData.services]; s[index].desc = e.target.value; setFormData({...formData, services: s}); }} rows={2} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
-                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                               <button onClick={() => { const s = [...formData.services]; s.splice(index, 1); setFormData({...formData, services: s}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                             <textarea placeholder="Service Description..." value={svc.desc || ''} onChange={e => { const s = [...formData.services]; s[index].desc = e.target.value; setFormData({...formData, services: s}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none font-sans" />
+                             <div className="flex justify-end">
+                               <button onClick={() => { const s = [...formData.services]; s.splice(index, 1); setFormData({...formData, services: s}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove</button>
                              </div>
                            </div>
                         ))}
-                        {(!formData.services || formData.services.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No services added yet.</div>}
+                        {(!formData.services || formData.services.length === 0) && <div className="text-slate-500 text-sm italic">No services added yet.</div>}
                       </div>
                     </div>
 
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>Team Members</h3>
-                        <button onClick={() => setFormData({...formData, team: [...(formData.team || []), { name: '', role: '', image: '', desc: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Team Member</button>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">Team Members</h3>
+                        <button onClick={() => setFormData({...formData, team: [...(formData.team || []), { name: '', role: '', image: '', desc: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Team Member</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div className="flex flex-col gap-4">
                         {(formData.team || []).map((member: any, index: number) => (
-                           <div key={`tm-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                               <input type="text" placeholder="Name" value={member.name || ''} onChange={e => { const t = [...formData.team]; t[index].name = e.target.value; setFormData({...formData, team: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <input type="text" placeholder="Role/Title" value={member.role || ''} onChange={e => { const t = [...formData.team]; t[index].role = e.target.value; setFormData({...formData, team: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <input type="text" placeholder="Photo URL" value={member.image || ''} onChange={e => { const t = [...formData.team]; t[index].image = e.target.value; setFormData({...formData, team: t}); }} style={{ gridColumn: 'span 2', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                           <div key={`tm-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <input type="text" placeholder="Name" value={member.name || ''} onChange={e => { const t = [...formData.team]; t[index].name = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <input type="text" placeholder="Role/Title" value={member.role || ''} onChange={e => { const t = [...formData.team]; t[index].role = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <div className="sm:col-span-2">
+                                <input type="text" placeholder="Photo URL" value={member.image || ''} onChange={e => { const t = [...formData.team]; t[index].image = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               </div>
                              </div>
-                             <textarea placeholder="Short Bio (Optional)" value={member.desc || ''} onChange={e => { const t = [...formData.team]; t[index].desc = e.target.value; setFormData({...formData, team: t}); }} rows={2} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
-                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                               <button onClick={() => { const t = [...formData.team]; t.splice(index, 1); setFormData({...formData, team: t}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                             <textarea placeholder="Short Bio (Optional)" value={member.desc || ''} onChange={e => { const t = [...formData.team]; t[index].desc = e.target.value; setFormData({...formData, team: t}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                             <div className="flex justify-end">
+                               <button onClick={() => { const t = [...formData.team]; t.splice(index, 1); setFormData({...formData, team: t}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove</button>
                              </div>
                            </div>
                         ))}
-                        {(!formData.team || formData.team.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No team members added.</div>}
+                        {(!formData.team || formData.team.length === 0) && <div className="text-slate-500 text-sm italic">No team members added.</div>}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'products' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-8">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
                         <div>
-                          <h3 style={{ margin: 0, fontSize: 16 }}>Products (Store)</h3>
-                          <p style={{ margin: '4px 0 0 0', fontSize: 12, color: '#64748b' }}>Add products for visitors to view and buy directly via WhatsApp.</p>
+                          <h3 className="m-0 text-base font-bold text-slate-800">Products (Store)</h3>
+                          <p className="m-1 text-xs text-slate-500">Add products for visitors to view and buy directly via WhatsApp.</p>
                         </div>
-                        <button onClick={() => setFormData({...formData, products: [...(formData.products || []), { name: '', description: '', price: '', image: '', link: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Product</button>
+                        <button onClick={() => setFormData({...formData, products: [...(formData.products || []), { name: '', description: '', price: '', image: '', link: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors shrink-0">+ Add Product</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div className="flex flex-col gap-4">
                         {(formData.products || []).map((prod: any, index: number) => (
-                           <div key={`prod-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                               <input type="text" placeholder="Product Name" value={prod.name || ''} onChange={e => { const p = [...formData.products]; p[index].name = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <input type="text" placeholder="Price (e.g. 50 AED)" value={prod.price || ''} onChange={e => { const p = [...formData.products]; p[index].price = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                           <div key={`prod-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <input type="text" placeholder="Product Name" value={prod.name || ''} onChange={e => { const p = [...formData.products]; p[index].name = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <input type="text" placeholder="Price (e.g. 50 AED)" value={prod.price || ''} onChange={e => { const p = [...formData.products]; p[index].price = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
                              </div>
-                             <textarea placeholder="Product Description" value={prod.description || ''} onChange={e => { const p = [...formData.products]; p[index].description = e.target.value; setFormData({...formData, products: p}); }} rows={2} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
-                               <input type="url" placeholder="Image URL (e.g. https://domain.com/img.jpg)" value={prod.image || ''} onChange={e => { const p = [...formData.products]; p[index].image = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <input type="url" placeholder="External Buy Link (Optional)" value={prod.link || ''} onChange={e => { const p = [...formData.products]; p[index].link = e.target.value; setFormData({...formData, products: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                             <textarea placeholder="Product Description" value={prod.description || ''} onChange={e => { const p = [...formData.products]; p[index].description = e.target.value; setFormData({...formData, products: p}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                             <div className="grid grid-cols-1 gap-3">
+                               <input type="url" placeholder="Image URL (e.g. https://domain.com/img.jpg)" value={prod.image || ''} onChange={e => { const p = [...formData.products]; p[index].image = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <input type="url" placeholder="External Buy Link (Optional)" value={prod.link || ''} onChange={e => { const p = [...formData.products]; p[index].link = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
                              </div>
-                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-                               <button onClick={() => { const p = [...formData.products]; p.splice(index, 1); setFormData({...formData, products: p}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove Product</button>
+                             <div className="flex justify-end mt-2">
+                               <button onClick={() => { const p = [...formData.products]; p.splice(index, 1); setFormData({...formData, products: p}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove Product</button>
                              </div>
                            </div>
                         ))}
-                        {(!formData.products || formData.products.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No products added yet.</div>}
+                        {(!formData.products || formData.products.length === 0) && <div className="text-slate-500 text-sm italic">No products added yet.</div>}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'testimonials' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-8">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>Client Testimonials</h3>
-                        <button onClick={() => setFormData({...formData, testimonials: [...(formData.testimonials || []), { name: '', role: '', quote: '', rating: 5 }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Testimonial</button>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">Client Testimonials</h3>
+                        <button onClick={() => setFormData({...formData, testimonials: [...(formData.testimonials || []), { name: '', role: '', quote: '', rating: 5 }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Testimonial</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div className="flex flex-col gap-4">
                         {(formData.testimonials || []).map((test: any, index: number) => (
-                           <div key={`ts-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                               <input type="text" placeholder="Client Name" value={test.name || ''} onChange={e => { const t = [...formData.testimonials]; t[index].name = e.target.value; setFormData({...formData, testimonials: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <input type="text" placeholder="Company/Role" value={test.role || ''} onChange={e => { const t = [...formData.testimonials]; t[index].role = e.target.value; setFormData({...formData, testimonials: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <select value={test.rating || 5} onChange={e => { const t = [...formData.testimonials]; t[index].rating = Number(e.target.value); setFormData({...formData, testimonials: t}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}>
+                           <div key={`ts-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                               <input type="text" placeholder="Client Name" value={test.name || ''} onChange={e => { const t = [...formData.testimonials]; t[index].name = e.target.value; setFormData({...formData, testimonials: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <input type="text" placeholder="Company/Role" value={test.role || ''} onChange={e => { const t = [...formData.testimonials]; t[index].role = e.target.value; setFormData({...formData, testimonials: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <select value={test.rating || 5} onChange={e => { const t = [...formData.testimonials]; t[index].rating = Number(e.target.value); setFormData({...formData, testimonials: t}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
                                  <option value={5}>5 Stars ★★★★★</option>
                                  <option value={4}>4 Stars ★★★★</option>
                                  <option value={3}>3 Stars ★★★</option>
@@ -810,76 +839,78 @@ export default function OwnerDashboard() {
                                  <option value={1}>1 Star ★</option>
                                </select>
                              </div>
-                             <textarea placeholder="Client Quote" value={test.quote || ''} onChange={e => { const t = [...formData.testimonials]; t[index].quote = e.target.value; setFormData({...formData, testimonials: t}); }} rows={3} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
-                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                               <button onClick={() => { const t = [...formData.testimonials]; t.splice(index, 1); setFormData({...formData, testimonials: t}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                             <textarea placeholder="Client Quote" value={test.quote || ''} onChange={e => { const t = [...formData.testimonials]; t[index].quote = e.target.value; setFormData({...formData, testimonials: t}); }} rows={3} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                             <div className="flex justify-end">
+                               <button onClick={() => { const t = [...formData.testimonials]; t.splice(index, 1); setFormData({...formData, testimonials: t}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove</button>
                              </div>
                            </div>
                         ))}
-                        {(!formData.testimonials || formData.testimonials.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No testimonials added.</div>}
+                        {(!formData.testimonials || formData.testimonials.length === 0) && <div className="text-slate-500 text-sm italic">No testimonials added.</div>}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'faq' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-8">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>Frequently Asked Questions</h3>
-                        <button onClick={() => setFormData({...formData, faqs: [...(formData.faqs || []), { question: '', answer: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add FAQ</button>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">Frequently Asked Questions</h3>
+                        <button onClick={() => setFormData({...formData, faqs: [...(formData.faqs || []), { question: '', answer: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add FAQ</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <div className="flex flex-col gap-4">
                         {(formData.faqs || []).map((faq: any, index: number) => (
-                           <div key={`faq-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <input type="text" placeholder="Question" value={faq.question || ''} onChange={e => { const f = [...formData.faqs]; f[index].question = e.target.value; setFormData({...formData, faqs: f}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                             <textarea placeholder="Answer" value={faq.answer || ''} onChange={e => { const f = [...formData.faqs]; f[index].answer = e.target.value; setFormData({...formData, faqs: f}); }} rows={3} style={{ width: '100%', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }}></textarea>
-                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                               <button onClick={() => { const f = [...formData.faqs]; f.splice(index, 1); setFormData({...formData, faqs: f}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                           <div key={`faq-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <input type="text" placeholder="Question" value={faq.question || ''} onChange={e => { const f = [...formData.faqs]; f[index].question = e.target.value; setFormData({...formData, faqs: f}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-semibold" />
+                             <textarea placeholder="Answer" value={faq.answer || ''} onChange={e => { const f = [...formData.faqs]; f[index].answer = e.target.value; setFormData({...formData, faqs: f}); }} rows={3} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                             <div className="flex justify-end">
+                               <button onClick={() => { const f = [...formData.faqs]; f.splice(index, 1); setFormData({...formData, faqs: f}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove</button>
                              </div>
                            </div>
                         ))}
-                        {(!formData.faqs || formData.faqs.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No FAQs added.</div>}
+                        {(!formData.faqs || formData.faqs.length === 0) && <div className="text-slate-500 text-sm italic">No FAQs added.</div>}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'hours' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-8">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>Business Hours</h3>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">Business Hours</h3>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div className="flex flex-col gap-3">
                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
                           const currentHours = (formData.hours || {})[day] || { open: '09:00', close: '18:00', closed: false };
                           return (
-                            <div key={day} style={{ display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #f1f5f9', paddingBottom: 12 }}>
-                              <div style={{ width: 100, fontWeight: 600, color: '#475569' }}>{day}</div>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
-                                <input type="checkbox" checked={currentHours.closed} onChange={e => {
-                                  const h = { ...formData.hours };
-                                  h[day] = { ...currentHours, closed: e.target.checked };
-                                  setFormData({...formData, hours: h});
-                                }} />
-                                Closed
-                              </label>
-                              {!currentHours.closed && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <input type="time" value={currentHours.open} onChange={e => {
+                            <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                              <div className="w-24 font-bold text-slate-600 text-sm">{day}</div>
+                              <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 text-xs font-bold text-slate-500 cursor-pointer select-none">
+                                  <input type="checkbox" checked={currentHours.closed} onChange={e => {
                                     const h = { ...formData.hours };
-                                    h[day] = { ...currentHours, open: e.target.value };
+                                    h[day] = { ...currentHours, closed: e.target.checked };
                                     setFormData({...formData, hours: h});
-                                  }} style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6 }} />
-                                  <span>to</span>
-                                  <input type="time" value={currentHours.close} onChange={e => {
-                                    const h = { ...formData.hours };
-                                    h[day] = { ...currentHours, close: e.target.value };
-                                    setFormData({...formData, hours: h});
-                                  }} style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: 6 }} />
-                                </div>
-                              )}
+                                  }} className="accent-blue-600" />
+                                  Closed
+                                </label>
+                                {!currentHours.closed && (
+                                  <div className="flex items-center gap-2">
+                                    <input type="time" value={currentHours.open} onChange={e => {
+                                      const h = { ...formData.hours };
+                                      h[day] = { ...currentHours, open: e.target.value };
+                                      setFormData({...formData, hours: h});
+                                    }} className="p-1.5 border border-slate-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+                                    <span className="text-[10px] font-bold text-slate-400">TO</span>
+                                    <input type="time" value={currentHours.close} onChange={e => {
+                                      const h = { ...formData.hours };
+                                      h[day] = { ...currentHours, close: e.target.value };
+                                      setFormData({...formData, hours: h});
+                                    }} className="p-1.5 border border-slate-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500" />
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
@@ -889,101 +920,123 @@ export default function OwnerDashboard() {
                 )}
 
                 {activeTab === 'media' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-10">
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>Gallery / Portfolio</h3>
-                        <button onClick={() => setFormData({...formData, gallery: [...(formData.gallery || []), '']})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Image Link</button>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">Gallery / Portfolio</h3>
+                        <button onClick={() => setFormData({...formData, gallery: [...(formData.gallery || []), '']})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Image</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div className="flex flex-col gap-3">
                         {(formData.gallery || []).map((imgUrl: string, index: number) => (
-                           <div key={index} style={{ display: 'flex', gap: 12 }}>
-                             <input type="url" placeholder="Image URL (e.g. https://domain.com/img.jpg)" value={imgUrl} onChange={e => { const g = [...formData.gallery]; g[index] = e.target.value; setFormData({...formData, gallery: g}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                             <button onClick={() => { const g = [...formData.gallery]; g.splice(index, 1); setFormData({...formData, gallery: g}); }} style={{ padding: '0 16px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Remove</button>
+                           <div key={index} className="flex items-center gap-2 group">
+                             <div className="flex-1">
+                               <input type="url" placeholder="Image URL (e.g. https://domain.com/img.jpg)" value={imgUrl} onChange={e => { const g = [...formData.gallery]; g[index] = e.target.value; setFormData({...formData, gallery: g}); }} className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                             </div>
+                             <button onClick={() => { const g = [...formData.gallery]; g.splice(index, 1); setFormData({...formData, gallery: g}); }} className="p-2.5 bg-red-50 text-red-600 border-none rounded-lg cursor-pointer hover:bg-red-100 transition-colors shrink-0 flex items-center justify-center">
+                               <X size={18} />
+                             </button>
                            </div>
                         ))}
+                        {(!formData.gallery || formData.gallery.length === 0) && <div className="text-slate-500 text-sm italic">Add images to showcase your work.</div>}
                       </div>
                     </div>
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>YouTube Videos</h3>
-                        <button onClick={() => setFormData({...formData, videos: [...(formData.videos || []), '']})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Video Link</button>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-base font-bold text-slate-800">YouTube Videos</h3>
+                        <button onClick={() => setFormData({...formData, videos: [...(formData.videos || []), '']})} className="bg-red-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-red-700 transition-colors">+ Add Video</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div className="flex flex-col gap-3">
                         {(formData.videos || []).map((vidUrl: string, index: number) => (
-                           <div key={index} style={{ display: 'flex', gap: 12 }}>
-                             <input type="url" placeholder="YouTube Embed URL (https://youtube.com/embed/...)" value={vidUrl} onChange={e => { const v = [...formData.videos]; v[index] = e.target.value; setFormData({...formData, videos: v}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                             <button onClick={() => { const v = [...formData.videos]; v.splice(index, 1); setFormData({...formData, videos: v}); }} style={{ padding: '0 16px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Remove</button>
+                           <div key={index} className="flex items-center gap-2">
+                             <div className="flex-1">
+                               <input type="url" placeholder="YouTube Embed URL (https://youtube.com/embed/...)" value={vidUrl} onChange={e => { const v = [...formData.videos]; v[index] = e.target.value; setFormData({...formData, videos: v}); }} className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 text-sm" />
+                             </div>
+                             <button onClick={() => { const v = [...formData.videos]; v.splice(index, 1); setFormData({...formData, videos: v}); }} className="p-2.5 bg-red-50 text-red-600 border-none rounded-lg cursor-pointer hover:bg-red-100 transition-colors shrink-0 flex items-center justify-center">
+                               <X size={18} />
+                             </button>
                            </div>
                         ))}
+                        {(!formData.videos || formData.videos.length === 0) && <div className="text-slate-500 text-sm italic">Embed videos using the YouTube 'Embed' link.</div>}
                       </div>
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'bank' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                       <h3 style={{ margin: 0, fontSize: 16 }}>Bank Accounts</h3>
-                       <button onClick={() => setFormData({...formData, bankAccounts: [...(formData.bankAccounts || []), { country: 'UAE', bankName: '', accountName: '', accountNumber: '', iban: '', swift: '' }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>+ Add Account</button>
-                    </div>
-                    {(formData.bankAccounts || []).map((acc: any, index: number) => (
-                       <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                           <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Bank Name</label>
-                           <input type="text" value={acc.bankName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].bankName = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                         </div>
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                           <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Country</label>
-                           <input type="text" value={acc.country || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].country = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                         </div>
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 2' }}>
-                           <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Account Name</label>
-                           <input type="text" value={acc.accountName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].accountName = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                         </div>
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                           <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>Account Number</label>
-                           <input type="text" value={acc.accountNumber || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].accountNumber = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'monospace' }} />
-                         </div>
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                           <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>IBAN</label>
-                           <input type="text" value={acc.iban || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].iban = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'monospace' }} />
-                         </div>
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                           <label style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>SWIFT Code</label>
-                           <input type="text" value={acc.swift || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].swift = e.target.value; setFormData({...formData, bankAccounts: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, fontFamily: 'monospace' }} />
-                         </div>
-                         <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                           <button onClick={() => { const b = [...formData.bankAccounts]; b.splice(index, 1); setFormData({...formData, bankAccounts: b}); }} style={{ padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove Account</button>
-                         </div>
-                       </div>
-                    ))}
-                    {(!formData.bankAccounts || formData.bankAccounts.length === 0) && <div style={{ color: '#64748b', fontSize: 14 }}>No bank details provided.</div>}
-                    
-                    <div style={{ marginTop: 24, borderTop: '1px solid #e2e8f0', paddingTop: 24 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                         <div>
-                            <h3 style={{ margin: 0, fontSize: 16 }}>Payment Links & QR</h3>
-                            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>Add Stripe, PayPal, UPI, or PayTabs links for direct payment</p>
-                         </div>
-                         <button onClick={() => setFormData({...formData, paymentLinks: [...(formData.paymentLinks || []), { platform: 'Stripe', url: '', qrCodeUrl: '' }]})} style={{ padding: '6px 12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>+ Add Link</button>
+                  <div className="flex flex-col gap-10">
+                    <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                         <h3 className="m-0 text-base font-bold text-slate-800">Bank Accounts</h3>
+                         <button onClick={() => setFormData({...formData, bankAccounts: [...(formData.bankAccounts || []), { country: 'UAE', bankName: '', accountName: '', accountNumber: '', iban: '', swift: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Account</button>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                        {(formData.paymentLinks || []).map((link: any, index: number) => (
-                           <div key={`pl-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                             <div style={{ display: 'flex', gap: 12 }}>
-                               <select value={link.platform} onChange={e => { const p = [...formData.paymentLinks]; p[index].platform = e.target.value; setFormData({...formData, paymentLinks: p}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', width: 140 }}>
-                                 <option value="Stripe">Stripe</option>
-                                 <option value="PayPal">PayPal</option>
-                                 <option value="UPI">UPI</option>
-                                 <option value="PayTabs">PayTabs</option>
-                                 <option value="Custom">Custom Link</option>
-                               </select>
-                               <input type="url" placeholder="Direct Payment URL (e.g., https://buy.stripe.com/...)" value={link.url || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].url = e.target.value; setFormData({...formData, paymentLinks: p}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                      <div className="flex flex-col gap-6">
+                        {(formData.bankAccounts || []).map((acc: any, index: number) => (
+                           <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 md:p-6 border border-slate-200 rounded-xl bg-slate-50 shadow-sm">
+                             <div className="flex flex-col gap-1.5">
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bank Name</label>
+                               <input type="text" value={acc.bankName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].bankName = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
                              </div>
-                             <div style={{ display: 'flex', gap: 12 }}>
-                               <input type="url" placeholder="Optional QR Code Image URL" value={link.qrCodeUrl || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].qrCodeUrl = e.target.value; setFormData({...formData, paymentLinks: p}); }} style={{ flex: 1, padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                               <button onClick={() => { const p = [...formData.paymentLinks]; p.splice(index, 1); setFormData({...formData, paymentLinks: p}); }} style={{ padding: '0 16px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 8, cursor: 'pointer' }}>Remove</button>
+                             <div className="flex flex-col gap-1.5">
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Country</label>
+                               <input type="text" value={acc.country || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].country = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                             </div>
+                             <div className="flex flex-col gap-1.5 md:col-span-2">
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Holder Name</label>
+                               <input type="text" value={acc.accountName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].accountName = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                             </div>
+                             <div className="flex flex-col gap-1.5">
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Number</label>
+                               <input type="text" value={acc.accountNumber || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].accountNumber = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
+                             </div>
+                             <div className="flex flex-col gap-1.5">
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">IBAN</label>
+                               <input type="text" value={acc.iban || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].iban = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
+                             </div>
+                             <div className="flex flex-col gap-1.5">
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">SWIFT Code</label>
+                               <input type="text" value={acc.swift || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].swift = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
+                             </div>
+                             <div className="md:col-span-2 flex justify-end mt-2">
+                               <button onClick={() => { const b = [...formData.bankAccounts]; b.splice(index, 1); setFormData({...formData, bankAccounts: b}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove Account</button>
+                             </div>
+                           </div>
+                        ))}
+                        {(!formData.bankAccounts || formData.bankAccounts.length === 0) && <div className="text-slate-500 text-sm italic">No bank details provided.</div>}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-8 border-t border-slate-200 pt-10">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                         <div>
+                            <h3 className="m-0 text-base font-bold text-slate-800">Payment Links & QR</h3>
+                            <p className="m-1 text-xs text-slate-500">Add Stripe, PayPal, UPI, or PayTabs links for direct payment</p>
+                         </div>
+                         <button onClick={() => setFormData({...formData, paymentLinks: [...(formData.paymentLinks || []), { platform: 'Stripe', url: '', qrCodeUrl: '' }]})} className="bg-emerald-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-sm">+ Add Payment Link</button>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        {(formData.paymentLinks || []).map((link: any, index: number) => (
+                           <div key={`pl-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                               <div className="sm:col-span-4">
+                                 <select value={link.platform} onChange={e => { const p = [...formData.paymentLinks]; p[index].platform = e.target.value; setFormData({...formData, paymentLinks: p}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                                   <option value="Stripe">Stripe</option>
+                                   <option value="PayPal">PayPal</option>
+                                   <option value="UPI">UPI</option>
+                                   <option value="PayTabs">PayTabs</option>
+                                   <option value="Custom">Custom Link</option>
+                                 </select>
+                               </div>
+                               <div className="sm:col-span-8">
+                                 <input type="url" placeholder="Direct Payment URL (e.g., https://buy.stripe.com/...)" value={link.url || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].url = e.target.value; setFormData({...formData, paymentLinks: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               </div>
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <div className="flex-1">
+                                 <input type="url" placeholder="Optional QR Code Image URL" value={link.qrCodeUrl || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].qrCodeUrl = e.target.value; setFormData({...formData, paymentLinks: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               </div>
+                               <button onClick={() => { const p = [...formData.paymentLinks]; p.splice(index, 1); setFormData({...formData, paymentLinks: p}); }} className="p-3 bg-red-50 text-red-600 border-none rounded-lg cursor-pointer hover:bg-red-100 transition-colors shrink-0">
+                                 <X size={20} />
+                               </button>
                              </div>
                            </div>
                         ))}
@@ -993,96 +1046,105 @@ export default function OwnerDashboard() {
                 )}
 
                 {activeTab === 'theme' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <div className="flex flex-col gap-10">
                     <div>
-                      <h3 style={{ margin: '0 0 16px', fontSize: 16 }}>Profile Theme</h3>
-                      <p style={{ fontSize: 14, color: '#64748b', marginBottom: 20 }}>Select a layout and style for your digital profile.</p>
+                      <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Profile Layout & Theme</h3>
+                      <p className="m-0 text-sm text-slate-500 mb-6 underline decoration-blue-500/30">Select a layout and style for your digital profile.</p>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div onClick={() => setFormData({...formData, template: 'classic'})} style={{ position: 'relative', border: formData.template === 'classic' || !formData.template ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: 16, padding: 16, cursor: 'pointer', textAlign: 'center', background: '#f8fafc', transition: 'all 0.2s' }}>
-                          <div style={{ background: '#dbeafe', height: 120, borderRadius: 8, marginBottom: 16 }}></div>
-                          <div style={{ fontWeight: 700, color: '#1e293b' }}>Classic Modern</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div onClick={() => setFormData({...formData, template: 'classic'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'classic' || !formData.template ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                          <div className="bg-slate-200 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
+                          <div className="font-bold text-slate-900">Classic Modern</div>
                         </div>
-                        <div onClick={() => setFormData({...formData, template: 'executive'})} style={{ position: 'relative', border: formData.template === 'executive' ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: 16, padding: 16, cursor: 'pointer', textAlign: 'center', background: '#0f172a', color: '#fff', transition: 'all 0.2s' }}>
-                          <div style={{ position: 'absolute', top: -10, right: -10, background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 12, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>PREMIUM</div>
-                          <div style={{ background: '#1e293b', height: 120, borderRadius: 8, marginBottom: 16 }}></div>
-                          <div style={{ fontWeight: 700 }}>Executive Dark</div>
+                        <div onClick={() => setFormData({...formData, template: 'executive'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'executive' ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-slate-900 hover:bg-slate-800'}`}>
+                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg">PREMIUM</div>
+                          <div className="bg-slate-800 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
+                          <div className={`font-bold ${formData.template === 'executive' ? 'text-blue-700' : 'text-white'}`}>Executive Dark</div>
                         </div>
-                        <div onClick={() => setFormData({...formData, template: 'minimal'})} style={{ position: 'relative', border: formData.template === 'minimal' ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: 16, padding: 16, cursor: 'pointer', textAlign: 'center', background: '#fff', transition: 'all 0.2s' }}>
-                          <div style={{ position: 'absolute', top: -10, right: -10, background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 8px', borderRadius: 12, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>PREMIUM</div>
-                          <div style={{ border: '1px solid #e2e8f0', height: 120, borderRadius: 8, marginBottom: 16 }}></div>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>Minimal Clean</div>
+                        <div onClick={() => setFormData({...formData, template: 'minimal'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'minimal' ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg">PREMIUM</div>
+                          <div className="border border-slate-100 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
+                          <div className="font-bold text-slate-900">Minimal Clean</div>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
                 {activeTab === 'widgets' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                     <div>
-                       <h3 style={{ margin: '0 0 16px', fontSize: 16 }}>Booking Appointments Button</h3>
+                  <div className="flex flex-col gap-10">
+                     <div className="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm">
+                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Booking Appointments Button</h3>
                        {profile.plan === 'Basic' || profile.plan === 'Pro' ? (
-                         <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', padding: 20, borderRadius: 12 }}>
-                           <p style={{ margin: 0, color: '#991b1b', fontSize: 14, fontWeight: 600 }}>External Appointment Booking Link is not available on your current plan.</p>
-                           <p style={{ fontSize: 13, color: '#b91c1c', marginTop: 4 }}>Note: Our built-in booking feature is available for all plans.</p>
-                           <button onClick={() => setSidebarTab('plan')} style={{ marginTop: 12, background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer' }}>Upgrade Plan</button>
+                         <div className="mt-4 bg-amber-50 border border-amber-200 p-5 rounded-xl">
+                           <div className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-2">
+                             <Shield size={18} /> Premium Feature Required
+                           </div>
+                           <p className="m-0 text-xs text-amber-700 leading-relaxed">External Appointment Booking Link is not available on your current plan. Note: Our built-in booking feature is available for all plans.</p>
+                           <button onClick={() => setSidebarTab('plan')} className="mt-4 bg-amber-600 text-white border-none py-2 px-6 rounded-lg text-xs font-bold cursor-pointer hover:bg-amber-700 transition-colors shadow-lg shadow-amber-600/20">Upgrade Plan</button>
                          </div>
                        ) : (
-                         <div>
-                           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Calendly / External Booking Link</label>
-                           <input type="text" value={formData.meetingUrl || ''} onChange={e => setFormData({...formData, meetingUrl: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, boxSizing: 'border-box' }} placeholder="https://calendly.com/yourname" />
-                           <p style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>If provided, a custom "Book Meeting" button will redirect visitors to this link instead of using the built-in system.</p>
+                         <div className="mt-4 space-y-4">
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Calendly / External Booking Link</label>
+                             <input type="text" value={formData.meetingUrl || ''} onChange={e => setFormData({...formData, meetingUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://calendly.com/yourname" />
+                             <p className="text-[10px] font-medium text-slate-500 mt-1">If provided, a custom "Book Meeting" button will redirect visitors to this link instead of using the built-in system.</p>
+                           </div>
                          </div>
                        )}
                      </div>
-                     <div style={{ marginTop: 32 }}>
-                       <h3 style={{ margin: '0 0 16px', fontSize: 16 }}>Business Document / Portfolio</h3>
-                       <p style={{ margin: '0 0 16px', fontSize: 14, color: '#64748b' }}>Upload or link a PDF file like your Company Profile, Portfolio, or Resume.</p>
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div>
-                           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Document URL (PDF / Web Link)</label>
-                           <input type="url" value={formData.documentUrl || ''} onChange={e => setFormData({...formData, documentUrl: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, boxSizing: 'border-box' }} placeholder="https://..." />
+
+                     <div className="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm">
+                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Business Document / Portfolio</h3>
+                       <p className="m-0 text-xs text-slate-500 mb-6">Upload or link a PDF file like your Company Profile, Portfolio, or Resume.</p>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                         <div className="flex flex-col gap-1.5">
+                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Document URL (PDF / Web Link)</label>
+                           <input type="url" value={formData.documentUrl || ''} onChange={e => setFormData({...formData, documentUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://..." />
                          </div>
-                         <div>
-                           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 6 }}>Custom Button Text</label>
-                           <input type="text" value={formData.documentButtonText || ''} onChange={e => setFormData({...formData, documentButtonText: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, boxSizing: 'border-box' }} placeholder="e.g. Download Company Profile" />
+                         <div className="flex flex-col gap-1.5">
+                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Custom Button Text</label>
+                           <input type="text" value={formData.documentButtonText || ''} onChange={e => setFormData({...formData, documentButtonText: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Download Company Profile" />
                          </div>
                        </div>
                      </div>
 
-                     <div style={{ marginTop: 32, borderTop: '1px solid #e2e8f0', paddingTop: 24 }}>
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                         <div>
-                           <h3 style={{ margin: 0, fontSize: 16 }}>Custom Action Buttons</h3>
-                           <p style={{ margin: '4px 0 0', fontSize: 12, color: '#64748b' }}>Add extra buttons to link to apps, websites, or features.</p>
-                         </div>
-                         <button onClick={() => setFormData({...formData, customButtons: [...(formData.customButtons || []), { label: '', url: '', icon: 'Link', isPrimary: false }]})} style={{ padding: '6px 12px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>+ Add Button</button>
-                       </div>
-                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                         {(formData.customButtons || []).map((btn: any, index: number) => (
-                            <div key={`cbtn-${index}`} style={{ border: '1px solid #e2e8f0', padding: 16, borderRadius: 12, background: '#f8fafc', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                <input type="text" placeholder="Button Label (e.g. Visit Website)" value={btn.label || ''} onChange={e => { const b = [...formData.customButtons]; b[index].label = e.target.value; setFormData({...formData, customButtons: b}); }} style={{ flex: 1, minWidth: '200px', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                                <input type="url" placeholder="URL Link" value={btn.url || ''} onChange={e => { const b = [...formData.customButtons]; b[index].url = e.target.value; setFormData({...formData, customButtons: b}); }} style={{ flex: 1, minWidth: '200px', padding: 10, border: '1px solid #cbd5e1', borderRadius: 8 }} />
-                              </div>
-                              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                                <select value={btn.icon || 'Link'} onChange={e => { const b = [...formData.customButtons]; b[index].icon = e.target.value; setFormData({...formData, customButtons: b}); }} style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff', minWidth: 120 }}>
-                                  <option value="Link">Link Icon</option>
-                                  <option value="Globe">Website</option>
-                                  <option value="Calendar">Calendar</option>
-                                  <option value="FileText">Document</option>
-                                  <option value="Download">Download</option>
-                                  <option value="MessageCircle">Chat</option>
-                                </select>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer', userSelect: 'none' }}>
-                                  <input type="checkbox" checked={btn.isPrimary || false} onChange={e => { const b = [...formData.customButtons]; b[index].isPrimary = e.target.checked; setFormData({...formData, customButtons: b}); }} />
-                                  Highlight as Primary action
-                                </label>
-                                <button onClick={() => { const b = [...formData.customButtons]; b.splice(index, 1); setFormData({...formData, customButtons: b}); }} style={{ marginLeft: 'auto', padding: '6px 12px', background: '#fee2e2', color: '#ef4444', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button>
-                              </div>
-                            </div>
-                         ))}
-                       </div>
+                     <div className="mt-4 pt-10 border-t border-slate-200">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                          <div>
+                            <h3 className="m-0 text-base font-bold text-slate-800">Custom Action Buttons</h3>
+                            <p className="m-1 text-xs text-slate-500">Add extra buttons to link to apps, websites, or features.</p>
+                          </div>
+                          <button onClick={() => setFormData({...formData, customButtons: [...(formData.customButtons || []), { label: '', url: '', icon: 'Link', isPrimary: false }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm">+ Add Button</button>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                          {(formData.customButtons || []).map((btn: any, index: number) => (
+                             <div key={`cbtn-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                 <input type="text" placeholder="Button Label (e.g. Visit Website)" value={btn.label || ''} onChange={e => { const b = [...formData.customButtons]; b[index].label = e.target.value; setFormData({...formData, customButtons: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                                 <input type="url" placeholder="URL Link" value={btn.url || ''} onChange={e => { const b = [...formData.customButtons]; b[index].url = e.target.value; setFormData({...formData, customButtons: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               </div>
+                               <div className="flex flex-wrap items-center justify-between gap-4">
+                                 <select value={btn.icon || 'Link'} onChange={e => { const b = [...formData.customButtons]; b[index].icon = e.target.value; setFormData({...formData, customButtons: b}); }} className="flex-1 min-w-[140px] p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
+                                   <option value="Link">🔗 Standard Link</option>
+                                   <option value="Globe">🌐 Website</option>
+                                   <option value="Calendar">📅 Calendar</option>
+                                   <option value="FileText">📄 Document</option>
+                                   <option value="Download">📥 Download</option>
+                                   <option value="MessageCircle">💬 Chat</option>
+                                 </select>
+                                 <div className="flex items-center gap-4">
+                                   <label className="flex items-center gap-2 text-xs font-bold text-slate-500 cursor-pointer select-none">
+                                     <input type="checkbox" checked={btn.isPrimary || false} onChange={e => { const b = [...formData.customButtons]; b[index].isPrimary = e.target.checked; setFormData({...formData, customButtons: b}); }} className="accent-blue-600" />
+                                     Primary Style
+                                   </label>
+                                   <button onClick={() => { const b = [...formData.customButtons]; b.splice(index, 1); setFormData({...formData, customButtons: b}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">
+                                     Remove
+                                   </button>
+                                 </div>
+                               </div>
+                             </div>
+                          ))}
+                        </div>
                      </div>
                   </div>
                 )}
@@ -1091,125 +1153,196 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'analytics' && (
-            <div style={{ padding: 24 }}>
-               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>Profile Analytics</h3>
+            <div className="p-4 md:p-8">
+               <div className="mb-8">
+                 <h2 className="text-2xl font-black text-slate-900 m-0">Profile Performance</h2>
+                 <p className="text-slate-500 m-0 mt-1 text-sm">Real-time engagement insights for your profile</p>
+               </div>
                
-               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
-                   <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Total Views</div>
-                   <div className="text-4xl font-extrabold text-slate-900">{profile.views || 0}</div>
-                   <div className="text-sm text-emerald-600 font-bold mt-2">↑ +12% this week</div>
-                   <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-slate-200 opacity-50" />
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                 <div className="bg-white border border-slate-200 rounded-3xl p-6 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                   <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Total Profile Views</div>
+                   <div className="text-4xl font-black text-slate-900 tabular-nums leading-none mb-4">{profile.views || 0}</div>
+                   <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700">↑</span>
+                     <span>+12.4% vs last month</span>
+                   </div>
+                   <BarChart3 size={100} className="absolute -bottom-6 -right-6 text-slate-50 opacity-[0.05]" />
                  </div>
                  
-                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
-                   <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Unique Visitors</div>
-                   <div className="text-4xl font-extrabold text-slate-900">{Math.floor((profile.views || 0) * 0.7)}</div>
-                   <div className="text-sm text-emerald-600 font-bold mt-2">↑ +8% this week</div>
-                   <Users size={80} className="absolute -bottom-4 -right-4 text-slate-200 opacity-50" />
+                 <div className="bg-white border border-slate-200 rounded-3xl p-6 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                   <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Unique Visitors</div>
+                   <div className="text-4xl font-black text-slate-900 tabular-nums leading-none mb-4">{Math.floor((profile.views || 0) * 0.7)}</div>
+                   <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700">↑</span>
+                     <span>+8.2% vs last month</span>
+                   </div>
+                   <Users size={100} className="absolute -bottom-6 -right-6 text-slate-50 opacity-[0.05]" />
                  </div>
 
-                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 relative overflow-hidden">
-                   <div className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Link Clicks</div>
-                   <div className="text-4xl font-extrabold text-slate-900">{Math.floor((profile.views || 0) * 0.45)}</div>
-                   <div className="text-sm text-emerald-600 font-bold mt-2">↑ +15% this week</div>
-                   <LinkIcon size={80} className="absolute -bottom-4 -right-4 text-slate-200 opacity-50" />
+                 <div className="bg-white border border-slate-200 rounded-3xl p-6 relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                   <div className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">CTA Interactions</div>
+                   <div className="text-4xl font-black text-slate-900 tabular-nums leading-none mb-4">{Math.floor((profile.views || 0) * 0.45)}</div>
+                   <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700">↑</span>
+                     <span>+15.7% vs last month</span>
+                   </div>
+                   <LinkIcon size={100} className="absolute -bottom-6 -right-6 text-slate-50 opacity-[0.05]" />
                  </div>
                </div>
 
-               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                 <h4 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><MapPin size={20} className="text-blue-500"/> Audience Geometry</h4>
-                 <div className="flex flex-col gap-4">
-                   <div className="flex items-center gap-4">
-                     <div className="w-8 font-bold text-slate-500">US</div>
-                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
-                       <div className="bg-blue-500 h-full w-[65%] rounded-full"></div>
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                   <div className="flex items-center justify-between mb-8">
+                     <div>
+                       <h4 className="text-lg font-black text-slate-900 m-0">Global Reach</h4>
+                       <p className="text-xs text-slate-500 m-0">Visitor distribution by country</p>
                      </div>
-                     <div className="w-12 text-right font-bold text-slate-900">65%</div>
+                     <MapPin className="text-blue-500" size={24} />
                    </div>
-                   <div className="flex items-center gap-4">
-                     <div className="w-8 font-bold text-slate-500">IN</div>
-                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
-                       <div className="bg-blue-400 h-full w-[20%] rounded-full"></div>
-                     </div>
-                     <div className="w-12 text-right font-bold text-slate-900">20%</div>
+                   <div className="space-y-6">
+                     {[
+                       { code: 'UAE', name: 'United Arab Emirates', views: 65, color: 'bg-blue-600' },
+                       { code: 'IND', name: 'India', views: 20, color: 'bg-emerald-500' },
+                       { code: 'GBR', name: 'United Kingdom', views: 10, color: 'bg-purple-500' },
+                       { code: 'USA', name: 'United States', views: 5, color: 'bg-slate-500' }
+                     ].map((item) => (
+                       <div key={item.code} className="group">
+                         <div className="flex items-center justify-between mb-2">
+                           <div className="flex items-center gap-2">
+                             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">{item.code}</span>
+                             <span className="text-sm font-bold text-slate-700">{item.name}</span>
+                           </div>
+                           <span className="text-sm font-black text-slate-900 tabular-nums">{item.views}%</span>
+                         </div>
+                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                           <motion.div initial={{ width: 0 }} animate={{ width: `${item.views}%` }} transition={{ duration: 1, ease: 'easeOut' }} className={`h-full ${item.color} rounded-full`} />
+                         </div>
+                       </div>
+                     ))}
                    </div>
-                   <div className="flex items-center gap-4">
-                     <div className="w-8 font-bold text-slate-500">UK</div>
-                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
-                       <div className="bg-blue-300 h-full w-[10%] rounded-full"></div>
-                     </div>
-                     <div className="w-12 text-right font-bold text-slate-900">10%</div>
-                   </div>
-                   <div className="flex items-center gap-4">
-                     <div className="w-8 font-bold text-slate-500">AE</div>
-                     <div className="flex-1 bg-slate-100 h-4 rounded-full overflow-hidden">
-                       <div className="bg-blue-200 h-full w-[5%] rounded-full"></div>
-                     </div>
-                     <div className="w-12 text-right font-bold text-slate-900">5%</div>
-                   </div>
+                 </div>
+
+                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mb-4">
+                      <LayoutDashboard size={32} />
+                    </div>
+                    <h4 className="text-lg font-black text-slate-900 m-0">Advanced Insights</h4>
+                    <p className="text-sm text-slate-500 mt-2 mb-6 max-w-[240px]">More detailed interaction data, device breakdown and referral sources coming soon.</p>
+                    <button className="px-6 py-2.5 bg-slate-100 text-slate-600 text-xs font-black rounded-xl cursor-not-allowed">Waitlist Active</button>
                  </div>
                </div>
             </div>
           )}
 
           {sidebarTab === 'appointments' && (
-            <div style={{ padding: 24 }}>
-               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>My Appointments & Leads</h3>
-               <p style={{ margin: '0 0 24px', fontSize: 14, color: '#64748b' }}>Here you will see all appointment bookings and contact form leads sent by visitors.</p>
+            <div className="p-4 md:p-8">
+               <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                 <div>
+                   <h2 className="text-2xl font-black text-slate-900 m-0">Appointments & Leads</h2>
+                   <p className="text-slate-500 m-0 mt-1 text-sm">Real-time management for all incoming customer queries</p>
+                 </div>
+                 <button 
+                  onClick={async () => {
+                    const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+                    try {
+                       await addDoc(collection(db, 'leads'), {
+                          profileId: profile.id,
+                          name: 'Rohan Sharma',
+                          email: 'rohan.s@example.com',
+                          phone: '+971 50 123 4567',
+                          company: 'Dubai Tech Ventures',
+                          message: 'I am interested in your services for my new startup in Dubai Silicon Oasis. Please call.',
+                          source: 'Contact Form',
+                          createdAt: serverTimestamp()
+                       });
+                       await addDoc(collection(db, 'appointments'), {
+                          profileId: profile.id,
+                          customerName: 'Sarah Jenkins',
+                          customerEmail: 'sarah.j@example.com',
+                          date: '2024-05-15',
+                          time: '11:00',
+                          source: 'Profile Booking',
+                          createdAt: serverTimestamp()
+                       });
+                       alert('Dubai Demo samples created! Please refresh or toggle the tab.');
+                    } catch(e) {
+                      alert('Failed to add sample data.');
+                    }
+                  }}
+                  className="px-5 py-2 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10 flex items-center gap-2"
+                >
+                  <Plus size={14} /> Load Dubai Leads Demo
+                </button>
+               </div>
+
                {appointments.length === 0 ? (
-                 <div style={{ padding: 40, textAlign: 'center', background: '#f8fafc', borderRadius: 12, color: '#64748b', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Calendar size={48} style={{ opacity: 0.5, marginBottom: 12 }} />
-                    <p style={{ margin: '0 0 16px' }}>No appointments or leads yet.</p>
-                    <button 
-                      onClick={async () => {
-                        const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-                        try {
-                           await addDoc(collection(db, 'leads'), {
-                              profileId: profile.id,
-                              name: 'John Doe',
-                              email: 'john@example.com',
-                              phone: '+1 234 567 890',
-                              company: 'Tech Corp',
-                              message: 'Hi, I saw your profile and would love to connect about a potential partnership.',
-                              source: 'Sample Data',
-                              createdAt: serverTimestamp()
-                           });
-                           await addDoc(collection(db, 'appointments'), {
-                              profileId: profile.id,
-                              customerName: 'Alice Smith',
-                              customerEmail: 'alice@example.com',
-                              date: '2023-11-20',
-                              time: '14:30',
-                              source: 'Sample Booking',
-                              createdAt: serverTimestamp()
-                           });
-                           // Force refresh (it should auto trigger due to useEffect deps? Actually we don't have a listener, we just fetch once).
-                           // Let's just alert the user to click the tab again.
-                           alert('Sample data created! Please reopen the tab (click My Profile then Appointments again).');
-                        } catch(e) {
-                          alert('Failed to add sample data.');
-                        }
-                      }}
-                      className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition-colors border-none cursor-pointer"
-                    >
-                      Load Sample Data
-                    </button>
+                 <div className="flex flex-col items-center justify-center p-12 md:p-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl text-center">
+                    <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-6">
+                      <Calendar size={40} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-900 m-0">Inbox is empty</h3>
+                    <p className="text-sm text-slate-500 mt-2 mb-0 max-w-sm">When visitors book appointments or send leads from your profile, they will appear here instantly.</p>
                  </div>
                ) : (
-                 <div className="flex flex-col gap-3">
-                   {appointments.map(apt => (
-                     <div key={apt.id} className="flex flex-col sm:flex-row justify-between sm:items-center p-4 border border-slate-200 rounded-xl bg-slate-50 gap-4">
-                       <div>
-                         <div className="font-semibold text-slate-900 mb-1">{apt.name || apt.customerName}</div>
-                         <div className="text-sm text-slate-500">{apt.email || apt.customerEmail}</div>
-                         {apt.phone && <div className="text-sm text-slate-500 mt-1">{apt.phone}</div>}
-                         {apt.company && <div className="text-sm text-slate-500 mt-1">Company: {apt.company}</div>}
-                         {apt.message && <div className="text-sm text-slate-600 mt-2 italic bg-white p-2 border border-slate-100 rounded-md">"{apt.message}"</div>}
-                       </div>
-                       <div className="text-left sm:text-right">
-                         {apt.date && <div className="font-semibold text-blue-600">{apt.date} {apt.time && <span className="text-sm text-slate-600 font-normal">at {apt.time}</span>}</div>}
-                         <div className="text-xs text-slate-500 mt-2 uppercase font-bold px-2 py-1 bg-slate-200 rounded inline-block">{apt.source || 'Appointment'}</div>
+                 <div className="grid grid-cols-1 gap-4">
+                   {appointments.slice().sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0)).map(apt => (
+                     <div key={apt.id} className="group bg-white border border-slate-200 rounded-2xl p-5 md:p-6 transition-all hover:shadow-xl hover:border-blue-200 relative overflow-hidden">
+                       <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                       
+                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                         <div className="flex-1 flex gap-4">
+                           <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 font-black text-lg">
+                             {(apt.name || apt.customerName || '?').charAt(0)}
+                           </div>
+                           <div className="flex-1">
+                             <div className="flex items-center gap-2 mb-1">
+                               <span className="font-black text-slate-900">{apt.name || apt.customerName}</span>
+                               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${apt.source === 'Contact Form' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                                 {apt.source === 'Contact Form' ? 'NEW LEAD' : 'BOOKING'}
+                               </span>
+                             </div>
+                             <div className="flex flex-wrap gap-y-1 gap-x-4">
+                               <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold">
+                                 <Mail size={12} /> {apt.email || apt.customerEmail}
+                               </div>
+                               {apt.phone && (
+                                 <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold">
+                                   <Phone size={12} /> {apt.phone}
+                                 </div>
+                               )}
+                               {apt.company && (
+                                 <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold">
+                                   <Building size={12} /> {apt.company}
+                                 </div>
+                               )}
+                             </div>
+                             {apt.message && (
+                               <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-sm text-slate-600 leading-relaxed italic">
+                                 "{apt.message}"
+                               </div>
+                             )}
+                           </div>
+                         </div>
+                         
+                         <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center gap-2 shrink-0 border-t border-slate-100 pt-4 md:pt-0 md:border-none">
+                            {apt.date ? (
+                              <div className="flex flex-col md:items-end text-sm">
+                                <span className="font-black text-slate-900">{new Date(apt.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                <span className="font-bold text-blue-600">{apt.time || '--:--'}</span>
+                              </div>
+                            ) : (
+                              <span className="text-xs font-black text-slate-400 capitalize">Received {apt.createdAt?.toDate ? new Date(apt.createdAt.toDate()).toLocaleDateString() : 'Just now'}</span>
+                            )}
+                            <div className="flex gap-2">
+                               <button className="p-2.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shadow-sm shadow-blue-600/5">
+                                 <Mail size={18} />
+                               </button>
+                               <button className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors shadow-sm shadow-emerald-600/5">
+                                 <Phone size={18} />
+                               </button>
+                            </div>
+                         </div>
                        </div>
                      </div>
                    ))}
@@ -1218,87 +1351,310 @@ export default function OwnerDashboard() {
             </div>
           )}
 
+          {sidebarTab === 'marketing' && (
+            <div className="p-4 md:p-8">
+               <div className="mb-8">
+                 <h2 className="text-2xl font-black text-slate-900 m-0">Bulk Broadcast Marketing</h2>
+                 <p className="text-slate-500 m-0 mt-1 text-sm">Send updates and offers to all your followers at once</p>
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                       <h4 className="text-lg font-black text-slate-900 m-0 mb-6 flex items-center gap-2">
+                         <Plus size={20} className="text-blue-600" /> New Campaign
+                       </h4>
+                       
+                       <div className="space-y-6">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Broadcast Channel</label>
+                            <div className="grid grid-cols-3 gap-3">
+                               {['WhatsApp', 'Push', 'Email'].map(t => (
+                                 <button 
+                                  key={t}
+                                  onClick={() => setCampaignData({...campaignData, type: t})}
+                                  className={`py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2 ${campaignData.type === t ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}`}
+                                 >
+                                   {t}
+                                 </button>
+                               ))}
+                            </div>
+                            {campaignData.type === 'WhatsApp' && (
+                              <div className="mt-2 text-[10px] text-amber-600 font-bold bg-amber-50 p-2 rounded-lg border border-amber-200">
+                                ⚠️ WhatsApp API charges (AED 0.15 - 0.30 per conversation) apply for bulk sending.
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Message Content</label>
+                            <textarea 
+                              placeholder="Type your broadcast message here..." 
+                              value={campaignData.message}
+                              onChange={e => setCampaignData({...campaignData, message: e.target.value})}
+                              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl min-h-[150px] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm"
+                            />
+                          </div>
+
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Attachment URL (Optional Image)</label>
+                            <input 
+                              type="url" 
+                              placeholder="https://..." 
+                              value={campaignData.imageUrl}
+                              onChange={e => setCampaignData({...campaignData, imageUrl: e.target.value})}
+                              className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          <button 
+                            disabled={campaignLoading || !campaignData.message}
+                            onClick={async () => {
+                               if (followersCount === 0) {
+                                  alert("You don't have any followers yet to send messages to.");
+                                  return;
+                               }
+                               setCampaignLoading(true);
+                               try {
+                                  await addDoc(collection(db, 'campaigns'), {
+                                    profileId: profile.id,
+                                    ...campaignData,
+                                    sentAt: serverTimestamp(),
+                                    recipientCount: followersCount,
+                                    status: 'Sent'
+                                  });
+                                  alert(`Successfully broadcasted to ${followersCount} followers via ${campaignData.type}!`);
+                                  setCampaignData({ subject: '', message: '', imageUrl: '', type: 'WhatsApp' });
+                               } catch(e) {
+                                  alert("Failed to send campaign.");
+                               } finally {
+                                  setCampaignLoading(false);
+                               }
+                            }}
+                            className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3 ${campaignLoading || !campaignData.message ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-700'}`}
+                          >
+                            {campaignLoading ? 'Processing...' : `Broadcast to ${followersCount} Followers`} <Send size={18} />
+                          </button>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Audience</div>
+                       <div className="text-4xl font-black text-slate-900 mb-2">{followersCount + (profile?.fakeFollowers || 0)}</div>
+                       <p className="text-xs text-slate-500 m-0">Users who are following your business profile updates.</p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-slate-900 to-slate-800 border border-slate-800 rounded-3xl p-6 text-white shadow-lg">
+                       <h5 className="text-sm font-black m-0 mb-4 flex items-center gap-2">
+                         <Sparkles size={16} className="text-amber-400" /> WhatsApp Pro Tips
+                       </h5>
+                       <ul className="space-y-3 m-0 p-0 list-none text-xs text-slate-400 font-medium">
+                          <li className="flex gap-2">
+                            <span className="text-blue-500">•</span> Use images to increase click rate by 40%.
+                          </li>
+                          <li className="flex gap-2">
+                            <span className="text-blue-500">•</span> Keep messages under 200 characters for mobile readability.
+                          </li>
+                          <li className="flex gap-2">
+                            <span className="text-blue-500">•</span> Add a clear Call to Action (CTA).
+                          </li>
+                       </ul>
+                    </div>
+                  </div>
+               </div>
+            </div>
+          )}
+
           {sidebarTab === 'chatbot' && (
-            <div style={{ padding: 24 }}>
-               <h3 style={{ margin: '0 0 16px', fontSize: 18, borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>AI Chatbot Configuration</h3>
+            <div className="p-4 md:p-8">
+               <div className="mb-8">
+                 <h2 className="text-2xl font-black text-slate-900 m-0">AI Chatbot Agent</h2>
+                 <p className="text-slate-500 m-0 mt-1 text-sm">Configure your automated 24/7 client assistant</p>
+               </div>
+
                {profile.plan === 'Basic' ? (
-                 <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', padding: 32, borderRadius: 12, textAlign: 'center' }}>
-                   <MessageSquare size={48} color="#ef4444" style={{ margin: '0 auto 16px', opacity: 0.7 }} />
-                   <h4 style={{ margin: '0 0 8px', color: '#991b1b', fontSize: 18 }}>Premium Feature</h4>
-                   <p style={{ margin: 0, color: '#b91c1c', fontSize: 14, maxWidth: 400, marginInline: 'auto' }}>AI Chatbot is not available on your current plan. Upgrade to pro or higher to let an AI assistant answer client queries 24/7.</p>
-                   <button onClick={() => setSidebarTab('plan')} style={{ marginTop: 20, background: '#ef4444', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>Upgrade Plan</button>
+                 <div className="flex flex-col items-center justify-center p-12 md:p-20 bg-emerald-50 border-2 border-emerald-100 rounded-3xl text-center">
+                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6 animate-pulse">
+                      <MessageSquare size={40} strokeWidth={1.5} />
+                    </div>
+                    <h3 className="text-xl font-black text-emerald-900 m-0">Unlock AI Assistant</h3>
+                    <p className="text-sm text-emerald-700 mt-3 mb-8 max-w-sm mx-auto leading-relaxed">
+                      Upgrade to <span className="font-black">Pro Plan</span> to let our trained AI handle your leads, booking questions, and customer queries automatically 24/7.
+                    </p>
+                    <button onClick={() => setSidebarTab('plan')} className="px-8 py-3 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95">Upgrade & Unlock AI</button>
                  </div>
                ) : (
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: 24, borderRadius: 12 }}>
-                     <label style={{ display: 'block', fontSize: 15, fontWeight: 700, color: '#1e3a8a', marginBottom: 8 }}>System Prompt / Context</label>
-                     <p style={{ margin: '0 0 16px', fontSize: 14, color: '#1e40af', lineHeight: 1.5 }}>Provide instructions, business hours, services, and how the AI should answer questions. This acts as the memory for your AI Assistant.</p>
-                     <textarea 
-                       placeholder="Example: Aap ek behad muhazzib AI assistant hain Ahmed's law firm ke liye. Aapka maqsad logo ke basic sawalon ke asaan aur tehzeeb daari se jawab dena hai..." 
-                       value={formData.aiPrompt || ''} 
-                       onChange={e => setFormData({...formData, aiPrompt: e.target.value})} 
-                       rows={12} 
-                       style={{ width: '100%', padding: 16, border: '1px solid #93c5fd', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box', fontSize: 14 }}
-                     ></textarea>
-                     <button onClick={handleSave} style={{ marginTop: 16, background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, cursor: 'pointer' }}>Save Prompt</button>
-                   </div>
-                   
-                   <div style={{ border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: 500 }}>
-                     <div style={{ background: '#0f172a', color: '#fff', padding: 16, fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>Test Your Chatbot</span>
-                        <button onClick={() => { localStorage.removeItem(`chat_history_${profile.id}`); window.location.reload(); }} style={{ background: 'none', border: '1px solid #334155', color: '#cbd5e1', padding: '4px 8px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Clear History</button>
-                     </div>
-                     <DashboardChatTester profile={profile} />
-                   </div>
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                    <div className="flex flex-col gap-6">
+                      <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                        <div className="flex items-center gap-3 mb-6">
+                           <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                             <Brain size={20} />
+                           </div>
+                           <div>
+                             <h4 className="text-base font-black text-slate-900 m-0">Knowledge Base</h4>
+                             <p className="text-xs text-slate-500 m-0">Instructions & facts for the AI</p>
+                           </div>
+                        </div>
+
+                         <div className="relative group">
+                            <textarea 
+                              placeholder="Describe your business, services, pricing, and specific ways the AI should respond to clients..." 
+                              value={formData.aiPrompt || ''} 
+                              onChange={e => setFormData({...formData, aiPrompt: e.target.value})} 
+                              className="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl min-h-[350px] outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium leading-relaxed resize-none"
+                            />
+                            <div className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/80 backdrop-blur border border-slate-200 text-[10px] font-black text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                               <Sparkles size={10} /> AUTO-SAVING ACTIVE
+                            </div>
+                         </div>
+                         <div className="mt-6">
+                           <button onClick={handleSave} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]">
+                             Update Knowledge Base
+                           </button>
+                         </div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[600px] lg:h-auto">
+                       <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-white font-black text-sm tracking-tight">AI PREVIEW</span>
+                          </div>
+                          <button onClick={() => { localStorage.removeItem(`chat_history_${profile.id}`); window.location.reload(); }} className="text-[10px] font-black text-slate-400 hover:text-white transition-colors uppercase tracking-widest border border-slate-800 px-3 py-1 rounded-md bg-slate-800/50">Reset Chat</button>
+                       </div>
+                       <div className="flex-1 overflow-hidden relative">
+                         <DashboardChatTester profile={profile} />
+                       </div>
+                    </div>
                  </div>
                )}
             </div>
           )}
 
           {sidebarTab === 'plan' && (
-            <div style={{ padding: 24 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div style={{ background: '#f8fafc', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 8px', fontSize: 18 }}>Current Plan: <span style={{ color: '#2563eb' }}>{profile.plan || 'Free'}</span></h3>
-                    <p style={{ margin: 0, color: '#64748b', fontSize: 14 }}>Upgrade your plan to unlock more features like Custom Domain, AI Chatbot, and Booking links.</p>
+            <div className="p-4 md:p-8">
+              <div className="mb-10">
+                 <h2 className="text-2xl font-black text-slate-900 m-0">Subscription & Billing</h2>
+                 <p className="text-slate-500 m-0 mt-1 text-sm">Manage features and plan limits for your digital presence</p>
+              </div>
+
+               <div className="flex flex-col gap-10">
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 md:p-10 rounded-[2.5rem] text-white flex flex-col md:flex-row justify-between items-center gap-8 relative overflow-hidden shadow-2xl shadow-slate-900/20">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full" />
+                  <div className="relative z-10 text-center md:text-left">
+                    <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                      <div className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/30">CURRENT ACTIVE PLAN</div>
+                    </div>
+                    <div className="flex items-center gap-4 mb-2">
+                      <h3 className="text-5xl font-black m-0">{profile.plan || 'Free'}</h3>
+                      <Sparkles size={32} className="text-amber-400" />
+                    </div>
+                    <p className="text-slate-400 m-0 text-sm max-w-sm leading-relaxed">You are enjoying all features associated with the {profile.plan || 'Free'} plan. Upgrade anytime for advanced enterprise tools.</p>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 24, color: '#0f172a' }}>
-                     {profile.plan === 'Premium' ? '$49/mo' : profile.plan === 'Pro' ? '$19/mo' : 'Free'}
+                  <div className="relative z-10 text-center md:text-right bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl min-w-[200px]">
+                     <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">MEMBERSHIP COST</div>
+                     <div className="text-4xl font-black tabular-nums">
+                        {profile.plan === 'Premium' ? '$49' : profile.plan === 'Pro' ? '$19' : '$0'}
+                        <span className="text-sm font-bold text-slate-500 ml-1">/mo</span>
+                     </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                   <div style={{ border: '1px solid #e2e8f0', padding: 20, borderRadius: 12, opacity: profile.plan === 'Basic' ? 0.5 : 1 }}>
-                     <h4 style={{ margin: '0 0 8px', fontSize: 16 }}>Basic</h4>
-                     <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Free</div>
-                     <ul style={{ paddingLeft: 20, margin: 0, fontSize: 13, color: '#4b5563', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                       <li>Basic Profile</li>
-                       <li>5 Services</li>
-                     </ul>
-                     {profile.plan === 'Basic' ? <button disabled style={{ width: '100%', padding: 10, marginTop: 16, borderRadius: 8, border: '1px solid #cbd5e1', background: '#f1f5f9' }}>Current Plan</button> : <button onClick={() => { setFormData({...formData, plan: 'Basic'}); setTimeout(handleSave, 100); }} style={{ width: '100%', background: '#2563eb', color: '#fff', border: 'none', padding: 10, marginTop: 16, borderRadius: 8, cursor: 'pointer' }}>Select Basic</button>}
-                   </div>
-                   <div style={{ border: '1px solid #e2e8f0', padding: 20, borderRadius: 12, opacity: profile.plan === 'Pro' ? 0.5 : 1 }}>
-                     <h4 style={{ margin: '0 0 8px', fontSize: 16 }}>Pro</h4>
-                     <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>$19/mo</div>
-                     <ul style={{ paddingLeft: 20, margin: 0, fontSize: 13, color: '#4b5563', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                       <li>Pro Profile</li>
-                       <li>Custom AI Chatbot</li>
-                       <li>Unlimited Services</li>
-                     </ul>
-                     {profile.plan === 'Pro' ? <button disabled style={{ width: '100%', padding: 10, marginTop: 16, borderRadius: 8, border: '1px solid #cbd5e1', background: '#f1f5f9' }}>Current Plan</button> : <button onClick={() => { setFormData({...formData, plan: 'Pro'}); setTimeout(handleSave, 100); }} style={{ width: '100%', background: '#2563eb', color: '#fff', border: 'none', padding: 10, marginTop: 16, borderRadius: 8, cursor: 'pointer' }}>Select Pro</button>}
-                   </div>
-                   <div style={{ border: '2px solid #2563eb', padding: 20, borderRadius: 12, opacity: profile.plan === 'Premium' ? 0.5 : 1, position: 'relative' }}>
-                     <div style={{ position: 'absolute', top: -12, right: 16, background: '#2563eb', color: '#fff', padding: '4px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>MOST POPULAR</div>
-                     <h4 style={{ margin: '0 0 8px', fontSize: 16, color: '#2563eb' }}>Premium</h4>
-                     <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 16 }}>$49/mo</div>
-                     <ul style={{ paddingLeft: 20, margin: 0, fontSize: 13, color: '#4b5563', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                       <li>Everything in Pro</li>
-                       <li>External Booking Links</li>
-                       <li>Custom Domain</li>
-                     </ul>
-                     {profile.plan === 'Premium' ? <button disabled style={{ width: '100%', padding: 10, marginTop: 16, borderRadius: 8, border: '1px solid #cbd5e1', background: '#f1f5f9' }}>Current Plan</button> : <button onClick={() => { setFormData({...formData, plan: 'Premium'}); setTimeout(handleSave, 100); }} style={{ width: '100%', background: '#2563eb', color: '#fff', border: 'none', padding: 10, marginTop: 16, borderRadius: 8, cursor: 'pointer' }}>Select Premium</button>}
-                   </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   {[
+                     { name: 'Basic', price: 'Free', features: ['5 Services', 'Basic Profile', 'QR Code'], color: 'slate' },
+                     { name: 'Pro', price: '$19', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'], color: 'blue', popular: true },
+                     { name: 'Premium', price: '$49', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'], color: 'indigo' }
+                   ].map((plan) => (
+                     <div key={plan.name} className={`relative p-8 rounded-[2rem] border-2 transition-all group ${profile.plan === plan.name ? 'border-blue-600 bg-blue-50/20 ring-4 ring-blue-500/5' : 'border-slate-100 bg-white hover:border-slate-300 shadow-sm hover:shadow-xl'}`}>
+                       {plan.popular && (
+                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-blue-600/30">MOST POPULAR</div>
+                       )}
+                       
+                       <h4 className="text-lg font-black text-slate-900 m-0 mb-2">{plan.name}</h4>
+                       <div className="flex items-baseline gap-1 mb-8">
+                         <span className="text-3xl font-black text-slate-900">{plan.price}</span>
+                         {plan.price !== 'Free' && <span className="text-xs font-bold text-slate-500 tracking-tight">/month</span>}
+                       </div>
+                       
+                       <div className="space-y-4 mb-10">
+                         {plan.features.map(f => (
+                           <div key={f} className="flex items-center gap-3 text-xs font-bold text-slate-600">
+                             <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">✓</div>
+                             {f}
+                           </div>
+                         ))}
+                       </div>
+                       
+                       {profile.plan === plan.name ? (
+                         <button disabled className="w-full py-4 rounded-2xl bg-blue-50 text-blue-700 font-black text-xs uppercase tracking-widest cursor-default flex items-center justify-center gap-2">
+                           <Shield size={14} /> Active Plan
+                         </button>
+                       ) : (
+                         <button 
+                           onClick={() => { setFormData({...formData, plan: plan.name}); setTimeout(handleSave, 100); }} 
+                           className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${plan.popular ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10'}`}
+                         >
+                           Choose {plan.name}
+                         </button>
+                       )}
+                     </div>
+                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {sidebarTab === 'referrals' && (
+            <div className="max-w-6xl mx-auto flex flex-col gap-10 lg:pl-10 animate-fade-in pb-20">
+              <div className="mb-0">
+                <h1 className="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight">Referral Earnings</h1>
+                <p className="text-slate-500 mt-2 text-lg">Share your referral link with other businesses and earn commissions on their premium plans.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Referrals</div>
+                  <div className="text-4xl font-black text-slate-900 mb-2">{profile.referralCount || 0}</div>
+                  <p className="text-xs text-slate-500 m-0">Businesses completely referred.</p>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                  <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Pending</div>
+                  <div className="text-4xl font-black text-slate-900 mb-2">{profile.referralPending || 0}</div>
+                  <p className="text-xs text-slate-500 m-0">Awaiting purchase confirmation.</p>
+                </div>
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 border border-green-400 rounded-3xl p-6 shadow-sm">
+                  <div className="text-[10px] font-black text-green-100 uppercase tracking-widest mb-1">Total Earnings</div>
+                  <div className="text-4xl font-black text-white mb-2">AED {profile.referralEarnings || 0}</div>
+                  <p className="text-xs text-green-100 m-0">Available for withdrawal.</p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-10 shadow-sm relative overflow-hidden">
+                <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+                  <div className="flex-1">
+                     <h3 className="text-2xl font-bold text-slate-900 mb-2">Your Unified Referral Link</h3>
+                     <p className="text-slate-500 mb-6">Any traffic you send to our plans page using this link guarantees your commission if they subscribe.</p>
+                     
+                     <div className="flex flex-col sm:flex-row items-stretch gap-3">
+                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center overflow-x-auto">
+                          <span className="text-sm font-medium text-slate-700 whitespace-nowrap">{window.location.origin}/plans?ref={profile.id}</span>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${profile.id}`);
+                            showToast("Link copied to clipboard!");
+                          }}
+                          className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition"
+                        >
+                          Copy Link
+                        </button>
+                     </div>
+                  </div>
                 </div>
               </div>
             </div>

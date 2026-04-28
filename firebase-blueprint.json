@@ -36,6 +36,33 @@
         "profileId": { "type": "string" }
       },
       "required": ["name", "email", "message", "profileId"]
+    },
+    "Follower": {
+      "title": "Follower",
+      "description": "User who follows a business profile",
+      "type": "object",
+      "properties": {
+        "profileId": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["profileId", "email"]
+    },
+    "Campaign": {
+      "title": "Marketing Campaign",
+      "description": "Broadcast message sent to followers",
+      "type": "object",
+      "properties": {
+        "profileId": { "type": "string" },
+        "message": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "type": { "type": "string", "enum": ["WhatsApp", "Push", "Email"] },
+        "status": { "type": "string" },
+        "sentAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["profileId", "message", "type"]
     }
   },
   "firestore": {
@@ -50,6 +77,14 @@
     "/leads/{id}": {
       "schema": "Inquiry",
       "description": "Contact inquiries"
+    },
+    "/followers/{id}": {
+      "schema": "Follower",
+      "description": "Business followers"
+    },
+    "/campaigns/{id}": {
+      "schema": "Campaign",
+      "description": "Marketing broadcasts"
     }
   }
 }

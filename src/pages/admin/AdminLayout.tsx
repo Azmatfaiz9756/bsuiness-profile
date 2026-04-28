@@ -104,6 +104,9 @@ export const AdminLayout = () => {
             <Link onClick={closeMenu} to="/admin/profiles" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/profiles')}`}>
               <Users size={18} /> All Profiles
             </Link>
+            <Link onClick={closeMenu} to="/admin/leads" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/leads')}`}>
+               <Users size={18} /> Global Leads
+            </Link>
             
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">eCommerce</div>
             <Link onClick={closeMenu} to="/admin/products" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/products')}`}>

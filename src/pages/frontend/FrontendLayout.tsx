@@ -1,23 +1,15 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
-import { loginWithGoogle, logout } from '../../firebase';
+import { logout } from '../../firebase';
 import { Menu, X } from 'lucide-react';
+import { LoginModal } from '../../components/LoginModal';
 
 export const FrontendLayout = () => {
   const location = useLocation();
-  const { user, authLoading } = useAppContext();
+  const { user, authLoading, isLoginModalOpen, setIsLoginModalOpen } = useAppContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isActive = (path: string) => location.pathname === path ? 'active bg-slate-100' : '';
-
-  const handleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      setIsMobileMenuOpen(false);
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -28,6 +20,8 @@ export const FrontendLayout = () => {
 
   return (
     <div className="frontend-root w-full overflow-x-hidden relative">
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      
       {/* Desktop & Mobile Header */}
       <div className="nav flex h-[64px] items-center justify-between px-4 md:px-6 bg-white border-b border-slate-200 sticky top-0 z-50">
         <Link to="/" className="nav-logo flex items-center gap-2">
@@ -48,7 +42,6 @@ export const FrontendLayout = () => {
 
         {/* Desktop Auth */}
         <div className="nav-right hidden md:flex items-center gap-3">
-          <Link to="/admin" className="btn btn-outline btn-sm border border-slate-300 px-3 py-1.5 rounded text-sm font-medium hover:bg-slate-50 transition-colors">Super Admin</Link>
           {authLoading ? (
             <span className="text-slate-500 text-sm">Loading...</span>
           ) : user ? (
@@ -57,7 +50,7 @@ export const FrontendLayout = () => {
               <button onClick={handleLogout} className="btn btn-outline btn-sm border border-slate-300 px-3 py-1.5 rounded text-sm font-medium hover:bg-slate-50 transition-colors">Sign Out</button>
             </>
           ) : (
-            <button onClick={handleLogin} className="btn btn-blk btn-sm bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors">Business Login</button>
+            <button onClick={() => setIsLoginModalOpen(true)} className="btn btn-blk btn-sm bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors">Business Login</button>
           )}
         </div>
 
@@ -81,7 +74,6 @@ export const FrontendLayout = () => {
             
             <div className="h-px bg-slate-200 my-4"></div>
 
-            <Link onClick={closeMenu} to="/admin" className="p-3 text-center rounded-lg border border-slate-300 text-base font-medium transition-colors hover:bg-slate-50">Super Admin</Link>
             {authLoading ? (
               <span className="p-3 text-center text-slate-500">Loading...</span>
             ) : user ? (
@@ -90,7 +82,7 @@ export const FrontendLayout = () => {
                 <button onClick={handleLogout} className="p-3 text-center rounded-lg border border-slate-300 text-slate-700 font-medium transition-colors hover:bg-slate-50">Sign Out</button>
               </>
             ) : (
-              <button onClick={handleLogin} className="p-3 text-center rounded-lg bg-blue-600 text-white font-medium transition-colors hover:bg-blue-700">Business Login</button>
+              <button onClick={() => { setIsMobileMenuOpen(false); setIsLoginModalOpen(true); }} className="p-3 text-center rounded-lg bg-blue-600 text-white font-medium transition-colors hover:bg-blue-700">Business Login</button>
             )}
           </div>
         </div>

@@ -7,6 +7,7 @@ export const AppContext = createContext<any>(null);
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -121,6 +122,7 @@ User agar business ke baare mein puche, toh unhe batayein ki hum enterprise solu
   return (
     <AppContext.Provider value={{
       user, authLoading, 
+      isLoginModalOpen, setIsLoginModalOpen,
       profiles, setProfiles, orders, setOrders, products, setProducts, 
       walletBalance, setWalletBalance, stats, setStats,
       cart, setCart, wishlist, setWishlist, userOrders, setUserOrders,
