@@ -15,15 +15,21 @@ export default function FullProfile() {
 
   const { profiles } = useAppContext();
   
-  const [profile, setProfile] = useState<any>(null);
-  const [template, setTemplate] = useState('classic');
-  const [loading, setLoading] = useState(true);
+  // Try to find profile in context immediately to avoid flicker
+  const initialProfile = profiles.find((p: any) => p.id === id || p.slug === id);
+  const [profile, setProfile] = useState<any>(initialProfile || null);
+  const [template, setTemplate] = useState(initialProfile?.template || 'classic');
+  const [loading, setLoading] = useState(!initialProfile);
 
   // Fetch from Firebase
   useEffect(() => {
     const fetchProfile = async () => {
-      setLoading(true);
       if (!id) return;
+      
+      // If we don't have it yet, set loading
+      if (!profile) {
+        setLoading(true);
+      }
       
       try {
         let foundProfile = null;
@@ -43,22 +49,23 @@ export default function FullProfile() {
           }
         }
 
-        if (!foundProfile) {
-          // Fallback to local sample profiles
-          foundProfile = profiles.find((p: any) => p.id === id || p.slug === id) || profiles[0];
-        }
-
-        setProfile(foundProfile);
-        if (foundProfile && foundProfile.template) {
-          setTemplate(foundProfile.template);
+        if (foundProfile) {
+          setProfile(foundProfile);
+          if (foundProfile.template) {
+            setTemplate(foundProfile.template);
+          }
+        } else if (!profile) {
+          // Only fallback to first profile if we have absolutely nothing
+          setProfile(profiles[0]);
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
-        // Fallback to local sample profiles
-        const localProfile = profiles.find((p: any) => p.id === id || p.slug === id) || profiles[0];
-        setProfile(localProfile);
-        if (localProfile && localProfile.template) {
-          setTemplate(localProfile.template);
+        if (!profile) {
+          const localProfile = profiles.find((p: any) => p.id === id || p.slug === id) || profiles[0];
+          setProfile(localProfile);
+          if (localProfile && localProfile.template) {
+            setTemplate(localProfile.template);
+          }
         }
       } finally {
         setLoading(false);
@@ -93,7 +100,35 @@ export default function FullProfile() {
   }, [profile]);
 
   if (loading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#fff' }}>Loading Profile...</div>;
+    return (
+      <div style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: '#0f172a', 
+        color: '#fff' 
+      }}>
+        <div style={{
+          width: 50,
+          height: 50,
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTop: '3px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+        <div style={{ marginTop: 24, fontSize: 14, fontWeight: 500, letterSpacing: '0.05em', color: '#94a3b8' }}>
+          LOADING PROFILE
+        </div>
+      </div>
+    );
   }
 
   if (!profile) {

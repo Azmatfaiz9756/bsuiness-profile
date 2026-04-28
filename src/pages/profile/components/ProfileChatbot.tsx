@@ -224,7 +224,12 @@ Assist visitors with inquiries about the business, services, and contact informa
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
+    <div style={{ 
+      position: 'fixed', 
+      bottom: window.innerWidth < 480 ? 100 : 20, 
+      right: 20, 
+      zIndex: 1000 
+    }}>
       <AnimatePresence>
         {!isOpen ? (
           <motion.button 
@@ -236,12 +241,12 @@ Assist visitors with inquiries about the business, services, and contact informa
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(true)}
             style={{
-              width: 60, height: 60, borderRadius: '50%', background: '#2563eb', 
+              width: 56, height: 56, borderRadius: '50%', background: '#2563eb', 
               color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', 
               alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(37,99,235,0.4)',
             }}
           >
-            <Bot size={30} />
+            <Bot size={28} />
           </motion.button>
         ) : (
           <motion.div 
@@ -250,10 +255,10 @@ Assist visitors with inquiries about the business, services, and contact informa
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
             style={{
-              width: window.innerWidth < 400 ? '90vw' : 350, 
+              width: window.innerWidth < 480 ? 'calc(100vw - 40px)' : 350, 
               height: window.innerHeight < 600 ? '70vh' : 500, 
-              bottom: window.innerWidth < 400 ? 10 : 20,
-              right: window.innerWidth < 400 ? '5vw' : 20,
+              bottom: window.innerWidth < 480 ? 100 : 20,
+              right: 20,
               background: '#fff', borderRadius: 20, 
               boxShadow: '0 12px 40px rgba(0,0,0,0.2)', display: 'flex', 
               flexDirection: 'column', overflow: 'hidden', border: '1px solid #e2e8f0',

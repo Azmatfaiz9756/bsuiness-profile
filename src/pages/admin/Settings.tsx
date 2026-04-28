@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { Search, Globe, Smartphone, CreditCard, Save } from 'lucide-react';
+import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp } from 'lucide-react';
 
 export default function AdminSettings() {
   const { siteSettings, setSiteSettings } = useAppContext();
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState({ ...siteSettings });
 
-  const handleChange = (field: string, value: string) => {
+  const handleChange = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
@@ -29,7 +29,8 @@ export default function AdminSettings() {
         {[
           { id: 'general', label: 'General / App', icon: <Smartphone size={16} /> },
           { id: 'seo', label: 'Global SEO', icon: <Search size={16} /> },
-          { id: 'ecommerce', label: 'E-commerce', icon: <CreditCard size={16} /> }
+          { id: 'ecommerce', label: 'E-commerce', icon: <CreditCard size={16} /> },
+          { id: 'plans', label: 'Plans & Referral', icon: <TrendingUp size={16} /> }
         ].map(tab => (
           <button 
             key={tab.id}
@@ -134,6 +135,96 @@ export default function AdminSettings() {
                   <div style={{ fontSize: 13, color: '#6b7280' }}>Flat 10% Off on all physical products</div>
                </div>
                <button style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 600, cursor: 'pointer' }}>Revoke</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'plans' && (
+        <div style={{ background: '#fff', padding: 32, borderRadius: 16, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, borderBottom: '1px solid #e5e7eb', paddingBottom: 8 }}>Referral Rules</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Free Trial Period</label>
+                <input type="text" value={formData.trialPeriod || ''} onChange={e => handleChange('trialPeriod', e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Referral Success Window (Days)</label>
+                <input type="number" value={formData.referralPurchaseWindow || 0} onChange={e => handleChange('referralPurchaseWindow', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Referrer Reward (Amount)</label>
+                <input type="number" value={formData.referrerReward || 0} onChange={e => handleChange('referrerReward', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Referee Reward (Amount)</label>
+                <input type="number" value={formData.refereeReward || 0} onChange={e => handleChange('refereeReward', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, borderBottom: '1px solid #e5e7eb', paddingBottom: 8 }}>Manage Subscription Plans</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {(formData.plans || []).map((plan: any, idx: number) => (
+                <div key={idx} style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Plan Name</label>
+                      <input 
+                        type="text" 
+                        value={plan.name} 
+                        onChange={e => {
+                          const newPlans = [...formData.plans];
+                          newPlans[idx].name = e.target.value;
+                          setFormData({...formData, plans: newPlans});
+                        }}
+                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Price (Label)</label>
+                      <input 
+                        type="text" 
+                        value={plan.price} 
+                        onChange={e => {
+                          const newPlans = [...formData.plans];
+                          newPlans[idx].price = e.target.value;
+                          setFormData({...formData, plans: newPlans});
+                        }}
+                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Badge Text</label>
+                      <input 
+                        type="text" 
+                        value={plan.badge} 
+                        onChange={e => {
+                          const newPlans = [...formData.plans];
+                          newPlans[idx].badge = e.target.value;
+                          setFormData({...formData, plans: newPlans});
+                        }}
+                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} 
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input 
+                      type="checkbox" 
+                      checked={plan.popular} 
+                      onChange={e => {
+                        const newPlans = [...formData.plans];
+                        newPlans[idx].popular = e.target.checked;
+                        setFormData({...formData, plans: newPlans});
+                      }}
+                      id={`popular-${idx}`}
+                    />
+                    <label htmlFor={`popular-${idx}`} style={{ fontSize: 13, color: '#374151' }}>Mark as Popular</label>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

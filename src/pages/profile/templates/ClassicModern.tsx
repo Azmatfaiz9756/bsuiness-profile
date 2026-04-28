@@ -28,6 +28,8 @@ import {
   Link2,
   MessageCircle,
   Calendar,
+  UserPlus,
+  Share2,
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -52,36 +54,42 @@ export default function ClassicModern({
   onExit: () => void;
 }) {
   const [showShareModal, setShowShareModal] = useState(false);
-  const [sharePhone, setSharePhone] = useState("");
+  const [sharePhone, setSharePhone] = useState('');
+  const [activeTab, setActiveTab] = useState('home');
+  const [userRating, setUserRating] = useState(0);
+  const [isRatingSubmitted, setIsRatingSubmitted] = useState(false);
 
-  const SectionContainer = ({ icon, title, children }: any) => {
+  const handleRatingSubmit = (rating: number) => {
+    setUserRating(rating);
+    setIsRatingSubmitted(true);
+    // Simulation of API call
+    console.log("Rating submitted:", rating);
+  };
+
+  const hasServices = profile.services && profile.services.length > 0;
+  const hasProducts = profile.products && profile.products.length > 0;
+  const hasTestimonials = profile.testimonials && profile.testimonials.length > 0;
+  const hasFaqs = profile.faqs && profile.faqs.length > 0;
+  const hasPayments = (profile.paymentLinks && profile.paymentLinks.length > 0) || (profile.bankAccounts && profile.bankAccounts.length > 0);
+
+  const navItems = [
+    { id: 'home', label: 'Home', icon: <Contact2 size={20} />, show: true },
+    { id: 'services', label: 'Services', icon: <Sparkles size={20} />, show: profile.services && profile.services.length > 0 },
+    { id: 'shop', label: 'Store', icon: <ShoppingBag size={20} />, show: profile.products && profile.products.length > 0 },
+    { id: 'wallet', label: 'Wallet', icon: <Wallet size={20} />, show: true },
+    { id: 'inquiry', label: 'Inquiry', icon: <Mail size={20} />, show: true }
+  ].filter(item => item.show);
+
+  const SectionContainer = ({ icon, title, children, id }: any) => {
     return (
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e5e7eb",
-          borderRadius: 16,
-          marginBottom: 12,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "16px 20px",
-            background: "#f8fafc",
-            borderBottom: "1px solid #e5e7eb",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            fontSize: 15,
-            fontWeight: 700,
-            color: "#1e3a8a",
-          }}
-        >
+      <div id={id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: '#1e3a8a' }}>
           {icon}
           {title}
         </div>
-        <div style={{ padding: "20px" }}>{children}</div>
+        <div style={{ padding: '20px' }}>
+          {children}
+        </div>
       </div>
     );
   };
@@ -203,7 +211,7 @@ export default function ClassicModern({
         </div>
         <div
           style={{
-            background: profile.bannerVideo
+            background: profile.bannerVideo || profile.bannerUrl
               ? "#000"
               : "linear-gradient(135deg,#1a1a2e,#1a56db)",
             height: 180,
@@ -213,6 +221,19 @@ export default function ClassicModern({
             overflow: "hidden",
           }}
         >
+          {profile.bannerUrl && !profile.bannerVideo && (
+            <img 
+              src={profile.bannerUrl} 
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                opacity: 0.8,
+              }}
+              alt="Banner"
+            />
+          )}
           {profile.bannerVideo && (
             <video
               autoPlay
@@ -265,9 +286,14 @@ export default function ClassicModern({
                 fontSize: 28,
                 fontWeight: 800,
                 color: "#1e40af",
+                overflow: 'hidden'
               }}
             >
-              {profile.avatar}
+              {profile.photoUrl ? (
+                 <img src={profile.photoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={profile.name} />
+              ) : (
+                profile.avatar
+              )}
             </div>
           </div>
         </div>
@@ -304,6 +330,43 @@ export default function ClassicModern({
           </div>
           <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>
             {profile.company}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span 
+                    key={star} 
+                    onClick={() => !isRatingSubmitted && handleRatingSubmit(star)}
+                    style={{ 
+                      color: (star <= (userRating || 4)) ? '#f59e0b' : '#d1d5db',
+                      fontSize: 24,
+                      cursor: isRatingSubmitted ? 'default' : 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+              {isRatingSubmitted ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>Thank you for your rating!</span>
+                  <button 
+                    onClick={() => setIsRatingSubmitted(false)}
+                    style={{ background: 'none', border: 'none', color: '#1a56db', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    Edit
+                  </button>
+                </div>
+              ) : (
+                <span style={{ fontSize: 11, color: '#6b7280' }}>Click a star to rate {profile.name}</span>
+              )}
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#4b5563', marginLeft: 6 }}>
+              {userRating ? `${userRating}.0` : '4.8'} (24)
+            </span>
           </div>
 
           {profile.bio && (
@@ -501,7 +564,7 @@ export default function ClassicModern({
               onClick={handleSave}
               style={{
                 flex: 1,
-                background: "#1a1a2e",
+                background: "#000",
                 color: "#fff",
                 border: "none",
                 padding: "12px",
@@ -514,7 +577,7 @@ export default function ClassicModern({
                 gap: 8,
               }}
             >
-              <Contact2 size={16} /> Save Contact
+              <UserPlus size={18} /> Save Contact
             </button>
             <button
               onClick={() => setShowShareModal(true)}
@@ -536,58 +599,6 @@ export default function ClassicModern({
               <Send size={16} /> Share Profile
             </button>
           </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-            <button
-              onClick={() =>
-                alert("Downloading Apple Wallet pass... (Simulation)")
-              }
-              style={{
-                flex: 1,
-                background: "#000",
-                color: "#fff",
-                border: "none",
-                padding: "12px",
-                borderRadius: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                fontSize: 14,
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                <path d="M18.7 13.9C18.7 10.3 21.6 8.5 21.7 8.5C20.1 6.1 17.5 5.8 16.6 5.7C14.7 5.5 12.8 6.8 11.8 6.8C10.8 6.8 9.2 5.6 7.6 5.6C5.6 5.6 3.8 6.8 2.8 8.6C0.7 12.2 2.2 17.6 4.3 20.6C5.3 22 6.5 23.6 8 23.5C9.5 23.4 10 22.5 11.8 22.5C13.5 22.5 14 23.5 15.6 23.4C17.2 23.4 18.2 22 19.2 20.5C20.3 18.8 20.8 17.2 20.8 17.1C20.8 17 18.7 16.2 18.7 13.9Z" />
-                <path d="M15.4 3.8C16.2 2.8 16.7 1.4 16.6 0C15.4 0.1 13.9 0.8 13.1 1.8C12.4 2.6 11.8 4 12 5.4C13.3 5.5 14.6 4.7 15.4 3.8Z" />
-              </svg>
-              Apple Wallet
-            </button>
-            <button
-              onClick={() =>
-                alert("Downloading Google Wallet pass... (Simulation)")
-              }
-              style={{
-                flex: 1,
-                background: "#e8f0fe",
-                color: "#1967d2",
-                border: "none",
-                padding: "12px",
-                borderRadius: 12,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                fontSize: 14,
-              }}
-            >
-              <Wallet size={18} />
-              Google Wallet
-            </button>
-          </div>
-
           <div
             style={{
               display: "flex",
@@ -602,7 +613,7 @@ export default function ClassicModern({
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  background: "#2563eb",
+                  background: "#000",
                   color: "#fff",
                   padding: 14,
                   borderRadius: 12,
@@ -617,6 +628,23 @@ export default function ClassicModern({
                 <Calendar size={18} /> Book a Meeting
               </a>
             )}
+            <Link
+              to="/referrals"
+              style={{
+                background: "#1a56db",
+                color: "#fff",
+                padding: 14,
+                borderRadius: 12,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                textDecoration: "none",
+              }}
+            >
+              <Share2 size={18} /> Refer & Earn Rewards
+            </Link>
             {profile.documentUrl && (
               <a
                 href={profile.documentUrl}
@@ -672,139 +700,188 @@ export default function ClassicModern({
               ))}
           </div>
 
-          {!profile.meetingUrl && (
-            <div style={{ marginTop: 20, textAlign: "left" }}>
-              <AppointmentBooking profile={profile} />
+        {/* Main Content Area */}
+        <div style={{ padding: '0 20px', marginTop: 10 }}>
+          {activeTab === 'wallet' && (
+            <div style={{ marginBottom: 20 }}>
+              <div
+                style={{
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: 12,
+                  padding: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div style={{ fontSize: 20, color: "#1e40af" }}>
+                  <CreditCard size={24} />
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: "#1e40af",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    DBC MEMBER ID
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#1e3a8a",
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    {profile.id}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-
-          <div style={{ marginTop: 12 }}>
-            <LeadCapture profile={profile} />
-          </div>
         </div>
 
-        <div style={{ padding: "0 20px", marginTop: 10 }}>
-          <div
-            style={{
-              background: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              borderRadius: 12,
-              padding: 12,
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <div style={{ fontSize: 20, color: "#1e40af" }}>
-              <CreditCard size={24} />
-            </div>
-            <div>
-              <div
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: "#1e40af",
-                  letterSpacing: 1,
-                }}
-              >
-                DBC MEMBER ID
+        <div style={{ padding: '20px', paddingBottom: 100 }}>
+          {activeTab === 'home' && (
+            <>
+              {profile.address && (
+                <div style={{ marginBottom: 12 }}>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      width: "100%",
+                      background: "#16a34a",
+                      color: "#fff",
+                      padding: "14px",
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      textDecoration: "none",
+                      boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
+                      fontSize: 14
+                    }}
+                  >
+                    <MapPin size={18} /> Get Directions
+                  </a>
+                </div>
+              )}
+              <div style={{ marginBottom: 20 }}>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    width: "100%",
+                    background: "#2563eb",
+                    color: "#fff",
+                    padding: "14px",
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 14,
+                    boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
+                  }}
+                >
+                  <UserPlus size={18} /> Exchange Contact
+                </button>
               </div>
-              <div
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "#1e3a8a",
-                  fontFamily: "monospace",
-                }}
-              >
-                {profile.id}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ padding: "20px" }}>
-          <SectionContainer
-            title="Contact & Location"
-            icon={<PhoneCall size={18} />}
-          >
+              <SectionContainer
+                title="Contact & Location"
+              icon={<PhoneCall size={18} />}
+            >
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <a
-                href={`tel:${profile.phone}`}
-                style={{
-                  textDecoration: "none",
-                  background: "#f9fafb",
-                  border: "1px solid #e5e7eb",
-                  padding: 16,
-                  borderRadius: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                }}
-              >
-                <div
+              {profile.phone && (
+                <a
+                  href={`tel:${profile.phone}`}
                   style={{
-                    background: "#dcfce7",
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
+                    textDecoration: "none",
+                    background: "#f9fafb",
+                    border: "1px solid #e5e7eb",
+                    padding: 16,
+                    borderRadius: 12,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    color: "#16a34a",
+                    gap: 14,
                   }}
                 >
-                  <PhoneCall size={20} />
-                </div>
-                <div>
                   <div
-                    style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
+                    style={{
+                      background: "#dcfce7",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#16a34a",
+                    }}
                   >
-                    Call Mobile
+                    <PhoneCall size={20} />
                   </div>
-                  <div style={{ fontSize: 12, color: "#6b7280" }}>
-                    {profile.phone}
+                  <div>
+                    <div
+                      style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
+                    >
+                      Call Mobile
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      {profile.phone}
+                    </div>
                   </div>
-                </div>
-              </a>
-              <a
-                href={`mailto:${profile.email}`}
-                style={{
-                  textDecoration: "none",
-                  background: "#f9fafb",
-                  border: "1px solid #e5e7eb",
-                  padding: 16,
-                  borderRadius: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                }}
-              >
-                <div
+                </a>
+              )}
+              {profile.email && (
+                <a
+                  href={`mailto:${profile.email}`}
                   style={{
-                    background: "#fee2e2",
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
+                    textDecoration: "none",
+                    background: "#f9fafb",
+                    border: "1px solid #e5e7eb",
+                    padding: 16,
+                    borderRadius: 12,
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    color: "#dc2626",
+                    gap: 14,
                   }}
                 >
-                  <Mail size={20} />
-                </div>
-                <div>
                   <div
-                    style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
+                    style={{
+                      background: "#fee2e2",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#dc2626",
+                    }}
                   >
-                    Email
+                    <Mail size={20} />
                   </div>
-                  <div style={{ fontSize: 12, color: "#6b7280" }}>
-                    {profile.email}
+                  <div>
+                    <div
+                      style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
+                    >
+                      Email
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      {profile.email}
+                    </div>
                   </div>
-                </div>
-              </a>
+                </a>
+              )}
               {profile.whatsapp && (
                 <a
                   href={`https://wa.me/${profile.whatsapp}`}
@@ -1020,7 +1097,11 @@ export default function ClassicModern({
               )}
             </div>
           </SectionContainer>
-          <SectionContainer title="Services" icon={<Sparkles size={18} />}>
+          </>
+          )}
+
+          {activeTab === 'services' && hasServices && (
+            <SectionContainer title="Services" icon={<Sparkles size={18} />}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {profile.services && profile.services.length > 0 ? (
                 profile.services.map((svc: any, i: number) => (
@@ -1300,7 +1381,10 @@ export default function ClassicModern({
               )}
             </div>
           </SectionContainer>
-          <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
+          )}
+
+          {activeTab === 'inquiry' && (
+            <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
             <div
               style={{
                 background: "#fff",
@@ -1366,7 +1450,10 @@ export default function ClassicModern({
               </button>
             </div>
           </SectionContainer>
-          <SectionContainer title="Wallet" icon={<Wallet size={18} />}>
+          )}
+
+          {activeTab === 'wallet' && (
+            <SectionContainer title="Wallet" icon={<Wallet size={18} />}>
             <>
               <div
                 style={{
@@ -1479,7 +1566,10 @@ export default function ClassicModern({
               )}
             </>
           </SectionContainer>
-          <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
+          )}
+
+          {activeTab === 'shop' && hasProducts && (
+            <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {profile.products && profile.products.length > 0 ? (
                 profile.products.map((prod: any, i: number) => (
@@ -1590,117 +1680,47 @@ export default function ClassicModern({
               )}
             </div>
           </SectionContainer>
-          <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
+          )}
+
+          {activeTab === 'home' && hasFaqs && (
+            <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.testimonials && profile.testimonials.length > 0 ? (
-                profile.testimonials.map((test: any, i: number) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: "#fff",
-                      border: "1px solid #e5e7eb",
-                      padding: 16,
-                      borderRadius: 16,
-                    }}
-                  >
-                    <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
-                      {[...Array(test.rating || 5)].map((_, i) => (
-                        <span
-                          key={i}
-                          style={{ color: "#fbbf24", fontSize: 14 }}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        color: "#4b5563",
-                        fontStyle: "italic",
-                        marginBottom: 12,
-                      }}
-                    >
-                      "{test.quote}"
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "#1f2937",
-                      }}
-                    >
-                      {test.name}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#9ca3af" }}>
-                      {test.role}
-                    </div>
-                  </div>
-                ))
-              ) : (
+              {profile.faqs.map((faq: any, i: number) => (
                 <div
+                  key={i}
                   style={{
-                    textAlign: "center",
-                    padding: 20,
-                    color: "#6b7280",
-                    fontSize: 14,
+                    background: "#fff",
+                    border: "1px solid #e5e7eb",
+                    padding: 16,
+                    borderRadius: 16,
                   }}
                 >
-                  No reviews available.
-                </div>
-              )}
-            </div>
-          </SectionContainer>
-          <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.faqs && profile.faqs.length > 0 ? (
-                profile.faqs.map((faq: any, i: number) => (
                   <div
-                    key={i}
                     style={{
-                      background: "#fff",
-                      border: "1px solid #e5e7eb",
-                      padding: 16,
-                      borderRadius: 16,
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "#1e3a8a",
+                      marginBottom: 8,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: "#1e3a8a",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Q: {faq.question}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        color: "#4b5563",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      A: {faq.answer}
-                    </div>
+                    Q: {faq.question}
                   </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 20,
-                    color: "#6b7280",
-                    fontSize: 14,
-                  }}
-                >
-                  No FAQs available.
+                  <div
+                    style={{
+                      fontSize: 14,
+                      color: "#4b5563",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    A: {faq.answer}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </SectionContainer>
-          {((profile.paymentLinks && profile.paymentLinks.length > 0) ||
-            (profile.bankAccounts && profile.bankAccounts.length > 0)) && (
+          )}
+
+          {activeTab === 'wallet' && hasPayments && (
             <SectionContainer title="Payments" icon={<Wallet size={18} />}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
@@ -1919,7 +1939,9 @@ export default function ClassicModern({
               </div>
             </SectionContainer>
           )}
-          <SectionContainer title="Referral" icon={<LinkIcon size={18} />}>
+
+          {activeTab === 'home' && (
+            <SectionContainer title="Referral Program" icon={<LinkIcon size={18} />}>
             <div
               style={{
                 background: "#1a56db",
@@ -1929,12 +1951,12 @@ export default function ClassicModern({
                 textAlign: "center",
               }}
             >
-              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>
-                Get Your Own Digital Profile
+              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
+                Refer & Earn Rewards
               </div>
-              <div style={{ fontSize: 13, color: "#dbeafe", marginBottom: 16 }}>
-                Join the DBC network using my referral code. We both earn
-                rewards!
+              <div style={{ fontSize: 13, color: "#dbeafe", marginBottom: 16, textAlign: 'left', lineHeight: 1.5 }}>
+                <div style={{ marginBottom: 8 }}>• <strong>1 Month Free Trial:</strong> All new business profiles get a full month free trial to explore all features.</div>
+                <div>• <strong>Referral Success:</strong> If your referral purchases any plan within <strong>35 days</strong> of signing up, your referral is marked successful and you both earn rewards!</div>
               </div>
               <div
                 style={{
@@ -1948,7 +1970,7 @@ export default function ClassicModern({
                   marginBottom: 12,
                 }}
               >
-                dbc.ae/ref/{profile.id ? profile.id.slice(-6) : "LINK"}
+                businessprofile.webdevelop.ae/ref/{profile.id ? profile.id.slice(-6).toUpperCase() : "LINK"}
               </div>
               <Link
                 to="/plans"
@@ -1964,10 +1986,100 @@ export default function ClassicModern({
                   cursor: "pointer",
                 }}
               >
-                Sign Up Now
+                Get Started Now
               </Link>
             </div>
           </SectionContainer>
+          )}
+
+          {hasTestimonials && (
+            <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {profile.testimonials.map((test: any, i: number) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
+                      padding: 16,
+                      borderRadius: 16,
+                    }}
+                  >
+                    <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+                      {[...Array(test.rating || 5)].map((_, i) => (
+                        <span
+                          key={i}
+                          style={{ color: "#fbbf24", fontSize: 14 }}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        color: "#4b5563",
+                        fontStyle: "italic",
+                        marginBottom: 12,
+                      }}
+                    >
+                      "{test.quote}"
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: "#1f2937",
+                      }}
+                    >
+                      {test.name}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#9ca3af" }}>
+                      {test.role}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </SectionContainer>
+          )}
+        </div>
+
+        {/* Bottom Navigation */}
+        <div style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: '50%', 
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: 480,
+          background: '#fff', 
+          borderTop: '1px solid #e5e7eb', 
+          display: 'flex', 
+          justifyContent: 'space-around', 
+          padding: '12px 0 24px 0',
+          zIndex: 1000,
+          boxShadow: '0 -10px 25px rgba(0,0,0,0.08)'
+        }}>
+          {navItems.map((item) => (
+            <button 
+              key={item.id} 
+              onClick={() => setActiveTab(item.id)}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                gap: 4, 
+                color: activeTab === item.id ? '#1a1a2e' : '#94a3b8',
+                cursor: 'pointer',
+                flex: 1
+              }}
+            >
+              <div style={{ transform: activeTab === item.id ? 'scale(1.1) translateY(-3px)' : 'none', transition: 'all 0.2s' }}>{item.icon}</div>
+              <span style={{ fontSize: 10, fontWeight: activeTab === item.id ? 800 : 500 }}>{item.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Share Modal */}
@@ -2250,5 +2362,6 @@ export default function ClassicModern({
         <ProfileChatbot profile={profile} />
       </div>
     </div>
-  );
+  </div>
+);
 }

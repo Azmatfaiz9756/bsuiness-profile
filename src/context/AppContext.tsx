@@ -103,7 +103,16 @@ User agar business ke baare mein puche, toh unhe batayein ki hum enterprise solu
     currency: 'AED',
     seoTitle: 'DBC - Digital Business Card',
     seoDesc: 'Create your digital business card and start networking smarter.',
-    seoKeywords: 'nfc card, digital business card, networking'
+    seoKeywords: 'nfc card, digital business card, networking',
+    trialPeriod: '1 Month',
+    referralPurchaseWindow: 35,
+    referrerReward: 50,
+    refereeReward: 50,
+    plans: [
+      { id: 'standard', name: 'Standard', price: 'AED 299', popular: false, badge: 'STANDARD' },
+      { id: 'premium', name: 'Premium', price: 'AED 599', popular: true, badge: 'MOST POPULAR' },
+      { id: 'business_pro', name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO' }
+    ]
   });
 
   const [walletBalance, setWalletBalance] = useState(340);

@@ -517,8 +517,45 @@ export default function OwnerDashboard() {
                       <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Profile Photo URL</label>
+                      <div className="flex gap-2">
+                        <input type="text" placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} style={{ flex: 1, padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                        <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+                           {formData.photoUrl && <img src={formData.photoUrl} className="w-full h-full object-cover" />}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Banner Image URL</label>
+                      <input type="text" placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Job Title</label>
                       <input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Business Category</label>
+                      <select 
+                        value={formData.category || 'Technology'} 
+                        onChange={e => setFormData({...formData, category: e.target.value})} 
+                        style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}
+                      >
+                        {['Technology', 'Real Estate', 'Finance', 'Consulting', 'Design', 'Medical', 'Retail', 'Education'].map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>City (UAE)</label>
+                      <select 
+                        value={formData.city || 'Dubai'} 
+                        onChange={e => setFormData({...formData, city: e.target.value})} 
+                        style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8, background: '#fff' }}
+                      >
+                        {['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Fujairah', 'Ras Al Khaimah', 'Umm Al Quwain'].map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Company</label>
@@ -554,14 +591,13 @@ export default function OwnerDashboard() {
                             const btn = document.getElementById("ai-bio-btn");
                             if(btn) btn.innerHTML = "Generating...";
                             try {
-                              const GenAI = (await import('@google/genai')).GoogleGenAI;
-                              const ai = new GenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || '' });
-                              const res = await ai.models.generateContent({
-                                model: 'gemini-2.5-flash',
-                                contents: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.`
-                              });
-                              if(res.text) {
-                                setFormData({...formData, bio: res.text});
+                              const aiInstance: any = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+                              const model = aiInstance.getGenerativeModel({ model: 'gemini-1.5-flash' });
+                              const result = await model.generateContent(`Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.`);
+                              const response = await result.response;
+                              const text = response.text();
+                              if(text) {
+                                setFormData({...formData, bio: text});
                               }
                             } catch(e) {
                               alert("Failed to generate bio.");
@@ -607,7 +643,41 @@ export default function OwnerDashboard() {
                         <input type="url" value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="https://..." />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Building / Office Address</label>
+                        <div className="flex justify-between items-center">
+                          <label style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>Building / Office Address</label>
+                          <button 
+                            onClick={() => {
+                              if (!navigator.geolocation) {
+                                alert("Geolocation is not supported by your browser");
+                                return;
+                              }
+                              const btn = document.getElementById("gps-btn");
+                              if(btn) btn.innerHTML = "Fetching...";
+                              navigator.geolocation.getCurrentPosition(async (position) => {
+                                const { latitude, longitude } = position.coords;
+                                try {
+                                  // Simplified reverse geocoding mock or real if we had an API key
+                                  // For now, let's at least set the coordinates if we can't get address string easily
+                                  const address = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+                                  setFormData({
+                                    ...formData, 
+                                    address: address,
+                                    mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`
+                                  });
+                                  if(btn) btn.innerHTML = "✅ Found!";
+                                  setTimeout(() => { if(btn) btn.innerHTML = "📍 Use My GPS"; }, 2000);
+                                } catch(e) {
+                                  alert("Could not fetch address details.");
+                                }
+                              }, (err) => {
+                                alert("GPS Error: " + err.message);
+                                if(btn) btn.innerHTML = "📍 Use My GPS";
+                              });
+                            }}
+                            id="gps-btn"
+                            style={{ fontSize: 11, background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}
+                          >📍 Use My GPS</button>
+                        </div>
                         <input type="text" value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }} placeholder="Office 123, Tower..." />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: 'span 2' }}>

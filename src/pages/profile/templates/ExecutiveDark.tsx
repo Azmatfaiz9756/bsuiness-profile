@@ -17,7 +17,6 @@ import {
   CalendarDays,
   Video,
   CreditCard,
-  Wallet,
   ShoppingBag,
   Contact,
   FileText,
@@ -25,6 +24,11 @@ import {
   MessageCircle,
   Calendar,
   Link2,
+  Wallet,
+  MessageSquare,
+  Link as LinkIcon,
+  UserPlus,
+  Share2,
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -204,7 +208,7 @@ export default function ExecutiveDark({
             {profile.plan.toUpperCase()}
           </div>
         </div>
-        {profile.bannerVideo && (
+        {(profile.bannerVideo || profile.bannerUrl) && (
           <div
             style={{
               position: "relative",
@@ -214,21 +218,35 @@ export default function ExecutiveDark({
               zIndex: 0,
             }}
           >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                opacity: 0.8,
-              }}
-            >
-              <source src={profile.bannerVideo} type="video/mp4" />
-            </video>
+            {profile.bannerVideo ? (
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: 0.8,
+                }}
+              >
+                <source src={profile.bannerVideo} type="video/mp4" />
+              </video>
+            ) : (
+              <img 
+                src={profile.bannerUrl} 
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: 0.8,
+                }}
+                alt="Banner"
+              />
+            )}
             <div
               style={{
                 position: "absolute",
@@ -248,7 +266,7 @@ export default function ExecutiveDark({
             padding: "10px 20px 30px",
             position: "relative",
             zIndex: 1,
-            marginTop: profile.bannerVideo ? -40 : 20,
+            marginTop: (profile.bannerVideo || profile.bannerUrl) ? -40 : 20,
           }}
         >
           <div
@@ -266,9 +284,14 @@ export default function ExecutiveDark({
               color: "#fef3c7",
               border: "4px solid #111",
               boxShadow: "0 0 0 1px #333",
+              overflow: 'hidden'
             }}
           >
-            {profile.avatar}
+            {profile.photoUrl ? (
+              <img src={profile.photoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={profile.name} />
+            ) : (
+              profile.avatar
+            )}
           </div>
 
           <h1
@@ -427,114 +450,82 @@ export default function ExecutiveDark({
               marginTop: 24,
             }}
           >
-            <button
-              onClick={handleSave}
+            <Link
+              to="/referrals"
               style={{
-                flex: 1,
-                background: "#fff",
-                color: "#000",
+                width: "100%",
+                background: "#b45309",
+                color: "#fff",
                 border: "none",
                 padding: "12px",
                 borderRadius: 4,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-            >
-              <Contact2 size={16} /> Save Contact
-            </button>
-            <button
-              onClick={() => setShowShareModal(true)}
-              style={{
-                flex: 1,
-                background: "transparent",
-                color: "#fff",
-                border: "1px solid #444",
-                padding: "12px",
-                borderRadius: 4,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-            >
-              <Send size={16} /> Share Profile
-            </button>
-          </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-            <button
-              onClick={() =>
-                alert("Downloading Apple Wallet pass... (Simulation)")
-              }
-              style={{
-                flex: 1,
-                background: "#111",
-                color: "#fff",
-                border: "1px solid #333",
-                padding: "12px",
-                borderRadius: 4,
                 fontWeight: 700,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 6,
-                fontSize: 13,
+                gap: 8,
+                textDecoration: "none",
+                fontSize: 14,
+                textTransform: 'uppercase',
+                letterSpacing: 1
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                <path d="M18.7 13.9C18.7 10.3 21.6 8.5 21.7 8.5C20.1 6.1 17.5 5.8 16.6 5.7C14.7 5.5 12.8 6.8 11.8 6.8C10.8 6.8 9.2 5.6 7.6 5.6C5.6 5.6 3.8 6.8 2.8 8.6C0.7 12.2 2.2 17.6 4.3 20.6C5.3 22 6.5 23.6 8 23.5C9.5 23.4 10 22.5 11.8 22.5C13.5 22.5 14 23.5 15.6 23.4C17.2 23.4 18.2 22 19.2 20.5C20.3 18.8 20.8 17.2 20.8 17.1C20.8 17 18.7 16.2 18.7 13.9Z" />
-                <path d="M15.4 3.8C16.2 2.8 16.7 1.4 16.6 0C15.4 0.1 13.9 0.8 13.1 1.8C12.4 2.6 11.8 4 12 5.4C13.3 5.5 14.6 4.7 15.4 3.8Z" />
-              </svg>
-              Apple Wallet
-            </button>
-            <button
-              onClick={() =>
-                alert("Downloading Google Wallet pass... (Simulation)")
-              }
-              style={{
-                flex: 1,
-                background: "#192841",
-                color: "#60a5fa",
-                border: "1px solid #1e3a8a",
-                padding: "12px",
-                borderRadius: 4,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                fontSize: 13,
-              }}
-            >
-              <Wallet size={18} />
-              Google Wallet
-            </button>
+              <Share2 size={16} /> Refer & Earn
+            </Link>
+            <div style={{ display: "flex", gap: 8, width: "100%" }}>
+              <button
+                onClick={handleSave}
+                style={{
+                  flex: 1,
+                  background: "#fff",
+                  color: "#000",
+                  border: "none",
+                  padding: "12px",
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 13,
+                }}
+              >
+                <UserPlus size={16} /> Save
+              </button>
+              <button
+                onClick={() => setShowShareModal(true)}
+                style={{
+                  flex: 1,
+                  background: "transparent",
+                  color: "#fff",
+                  border: "1px solid #444",
+                  padding: "12px",
+                  borderRadius: 4,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <Send size={16} /> Share
+              </button>
+            </div>
           </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              marginTop: 12,
-            }}
-          >
-            {profile.meetingUrl && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+            {profile.address && (
               <a
-                href={profile.meetingUrl}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{
-                  background: "#b45309",
+                  width: "100%",
+                  background: "#16a34a",
                   color: "#fff",
-                  padding: 14,
+                  padding: "14px",
                   borderRadius: 4,
                   fontWeight: 700,
                   display: "flex",
@@ -542,11 +533,34 @@ export default function ExecutiveDark({
                   justifyContent: "center",
                   gap: 8,
                   textDecoration: "none",
+                  boxShadow: "0 4px 12px rgba(22,163,74,0.3)",
+                  fontSize: 14
                 }}
               >
-                <Calendar size={18} /> Book an Appointment
+                <MapPin size={18} /> Get Directions
               </a>
             )}
+            <button
+               onClick={handleSave}
+               style={{
+                 width: "100%",
+                 background: "#2563eb",
+                 color: "#fff",
+                 padding: "14px",
+                 borderRadius: 4,
+                 fontWeight: 700,
+                 border: "none",
+                 cursor: "pointer",
+                 display: "flex",
+                 alignItems: "center",
+                 justifyContent: "center",
+                 gap: 8,
+                 fontSize: 14,
+                 boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
+               }}
+            >
+              <UserPlus size={18} /> Exchange Contact
+            </button>
             {profile.documentUrl && (
               <a
                 href={profile.documentUrl}
@@ -600,16 +614,6 @@ export default function ExecutiveDark({
                   {btn.label}
                 </a>
               ))}
-          </div>
-
-          {!profile.meetingUrl && (
-            <div style={{ marginTop: 20, textAlign: "left" }}>
-              <AppointmentBooking profile={profile} />
-            </div>
-          )}
-
-          <div style={{ marginTop: 12 }}>
-            <LeadCapture profile={profile} />
           </div>
         </div>
 
@@ -824,10 +828,10 @@ export default function ExecutiveDark({
               )}
             </div>
           </SectionContainer>
-          <SectionContainer title="Services" icon={<Globe size={18} />}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.services && profile.services.length > 0 ? (
-                profile.services.map((svc: any, i: number) => (
+          {profile.services && profile.services.length > 0 && (
+            <SectionContainer title="Services" icon={<Globe size={18} />}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {profile.services.map((svc: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -862,103 +866,92 @@ export default function ExecutiveDark({
                             : svc.price}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 20,
-                    color: "#666",
-                    fontSize: 14,
-                  }}
-                >
-                  No services listed.
-                </div>
-              )}
+                ))}
 
-              {profile.gallery && profile.gallery.length > 0 && (
-                <div style={{ marginTop: 12 }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      color: "#fff",
-                      marginBottom: 12,
-                      textTransform: "uppercase",
-                      letterSpacing: 1,
-                    }}
-                  >
-                    Portfolio
-                  </div>
-                  <div style={{ overflow: "hidden", paddingBottom: 12 }}>
-                    <div className="gallery-slider-dark">
-                      {[...profile.gallery, ...profile.gallery].map(
-                        (img: string, idx: number) => (
-                          <div
-                            key={idx}
-                            style={{
-                              height: 160,
-                              width: 240,
-                              flexShrink: 0,
-                              borderRadius: 8,
-                              overflow: "hidden",
-                              background: "#222",
-                              border: "1px solid #333",
-                            }}
-                          >
-                            <img
-                              src={img}
-                              alt="Portfolio item"
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                              }}
-                            />
-                          </div>
-                        ),
-                      )}
+                {profile.gallery && profile.gallery.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#fff",
+                        marginBottom: 12,
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                      }}
+                    >
+                      Portfolio
                     </div>
-                  </div>
-                  {profile.videos &&
-                    profile.videos.map((vid: string, idx: number) => (
-                      <div
-                        key={"v" + idx}
-                        style={{
-                          position: "relative",
-                          paddingBottom: "56.25%",
-                          height: 0,
-                          overflow: "hidden",
-                          borderRadius: 8,
-                          background: "#222",
-                          border: "1px solid #333",
-                          marginBottom: 12,
-                        }}
-                      >
-                        <iframe
-                          src={vid}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                          }}
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title="YouTube Video"
-                        ></iframe>
+                    <div style={{ overflow: "hidden", paddingBottom: 12 }}>
+                      <div className="gallery-slider-dark">
+                        {[...profile.gallery, ...profile.gallery].map(
+                          (img: string, idx: number) => (
+                            <div
+                              key={idx}
+                              style={{
+                                height: 160,
+                                width: 240,
+                                flexShrink: 0,
+                                borderRadius: 8,
+                                overflow: "hidden",
+                                background: "#222",
+                                border: "1px solid #333",
+                              }}
+                            >
+                              <img
+                                src={img}
+                                alt="Portfolio item"
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            </div>
+                          ),
+                        )}
                       </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          </SectionContainer>
-          <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.products && profile.products.length > 0 ? (
-                profile.products.map((prod: any, i: number) => (
+                    </div>
+                    {profile.videos &&
+                      profile.videos.map((vid: string, idx: number) => (
+                        <div
+                          key={"v" + idx}
+                          style={{
+                            position: "relative",
+                            paddingBottom: "56.25%",
+                            height: 0,
+                            overflow: "hidden",
+                            borderRadius: 8,
+                            background: "#222",
+                            border: "1px solid #333",
+                            marginBottom: 12,
+                          }}
+                        >
+                          <iframe
+                            src={vid}
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                            }}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title="YouTube Video"
+                          ></iframe>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </SectionContainer>
+          )}
+          {profile.products && profile.products.length > 0 && (
+            <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {profile.products.map((prod: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1047,21 +1040,10 @@ export default function ExecutiveDark({
                       </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 20,
-                    color: "#666",
-                    fontSize: 14,
-                  }}
-                >
-                  No products in the store yet.
-                </div>
-              )}
-            </div>
-          </SectionContainer>
+                ))}
+              </div>
+            </SectionContainer>
+          )}
           {((profile.paymentLinks && profile.paymentLinks.length > 0) ||
             (profile.bankAccounts && profile.bankAccounts.length > 0)) && (
             <SectionContainer title="Payments" icon={<Wallet size={18} />}>
@@ -1268,25 +1250,29 @@ export default function ExecutiveDark({
                   </div>
                 )}
                 {!profile.paymentLinks?.length &&
-                  !profile.bankAccounts?.length && (
+                  !profile.bankAccounts?.length ? null : (
                     <div
                       style={{
-                        textAlign: "center",
+                        background: "#1a1a1a",
+                        border: "1px solid #2a2a2a",
+                        borderRadius: 8,
                         padding: 20,
-                        color: "#666",
-                        fontSize: 14,
+                        color: "#fff",
+                        textAlign: "center",
                       }}
                     >
-                      No payment methods available.
+                      <div style={{ color: "#666", fontSize: 14 }}>
+                        Secured Payment Gateway Enabled
+                      </div>
                     </div>
                   )}
               </div>
             </SectionContainer>
           )}
-          <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.testimonials && profile.testimonials.length > 0 ? (
-                profile.testimonials.map((test: any, i: number) => (
+          {profile.testimonials && profile.testimonials.length > 0 && (
+            <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {profile.testimonials.map((test: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1325,25 +1311,14 @@ export default function ExecutiveDark({
                       {test.role}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 20,
-                    color: "#666",
-                    fontSize: 14,
-                  }}
-                >
-                  No reviews available.
-                </div>
-              )}
-            </div>
-          </SectionContainer>
-          <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.faqs && profile.faqs.length > 0 ? (
-                profile.faqs.map((faq: any, i: number) => (
+                ))}
+              </div>
+            </SectionContainer>
+          )}
+          {profile.faqs && profile.faqs.length > 0 && (
+            <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {profile.faqs.map((faq: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1369,21 +1344,10 @@ export default function ExecutiveDark({
                       A: {faq.answer}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: 20,
-                    color: "#666",
-                    fontSize: 14,
-                  }}
-                >
-                  No FAQs available.
-                </div>
-              )}
-            </div>
-          </SectionContainer>
+                ))}
+              </div>
+            </SectionContainer>
+          )}
           <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
             <div
               style={{
@@ -1600,31 +1564,33 @@ export default function ExecutiveDark({
                 style={{
                   background: "#1a1a1a",
                   border: "1px solid #2a2a2a",
-                  padding: 20,
+                  padding: 24,
                   borderRadius: 8,
                   color: "#fff",
                 }}
               >
-                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
-                  Referral Program
+                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: '#fef3c7' }}>
+                  Refer & Earn Rewards
                 </div>
-                <div style={{ fontSize: 13, color: "#888", marginBottom: 16 }}>
-                  Join the DBC network using my referral code. We both earn
-                  rewards!
+                <div style={{ fontSize: 13, color: "#aaa", marginBottom: 20, textAlign: 'left', lineHeight: 1.6 }}>
+                  <div style={{ marginBottom: 10 }}>✦ <strong>1 Month Free Trial:</strong> All new business profiles get a full month free trial.</div>
+                  <div>✦ <strong>Referral Success:</strong> If your referral purchases any plan within <strong>35 days</strong>, your referral is marked successful and you both earn rewards!</div>
                 </div>
                 <div
                   style={{
                     background: "#000",
                     border: "1px solid #333",
-                    padding: 12,
+                    padding: 14,
                     borderRadius: 4,
                     fontFamily: "monospace",
                     color: "#b45309",
                     textAlign: "center",
-                    marginBottom: 12,
+                    fontWeight: 700,
+                    fontSize: 16,
+                    marginBottom: 16,
                   }}
                 >
-                  dbc.ae/ref/{profile.id ? profile.id.slice(-6) : "LINK"}
+                  businessprofile.webdevelop.ae/ref/{profile.id ? profile.id.slice(-6).toUpperCase() : "LINK"}
                 </div>
                 <Link
                   to="/plans"
@@ -1634,16 +1600,19 @@ export default function ExecutiveDark({
                     boxSizing: "border-box",
                     textAlign: "center",
                     textDecoration: "none",
-                    background: "#333",
+                    background: "#b45309",
                     color: "#fff",
                     border: "none",
-                    padding: "10px",
+                    padding: "12px",
                     borderRadius: 4,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
+                    textTransform: 'uppercase',
+                    fontSize: 12,
+                    letterSpacing: 1
                   }}
                 >
-                  Sign Up Now
+                  Get Started Now
                 </Link>
               </div>
             </div>

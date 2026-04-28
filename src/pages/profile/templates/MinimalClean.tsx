@@ -19,6 +19,14 @@ import {
   Download,
   MessageCircle,
   Link2,
+  Wallet,
+  CreditCard,
+  ShoppingBag,
+  MessageSquare,
+  Link as LinkIcon,
+  UserPlus,
+  Send,
+  Share2,
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -186,7 +194,7 @@ export default function MinimalClean({
             {profile.plan.toUpperCase()}
           </div>
         </div>
-        {profile.bannerVideo && (
+        {(profile.bannerVideo || profile.bannerUrl) && (
           <div
             style={{
               position: "relative",
@@ -196,15 +204,23 @@ export default function MinimalClean({
               zIndex: 0,
             }}
           >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            >
-              <source src={profile.bannerVideo} type="video/mp4" />
-            </video>
+            {profile.bannerVideo ? (
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              >
+                <source src={profile.bannerVideo} type="video/mp4" />
+              </video>
+            ) : (
+              <img 
+                src={profile.bannerUrl} 
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                alt="Banner"
+              />
+            )}
             <div
               style={{
                 position: "absolute",
@@ -223,7 +239,7 @@ export default function MinimalClean({
             padding: "20px 32px",
             position: "relative",
             zIndex: 1,
-            marginTop: profile.bannerVideo ? -60 : 0,
+            marginTop: (profile.bannerVideo || profile.bannerUrl) ? -60 : 0,
           }}
         >
           <div
@@ -240,9 +256,14 @@ export default function MinimalClean({
               color: "#09090b",
               marginBottom: 24,
               boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
+              overflow: 'hidden'
             }}
           >
-            {profile.avatar}
+            {profile.photoUrl ? (
+              <img src={profile.photoUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={profile.name} />
+            ) : (
+              profile.avatar
+            )}
           </div>
 
           <h1
@@ -302,132 +323,117 @@ export default function MinimalClean({
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 12, marginTop: 32 }}>
-            <button
-              onClick={handleSave}
-              style={{
-                flex: 1,
-                background: "#09090b",
-                color: "#fff",
-                border: "none",
-                padding: "14px",
-                borderRadius: 999,
-                fontWeight: 500,
-                cursor: "pointer",
-                fontSize: 15,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-            >
-              <Download size={16} /> Save
-            </button>
-            <button
-              onClick={() => setShowShareModal(true)}
-              style={{
-                flex: 1,
-                background: "#fff",
-                color: "#09090b",
-                border: "1px solid #e4e4e7",
-                padding: "14px",
-                borderRadius: 999,
-                fontWeight: 500,
-                cursor: "pointer",
-                fontSize: 15,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-              }}
-            >
-              Share <ArrowUpRight size={16} />
-            </button>
-          </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-            <button
-              onClick={() =>
-                alert("Downloading Apple Wallet pass... (Simulation)")
-              }
-              style={{
-                flex: 1,
-                background: "#fff",
-                color: "#000",
-                border: "1px solid #e4e4e7",
-                padding: "14px",
-                borderRadius: 999,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                fontSize: 13,
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="black">
-                <path d="M18.7 13.9C18.7 10.3 21.6 8.5 21.7 8.5C20.1 6.1 17.5 5.8 16.6 5.7C14.7 5.5 12.8 6.8 11.8 6.8C10.8 6.8 9.2 5.6 7.6 5.6C5.6 5.6 3.8 6.8 2.8 8.6C0.7 12.2 2.2 17.6 4.3 20.6C5.3 22 6.5 23.6 8 23.5C9.5 23.4 10 22.5 11.8 22.5C13.5 22.5 14 23.5 15.6 23.4C17.2 23.4 18.2 22 19.2 20.5C20.3 18.8 20.8 17.2 20.8 17.1C20.8 17 18.7 16.2 18.7 13.9Z" />
-                <path d="M15.4 3.8C16.2 2.8 16.7 1.4 16.6 0C15.4 0.1 13.9 0.8 13.1 1.8C12.4 2.6 11.8 4 12 5.4C13.3 5.5 14.6 4.7 15.4 3.8Z" />
-              </svg>
-              Apple Wallet
-            </button>
-            <button
-              onClick={() =>
-                alert("Downloading Google Wallet pass... (Simulation)")
-              }
-              style={{
-                flex: 1,
-                background: "#fff",
-                color: "#09090b",
-                border: "1px solid #e4e4e7",
-                padding: "14px",
-                borderRadius: 999,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                fontSize: 13,
-              }}
-            >
-              <Wallet size={18} />
-              Google Wallet
-            </button>
-          </div>
-
-          {profile.meetingUrl ? (
-            <div style={{ marginTop: 12 }}>
-              <a
-                href={profile.meetingUrl}
-                target="_blank"
-                rel="noreferrer"
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 32 }}>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={handleSave}
                 style={{
+                  flex: 1,
+                  background: "#09090b",
+                  color: "#fff",
+                  padding: "14px",
+                  borderRadius: 999,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 15,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 8,
-                  textAlign: "center",
-                  textDecoration: "none",
+                  border: "none",
+                }}
+              >
+                <UserPlus size={16} /> Save Contact
+              </button>
+              <button
+                onClick={() => setShowShareModal(true)}
+                style={{
+                  flex: 1,
                   background: "#f4f4f5",
                   color: "#09090b",
+                  border: "1px solid #e4e4e7",
                   padding: "14px",
                   borderRadius: 999,
                   fontWeight: 600,
+                  cursor: "pointer",
                   fontSize: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
                 }}
               >
-                <Calendar size={18} /> Book Appointment
+                <Send size={16} /> Share
+              </button>
+            </div>
+            <Link
+              to="/referrals"
+              style={{
+                width: "100%",
+                background: "#f4f4f5",
+                color: "#71717a",
+                padding: "12px",
+                borderRadius: 999,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                textDecoration: "none",
+                border: "1px solid #e4e4e7",
+              }}
+            >
+              <Share2 size={16} /> Refer & Earn Rewards
+            </Link>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+            {profile.address && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  width: "100%",
+                  background: "#16a34a",
+                  color: "#fff",
+                  padding: "14px",
+                  borderRadius: 999,
+                  fontWeight: 600,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  textDecoration: "none",
+                  fontSize: 15,
+                  boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
+                }}
+              >
+                <MapPin size={18} /> Get Directions
               </a>
-            </div>
-          ) : (
-            <div style={{ marginTop: 24, textAlign: "left" }}>
-              <AppointmentBooking profile={profile} />
-            </div>
-          )}
-
-          <div style={{ marginTop: 12 }}>
-            <LeadCapture profile={profile} />
+            )}
+            <button
+              onClick={handleSave}
+              style={{
+                width: "100%",
+                background: "#2563eb",
+                color: "#fff",
+                padding: "14px",
+                borderRadius: 999,
+                fontWeight: 600,
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                fontSize: 15,
+                boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
+              }}
+            >
+              <UserPlus size={18} /> Exchange Contact
+            </button>
           </div>
         </div>
 
@@ -440,16 +446,7 @@ export default function MinimalClean({
           }}
         >
           <div style={{ marginBottom: 32 }}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#a1a1aa",
-                letterSpacing: 1,
-                textTransform: "uppercase",
-                marginBottom: 16,
-              }}
-            >
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#a1a1aa", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>
               Contact
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -1574,30 +1571,53 @@ export default function MinimalClean({
                         </div>
                       </div>
                     ))}
-                  <Link
-                    to="/plans"
+                  <div
                     style={{
-                      textDecoration: "none",
                       background: "#f4f4f5",
-                      padding: 16,
-                      borderRadius: 12,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      cursor: "pointer",
+                      padding: 24,
+                      borderRadius: 16,
+                      marginTop: 16,
                     }}
                   >
-                    <span
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#09090b", marginBottom: 8 }}>
+                      Refer & Earn Rewards
+                    </div>
+                    <div style={{ fontSize: 13, color: "#71717a", marginBottom: 16, lineHeight: 1.5 }}>
+                      <div style={{ marginBottom: 8 }}>• <strong>1 Month Free Trial:</strong> All new business profiles get a full month free trial.</div>
+                      <div>• <strong>Referral Success:</strong> If your referral purchases within <strong>35 days</strong>, both of you earn rewards!</div>
+                    </div>
+                    <div
                       style={{
-                        fontSize: 15,
-                        fontWeight: 500,
+                        background: "#fff",
+                        border: "1px solid #e4e4e7",
+                        padding: 12,
+                        borderRadius: 8,
+                        fontFamily: "monospace",
                         color: "#09090b",
+                        textAlign: "center",
+                        fontWeight: 600,
+                        marginBottom: 12,
                       }}
                     >
-                      Join Platform / Referral
-                    </span>
-                    <span style={{ fontSize: 15, color: "#a1a1aa" }}>→</span>
-                  </Link>
+                      businessprofile.webdevelop.ae/ref/{profile.id ? profile.id.slice(-6).toUpperCase() : "LINK"}
+                    </div>
+                    <Link
+                      to="/plans"
+                      style={{
+                        display: "block",
+                        textDecoration: "none",
+                        background: "#09090b",
+                        color: "#fff",
+                        textAlign: "center",
+                        padding: "12px",
+                        borderRadius: 8,
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
+                    >
+                      Get Started Now
+                    </Link>
+                  </div>
                   <Link
                     to="/shop"
                     style={{
