@@ -116,23 +116,23 @@ function JobForm({ editForm, setEditForm }: { editForm: any, setEditForm: any })
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="md:col-span-2">
         <label className="block text-sm font-bold text-slate-700 mb-2">Job Title</label>
-        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} />
+        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} />
       </div>
       <div className="md:col-span-2">
         <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
-        <textarea className="w-full border border-slate-300 rounded-lg p-2 h-24" value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})}></textarea>
+        <textarea className="w-full border border-slate-300 rounded-lg p-2 h-24" value={editForm.description || ''} onChange={e => setEditForm({...editForm, description: e.target.value})}></textarea>
       </div>
       <div className="md:col-span-2">
         <label className="block text-sm font-bold text-slate-700 mb-2">Requirements</label>
-        <textarea className="w-full border border-slate-300 rounded-lg p-2 h-20" value={editForm.requirements} onChange={e => setEditForm({...editForm, requirements: e.target.value})}></textarea>
+        <textarea className="w-full border border-slate-300 rounded-lg p-2 h-20" value={editForm.requirements || ''} onChange={e => setEditForm({...editForm, requirements: e.target.value})}></textarea>
       </div>
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Salary Range</label>
-        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.salary} onChange={e => setEditForm({...editForm, salary: e.target.value})} />
+        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.salary || ''} onChange={e => setEditForm({...editForm, salary: e.target.value})} />
       </div>
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Type</label>
-        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.type} onChange={e => setEditForm({...editForm, type: e.target.value})}>
+        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.type || 'Full-time'} onChange={e => setEditForm({...editForm, type: e.target.value})}>
           <option>Full-time</option>
           <option>Part-time</option>
           <option>Contract</option>
@@ -141,7 +141,7 @@ function JobForm({ editForm, setEditForm }: { editForm: any, setEditForm: any })
       </div>
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Status</label>
-        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.status || 'Open'} onChange={e => setEditForm({...editForm, status: e.target.value})}>
           <option>Open</option>
           <option>Closed</option>
         </select>

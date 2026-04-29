@@ -49,15 +49,23 @@ export default function FrontendPlans() {
             <div className="text-3xl font-black text-slate-900 mb-6">{plan.price}<sub className="text-xs text-slate-500 font-medium bottom-0">/yr</sub></div>
             
             <div className="text-left flex flex-col gap-3 mb-8">
-               <div className="flex items-start gap-2 text-sm text-slate-600">
-                 <span className="text-emerald-500 font-bold mt-0.5">✓</span> Digital profile page
-               </div>
-               <div className="flex items-start gap-2 text-sm text-slate-600">
-                 <span className="text-emerald-500 font-bold mt-0.5">✓</span> Basic NFC card
-               </div>
-               <div className="flex items-start gap-2 text-sm text-slate-600">
-                 <span className="text-emerald-500 font-bold mt-0.5">✓</span> Wallet + top-up
-               </div>
+               {plan.features && plan.features.length > 0 ? plan.features.map((feature: string, idx: number) => (
+                 <div key={idx} className="flex items-start gap-2 text-sm text-slate-600">
+                   <span className="text-emerald-500 font-bold mt-0.5">✓</span> {feature}
+                 </div>
+               )) : (
+                 <>
+                   <div className="flex items-start gap-2 text-sm text-slate-600">
+                     <span className="text-emerald-500 font-bold mt-0.5">✓</span> Digital profile page
+                   </div>
+                   <div className="flex items-start gap-2 text-sm text-slate-600">
+                     <span className="text-emerald-500 font-bold mt-0.5">✓</span> Basic NFC card
+                   </div>
+                   <div className="flex items-start gap-2 text-sm text-slate-600">
+                     <span className="text-emerald-500 font-bold mt-0.5">✓</span> Wallet + top-up
+                   </div>
+                 </>
+               )}
             </div>
             
             <button onClick={() => handleStartTrial(plan)} className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>

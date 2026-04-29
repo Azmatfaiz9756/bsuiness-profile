@@ -3,8 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { Package, Plus, Search, Edit2, Trash2, Filter } from 'lucide-react';
 
 export default function AdminProducts() {
-  const { products: contextProducts } = useAppContext();
-  const [products, setProducts] = useState(contextProducts || []);
+  const { products, setProducts } = useAppContext();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -28,11 +27,7 @@ export default function AdminProducts() {
     isDigital: false
   });
 
-  useEffect(() => {
-    if (products.length === 0 && contextProducts.length > 0) {
-      setProducts(contextProducts);
-    }
-  }, [contextProducts]);
+
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -171,24 +166,24 @@ export default function AdminProducts() {
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Product Title</label>
-                    <input required type="text" placeholder="e.g. iPhone 15 Pro Max, 256GB" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
+                    <input required type="text" placeholder="e.g. iPhone 15 Pro Max, 256GB" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Brand</label>
-                    <input type="text" placeholder="e.g. Apple, Nike" value={formData.brand} onChange={e => setFormData({...formData, brand: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
+                    <input type="text" placeholder="e.g. Apple, Nike" value={formData.brand || ''} onChange={e => setFormData({...formData, brand: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Category</label>
-                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }}>
+                    <select value={formData.category || 'Electronics'} onChange={e => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }}>
                       {categories.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Weight (kg) <span style={{color:'#94a3b8',fontWeight:400}}>(Optional)</span></label>
-                    <input type="number" step="0.01" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
+                    <input type="number" step="0.01" value={formData.weight || ''} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 10 }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#334155' }}>
@@ -204,15 +199,15 @@ export default function AdminProducts() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                     <div>
                       <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Regular Price (AED)</label>
-                      <input required type="number" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
+                      <input required type="number" value={formData.price || ''} onChange={e => setFormData({...formData, price: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Discount Price (Optional)</label>
-                      <input type="number" value={formData.discountPrice} onChange={e => setFormData({...formData, discountPrice: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
+                      <input type="number" value={formData.discountPrice || ''} onChange={e => setFormData({...formData, discountPrice: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: 12, color: '#64748b', marginBottom: 6 }}>Stock Quantity</label>
-                      <input required={!formData.isDigital} type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={formData.isDigital} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', background: formData.isDigital ? '#e2e8f0' : '#fff' }} />
+                      <input required={!formData.isDigital} type="number" value={formData.stock || ''} onChange={e => setFormData({...formData, stock: e.target.value})} disabled={formData.isDigital} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', background: formData.isDigital ? '#e2e8f0' : '#fff' }} />
                     </div>
                   </div>
                 </div>
@@ -220,16 +215,16 @@ export default function AdminProducts() {
                 {/* Description & Specs */}
                 <div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Detailed Description</label>
-                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} rows={4} placeholder="Write a compelling description for this product..." style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', fontFamily: 'inherit' }} />
+                  <textarea value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} rows={4} placeholder="Write a compelling description for this product..." style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', fontFamily: 'inherit' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Technical Specifications / Features (Bullet points)</label>
-                  <textarea value={formData.specifications} onChange={e => setFormData({...formData, specifications: e.target.value})} rows={3} placeholder="- 6.7-inch Super Retina XDR display\n- A17 Pro chip\n- Titanium design" style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', fontFamily: 'inherit' }} />
+                  <textarea value={formData.specifications || ''} onChange={e => setFormData({...formData, specifications: e.target.value})} rows={3} placeholder="- 6.7-inch Super Retina XDR display\n- A17 Pro chip\n- Titanium design" style={{ width: '100%', padding: '12px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none', fontFamily: 'inherit' }} />
                 </div>
                 
                 <div>
                   <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Product Status</label>
-                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} style={{ width: '200px', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }}>
+                  <select value={formData.status || 'Active'} onChange={e => setFormData({...formData, status: e.target.value})} style={{ width: '200px', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }}>
                     <option value="Active">Active (Visible in Store)</option>
                     <option value="Draft">Draft (Hidden)</option>
                     <option value="Out of Stock">Out of Stock</option>

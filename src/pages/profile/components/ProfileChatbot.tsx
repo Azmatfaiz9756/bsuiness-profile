@@ -13,7 +13,7 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<'hi' | 'en' | 'ar' | null>(null);
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
   const [liveChatSessionId, setLiveChatSessionId] = useState<string | null>(null);
   const [isLiveAgentRequesting, setIsLiveAgentRequesting] = useState(false);
 
@@ -31,14 +31,17 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const greetings = {
-    hi: `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`,
-    en: `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`,
-    ar: `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`
+  const getGreeting = (langId: string) => {
+    if (langId === 'hi') return `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`;
+    if (langId === 'en') return `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`;
+    if (langId === 'ar') return `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`;
+    const lang = CHAT_LANGUAGES.find(l => l.id === langId);
+    return `Hello! I'm the AI assistant for ${profile?.name}. I can assist you in ${lang?.label || langId}. How can I help you today?`;
   };
 
-  const prompts = {
-    hi: `Aap ${profile?.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+  const getPrompt = (langId: string) => {
+    if (langId === 'hi') {
+      return `Aap ${profile?.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
 - No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
@@ -65,9 +68,28 @@ Business Details:
 - Company: ${profile?.company}
 - Bio: ${profile?.bio}
 - Services: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}
-- Contact: Email ${profile?.email}, Phone ${profile?.phone}`,
-    en: `You are a professional AI business assistant for ${profile?.name}.
+- Contact: Email ${profile?.email}, Phone ${profile?.phone}`;
+    }
+    
+    if (langId === 'ar') {
+      return `أنت مساعد ذكي محترف لـ ${profile?.name}.
+يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة بيضاء مهذبة).
+
+معلومات العمل:
+- الاسم: ${profile?.name}
+- المسمى الوظيفي: ${profile?.title}
+- الشركة: ${profile?.company}
+- الخبرات: ${profile?.experience}
+- الخدمات: ${profile?.services?.map((s: any) => `${s.title}`).join('، ') || 'N/A'}
+- التواصل: ${profile?.email}, ${profile?.phone}
+
+ساعد الزوار في التعرف على الخدمات والتواصل.`;
+    }
+
+    const lang = CHAT_LANGUAGES.find(l => l.id === langId);
+    return `You are a professional AI business assistant for ${profile?.name}.
 Your tone should be helpful, clear, and professional.
+You MUST communicate primarily in ${lang?.label || langId}.
 
 Full Profile Context:
 - Name: ${profile?.name}
@@ -81,19 +103,7 @@ Full Profile Context:
 - Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
 - Socials: ${JSON.stringify(profile?.socials || {})}
 
-Assist visitors with inquiries about the business, services, and contact information.`,
-    ar: `أنت مساعد ذكي محترف لـ ${profile?.name}.
-يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة بيضاء مهذبة).
-
-معلومات العمل:
-- الاسم: ${profile?.name}
-- المسمى الوظيفي: ${profile?.title}
-- الشركة: ${profile?.company}
-- الخبرات: ${profile?.experience}
-- الخدمات: ${profile?.services?.map((s: any) => `${s.title}`).join('، ') || 'N/A'}
-- التواصل: ${profile?.email}, ${profile?.phone}
-
-ساعد الزوار في التعرف على الخدمات والتواصل.`
+Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.`;
   };
 
   // Persist language, history and session ID
@@ -152,7 +162,7 @@ Assist visitors with inquiries about the business, services, and contact informa
     if (selectedLang) {
        localStorage.setItem(lsKeyLang, selectedLang);
        if (messages.length === 0) {
-         setMessages([{ role: 'model', content: greetings[selectedLang] }]);
+         setMessages([{ role: 'model', content: getGreeting(selectedLang) }]);
        }
     }
   }, [selectedLang, lsKeyLang]);
@@ -242,7 +252,7 @@ Assist visitors with inquiries about the business, services, and contact informa
 
   const clearChat = () => {
     if (window.confirm('Delete chat history?')) {
-      const initialMsg = greetings[selectedLang || 'en'];
+      const initialMsg = getGreeting(selectedLang || 'en');
       setMessages([{ role: 'model', content: initialMsg }]);
       localStorage.setItem(lsKeyHistory, JSON.stringify([{ role: 'model', content: initialMsg }]));
     }
@@ -314,8 +324,8 @@ Assist visitors with inquiries about the business, services, and contact informa
       }));
 
       // Use recommended model
-      const modelName = 'gemini-3-flash-preview';
-      const systemInstruction = profile?.aiPrompt || prompts[selectedLang];
+      const modelName = 'gemini-1.5-flash';
+      const systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [
         ...history,
@@ -324,9 +334,9 @@ Assist visitors with inquiries about the business, services, and contact informa
 
       const response = await ai.models.generateContent({
         model: modelName,
-        contents: chatContents,
+        contents: chatContents as any,
         config: {
-          systemInstruction,
+          systemInstruction: systemInstruction as any,
           thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           tools: [{
             functionDeclarations: [

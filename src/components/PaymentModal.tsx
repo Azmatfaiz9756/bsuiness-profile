@@ -25,26 +25,49 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
     setLoading(true);
     
     try {
-      // Simulate secure payment gateway connection suitable for UAE
-      await new Promise(r => setTimeout(r, 2500));
-      
-      // Update plan in Firestore
-      const userRef = doc(db, 'profiles', user.uid);
-      await updateDoc(userRef, {
-        plan: plan.name,
-        updatedAt: new Date().toISOString()
-      });
+      if (method === 'stripe') {
+        const response = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            planName: plan.name,
+            price: plan.price,
+            uid: user.uid
+          }),
+        });
 
-      setLoading(false);
-      setSuccess(true);
+        const data = await response.json();
+        
+        if (data.url) {
+          window.location.href = data.url;
+          return; // Wait for redirect
+        } else {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+      } else {
+        // Tabby fallback simulation
+        await new Promise(r => setTimeout(r, 2500));
+        
+        // Update plan in Firestore
+        const userRef = doc(db, 'profiles', user.uid);
+        await updateDoc(userRef, {
+          plan: plan.name,
+          updatedAt: new Date().toISOString()
+        });
 
-      setTimeout(() => {
-        onClose();
-        navigate('/dashboard');
-      }, 2000);
-    } catch (err) {
-      console.error("Payment sync error:", err);
-      alert("Payment successful but failed to update profile. Please contact support.");
+        setLoading(false);
+        setSuccess(true);
+
+        setTimeout(() => {
+          onClose();
+          navigate('/dashboard');
+        }, 2000);
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      alert(err.message || "Payment process failed. Please contact support.");
       setLoading(false);
     }
   };

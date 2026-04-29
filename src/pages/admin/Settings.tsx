@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp } from 'lucide-react';
+import { db } from '../../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function AdminSettings() {
   const { siteSettings, setSiteSettings } = useAppContext();
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState({ ...siteSettings });
 
+  React.useEffect(() => {
+    setFormData(siteSettings);
+  }, [siteSettings]);
+
   const handleChange = (field: string, value: any) => {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    setSiteSettings(formData);
-    alert('Settings saved successfully!');
+  const handleSave = async () => {
+    try {
+      await setDoc(doc(db, 'settings', 'system'), formData, { merge: true });
+      setSiteSettings(formData);
+      alert('Settings saved successfully!');
+    } catch (e: any) {
+      console.error(e);
+      alert('Failed to save settings: ' + e.message);
+    }
   };
 
   return (
@@ -180,8 +192,8 @@ export default function AdminSettings() {
                         type="text" 
                         value={plan.name} 
                         onChange={e => {
-                          const newPlans = [...formData.plans];
-                          newPlans[idx].name = e.target.value;
+                          const newPlans = [...(formData.plans || [])];
+                          newPlans[idx] = { ...newPlans[idx], name: e.target.value };
                           setFormData({...formData, plans: newPlans});
                         }}
                         style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
@@ -193,8 +205,8 @@ export default function AdminSettings() {
                         type="text" 
                         value={plan.price} 
                         onChange={e => {
-                          const newPlans = [...formData.plans];
-                          newPlans[idx].price = e.target.value;
+                          const newPlans = [...(formData.plans || [])];
+                          newPlans[idx] = { ...newPlans[idx], price: e.target.value };
                           setFormData({...formData, plans: newPlans});
                         }}
                         style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
@@ -206,8 +218,8 @@ export default function AdminSettings() {
                         type="text" 
                         value={plan.badge} 
                         onChange={e => {
-                          const newPlans = [...formData.plans];
-                          newPlans[idx].badge = e.target.value;
+                          const newPlans = [...(formData.plans || [])];
+                          newPlans[idx] = { ...newPlans[idx], badge: e.target.value };
                           setFormData({...formData, plans: newPlans});
                         }}
                         style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
@@ -231,12 +243,12 @@ export default function AdminSettings() {
                               type="checkbox" 
                               checked={isChecked}
                               onChange={e => {
-                                const newPlans = [...formData.plans];
+                                const newPlans = [...(formData.plans || [])];
                                 const currentFeatures = newPlans[idx].features || [];
                                 if (e.target.checked) {
-                                  newPlans[idx].features = [...currentFeatures, feature];
+                                  newPlans[idx] = { ...newPlans[idx], features: [...currentFeatures, feature] };
                                 } else {
-                                  newPlans[idx].features = currentFeatures.filter((f: string) => f !== feature);
+                                  newPlans[idx] = { ...newPlans[idx], features: currentFeatures.filter((f: string) => f !== feature) };
                                 }
                                 setFormData({...formData, plans: newPlans});
                               }}
@@ -254,8 +266,8 @@ export default function AdminSettings() {
                       type="checkbox" 
                       checked={plan.popular} 
                       onChange={e => {
-                        const newPlans = [...formData.plans];
-                        newPlans[idx].popular = e.target.checked;
+                        const newPlans = [...(formData.plans || [])];
+                        newPlans[idx] = { ...newPlans[idx], popular: e.target.checked };
                         setFormData({...formData, plans: newPlans});
                       }}
                       id={`popular-${idx}`}

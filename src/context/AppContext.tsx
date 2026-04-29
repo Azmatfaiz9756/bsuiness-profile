@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 
 export const AppContext = createContext<any>(null);
 
@@ -243,6 +244,17 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       { id: 'business_pro', name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO' }
     ]
   });
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'system'), (docSnap) => {
+      if (docSnap.exists()) {
+        setSiteSettings(prev => ({ ...prev, ...docSnap.data() }));
+      }
+    }, (error) => {
+      console.error("Error fetching site settings:", error);
+    });
+    return () => unsub();
+  }, []);
 
   const [shopBanners, setShopBanners] = useState([
     { id: 1, title: 'Mega Sale on NFC Cards', desc: 'Up to 50% Off on all Premium Models', background: 'gradient', colorStart: '#2563eb', colorEnd: '#1e3a8a', imageUrl: '', imageType: 'icon', icon: '💳', font: 'sans', animation: 'spring' },

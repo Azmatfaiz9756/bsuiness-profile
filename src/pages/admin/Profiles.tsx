@@ -222,19 +222,19 @@ export default function AdminProfiles() {
                              newServices.splice(index, 1);
                              setFormData({...formData, services: newServices});
                            }} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={16} /></button>
-                           <input type="text" placeholder="Service Name" value={service.name} onChange={e => { const s = [...formData.services]; s[index].name = e.target.value; setFormData({...formData, services: s}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                           <input type="text" placeholder="Service Name" value={service.name || ''} onChange={e => { const s = [...formData.services]; s[index] = { ...s[index], name: e.target.value }; setFormData({...formData, services: s}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
                            <div style={{ display: 'flex', gap: 8 }}>
-                             <select value={service.priceType || 'Fixed'} onChange={e => { const s = [...formData.services]; s[index].priceType = e.target.value; setFormData({...formData, services: s}); }} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4, width: '130px', background: '#fff' }}>
+                             <select value={service.priceType || 'Fixed'} onChange={e => { const s = [...formData.services]; s[index] = { ...s[index], priceType: e.target.value }; setFormData({...formData, services: s}); }} style={{ padding: 8, border: '1px solid #d1d5db', borderRadius: 4, width: '130px', background: '#fff' }}>
                                <option value="Fixed">Fixed Price</option>
                                <option value="Hourly">Hourly Rate</option>
                                <option value="Call for Price">Call for Price</option>
                                <option value="Custom">Custom</option>
                              </select>
                              {(!service.priceType || service.priceType === 'Fixed' || service.priceType === 'Hourly') && (
-                               <input type="text" placeholder={service.priceType === 'Hourly' ? "Rate (e.g. AED 150/hr)" : "Price (e.g. AED 500)"} value={service.price} onChange={e => { const s = [...formData.services]; s[index].price = e.target.value; setFormData({...formData, services: s}); }} style={{ flex: 1, padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                               <input type="text" placeholder={service.priceType === 'Hourly' ? "Rate (e.g. AED 150/hr)" : "Price (e.g. AED 500)"} value={service.price || ''} onChange={e => { const s = [...formData.services]; s[index] = { ...s[index], price: e.target.value }; setFormData({...formData, services: s}); }} style={{ flex: 1, padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
                              )}
                            </div>
-                           <textarea placeholder="Description" value={service.desc} onChange={e => { const s = [...formData.services]; s[index].desc = e.target.value; setFormData({...formData, services: s}); }} rows={2} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4, fontFamily: 'inherit' }} />
+                           <textarea placeholder="Description" value={service.desc || ''} onChange={e => { const s = [...formData.services]; s[index] = { ...s[index], desc: e.target.value }; setFormData({...formData, services: s}); }} rows={2} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4, fontFamily: 'inherit' }} />
                          </div>
                        ))}
                        {(!formData.services || formData.services.length === 0) && <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', padding: 20 }}>No services added yet.</div>}
@@ -293,16 +293,16 @@ export default function AdminProfiles() {
                          }} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={16} /></button>
                          
                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                           <input type="text" placeholder="Country (e.g. UAE)" value={account.country} onChange={e => { const a = [...formData.bankAccounts]; a[index].country = e.target.value; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                           <input type="text" placeholder="Bank Name" value={account.bankName} onChange={e => { const a = [...formData.bankAccounts]; a[index].bankName = e.target.value; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                           <input type="text" placeholder="Country (e.g. UAE)" value={account.country} onChange={e => { const a = [...formData.bankAccounts]; a[index] = { ...a[index], country: e.target.value }; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                           <input type="text" placeholder="Bank Name" value={account.bankName} onChange={e => { const a = [...formData.bankAccounts]; a[index] = { ...a[index], bankName: e.target.value }; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
                          </div>
-                         <input type="text" placeholder="Account Holder Name" value={account.accountName} onChange={e => { const a = [...formData.bankAccounts]; a[index].accountName = e.target.value; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                         <input type="text" placeholder="Account Holder Name" value={account.accountName} onChange={e => { const a = [...formData.bankAccounts]; a[index] = { ...a[index], accountName: e.target.value }; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
                          
                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                           <input type="text" placeholder="Account Number" value={account.accountNumber || ''} onChange={e => { const a = [...formData.bankAccounts]; a[index].accountNumber = e.target.value; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
-                           <input type="text" placeholder="IBAN" value={account.iban} onChange={e => { const a = [...formData.bankAccounts]; a[index].iban = e.target.value; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                           <input type="text" placeholder="Account Number" value={account.accountNumber || ''} onChange={e => { const a = [...formData.bankAccounts]; a[index] = { ...a[index], accountNumber: e.target.value }; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                           <input type="text" placeholder="IBAN" value={account.iban} onChange={e => { const a = [...formData.bankAccounts]; a[index] = { ...a[index], iban: e.target.value }; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
                          </div>
-                         <input type="text" placeholder="SWIFT / BIC / Sort Code" value={account.swift} onChange={e => { const a = [...formData.bankAccounts]; a[index].swift = e.target.value; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
+                         <input type="text" placeholder="SWIFT / BIC / Sort Code" value={account.swift} onChange={e => { const a = [...formData.bankAccounts]; a[index] = { ...a[index], swift: e.target.value }; setFormData({...formData, bankAccounts: a}); }} style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 4 }} />
                        </div>
                      ))}
                      {(!formData.bankAccounts || formData.bankAccounts.length === 0) && <div style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', padding: 20 }}>No bank accounts added yet.</div>}

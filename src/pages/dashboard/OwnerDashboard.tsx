@@ -2,33 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import LiveAgentPanel from './LiveAgentPanel';
+import { CHAT_LANGUAGES } from '../../lib/languages';
 
 function DashboardChatTester({ profile }: { profile: any }) {
   const { user } = useAppContext();
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<'hi' | 'en' | 'ar' | null>(null);
+  const [selectedLang, setSelectedLang] = useState<string | null>(null);
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
-  const greetings = {
-    hi: `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`,
-    en: `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`,
-    ar: `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`
+  const getGreeting = (langId: string) => {
+    if (langId === 'hi') return `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`;
+    if (langId === 'en') return `Hello! I'm the AI assistant for ${profile?.name}. How can I assist you today?`;
+    if (langId === 'ar') return `مرحباً! أنا المساعد الذكي لـ ${profile?.name}. كيف يمكنني مساعدتك اليوم؟`;
+    const lang = CHAT_LANGUAGES.find(l => l.id === langId);
+    return `Hello! I'm the AI assistant for ${profile?.name}. I can assist you in ${lang?.label || langId}. How can I help you today?`;
   };
 
-  const prompts = {
-    hi: `Aap ${profile.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+  const getPrompt = (langId: string) => {
+    if (langId === 'hi') {
+      return `Aap ${profile.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
 - No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
-- No formal Hindi/Sanskrit: 'vistar', 'mukhya', 'adhik', 'yogdaan', 'parinaam' - Yeh sab bhi bilkul use na karein.
+- No formal Hindi/Sanskrit: 'vistar', 'mukhya', 'adhik', 'yogdaan', 'parinaam' - Yeh sab bhi delete na karein.
 
 INKI JAGAH YE EK DUM SIMPLE WORDS USE KAREIN:
 - 'baat-cheet' (guftagu ki jagah)
@@ -46,18 +50,24 @@ Greeting Style:
 "Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? Kya aap ${profile.name} sir se kisi khass topic pe baat-cheet karna chahte hain, ya humari company ${profile.company} ki services ke baare mein kuch jaanna chahte hain?"
 
 Context: Aap ${profile.name} (Work: ${profile.title} at ${profile.company}) ko represent karte hain.
-Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`,
-    en: `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
-Your tone should be helpful, clear, and professional. 
-Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.phone}.`,
-    ar: `أنت مساعد ذكي محترف لـ ${profile?.name} (المسمى الوظيفي: ${profile?.title} في ${profile?.company}).
+Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`;
+    }
+
+    if (langId === 'ar') {
+      return `أنت مساعد ذكي محترف لـ ${profile?.name} (المسمى الوظيفي: ${profile?.title} في ${profile?.company}).
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة خليجية بيضاء أو فصحى مهذبة).
-السياق: ${profile?.bio}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`
+السياق: ${profile?.bio}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`;
+    }
+    const lang = CHAT_LANGUAGES.find(l => l.id === langId);
+    return `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
+Your tone should be helpful, clear, and professional. 
+You MUST communicate primarily in ${lang?.label || langId}.
+Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.phone}.`;
   };
 
   useEffect(() => {
     if (selectedLang) {
-      setMessages([{ role: 'model', content: greetings[selectedLang] }]);
+      setMessages([{ role: 'model', content: getGreeting(selectedLang) }]);
     }
   }, [selectedLang]);
 
@@ -75,8 +85,8 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-3-flash-preview';
-      const systemInstruction = profile.aiPrompt || prompts[selectedLang];
+      const modelName = 'gemini-1.5-flash';
+      const systemInstruction = profile.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [
         ...history,
@@ -85,9 +95,9 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
 
       const response = await ai.models.generateContent({
         model: modelName,
-        contents: chatContents,
+        contents: chatContents as any,
         config: {
-          systemInstruction,
+          systemInstruction: systemInstruction as any,
           thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           tools: [{
             functionDeclarations: [
@@ -186,11 +196,20 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f8fafc' }}>
       <div style={{ flex: 1, padding: 16, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {!selectedLang ? (
-           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%', justifyContent: 'center', alignItems: 'center', overflowY: 'auto' }}>
               <span style={{ fontSize: 14, fontWeight: 600, color: '#64748b', marginBottom: 10 }}>Select test language:</span>
-              <button onClick={() => setSelectedLang('en')} style={{ width: '150px', padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer' }}>English</button>
-              <button onClick={() => setSelectedLang('hi')} style={{ width: '150px', padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer' }}>Hindustani</button>
-              <button onClick={() => setSelectedLang('ar')} style={{ width: '150px', padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer' }}>Arabic</button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10, width: '100%', padding: '10px' }}>
+               {CHAT_LANGUAGES.map(lang => (
+                 <button 
+                   key={lang.id}
+                   onClick={() => setSelectedLang(lang.id)} 
+                   style={{ padding: '10px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}
+                 >
+                   <span>{lang.flag}</span>
+                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lang.label}</span>
+                 </button>
+               ))}
+              </div>
            </div>
         ) : (
           messages.map((msg, i) => (
@@ -236,6 +255,35 @@ export default function OwnerDashboard() {
   const [invitationRole, setInvitationRole] = useState('Member (Customizable Profile)');
 
   const [toastMessage, setToastMessage] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Handle Stripe Success Callback
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success');
+    const sessionId = searchParams.get('session_id');
+    const planName = searchParams.get('plan');
+
+    if (paymentSuccess === 'true' && sessionId && planName && profile?.id) {
+      console.log('Payment success detected');
+      const completePayment = async () => {
+        try {
+          const { updateDoc } = await import('firebase/firestore');
+          const userRef = doc(db, 'profiles', profile.id);
+          await updateDoc(userRef, {
+            plan: decodeURIComponent(planName),
+            updatedAt: new Date().toISOString()
+          });
+          showToast(`Succesfully subscribed to ${decodeURIComponent(planName)}!`);
+          
+          // Clear URL params
+          setSearchParams({});
+        } catch (error) {
+          console.error("Failed to update profile after payment:", error);
+        }
+      };
+      completePayment();
+    }
+  }, [searchParams, profile, setSearchParams]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -740,8 +788,8 @@ export default function OwnerDashboard() {
                             try {
                               const aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
                               const res = await aiInstance.models.generateContent({
-                                model: 'gemini-3-flash-preview',
-                                contents: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.`
+                                model: 'gemini-1.5-flash',
+                                contents: [{ role: 'user', parts: [{ text: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.` }] }]
                               });
                               const text = res.text;
                               if(text) {
@@ -1322,7 +1370,7 @@ export default function OwnerDashboard() {
                                  </select>
                                  <div className="flex items-center gap-4">
                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-500 cursor-pointer select-none">
-                                     <input type="checkbox" checked={btn.isPrimary || false} onChange={e => { const b = [...formData.customButtons]; b[index].isPrimary = e.target.checked; setFormData({...formData, customButtons: b}); }} className="accent-blue-600" />
+                                     <input type="checkbox" checked={btn.isPrimary || false} onChange={e => { const b = [...formData.customButtons]; b[index] = { ...b[index], isPrimary: e.target.checked }; setFormData({...formData, customButtons: b}); }} className="accent-blue-600" />
                                      Primary Style
                                    </label>
                                    <button onClick={() => { const b = [...formData.customButtons]; b.splice(index, 1); setFormData({...formData, customButtons: b}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">

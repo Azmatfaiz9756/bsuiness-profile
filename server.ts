@@ -1,11 +1,79 @@
 import express from "express";
 import path from "path";
+import Stripe from "stripe";
 
 async function startServer() {
   const app = express();
+  app.set('trust proxy', true);
   const PORT = 3000;
   
   app.use(express.json());
+
+  // Stripe setup
+  let stripeClient: Stripe | null = null;
+  const getStripe = () => {
+    if (!stripeClient) {
+      if (process.env.STRIPE_SECRET_KEY) {
+        stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
+          apiVersion: '2026-04-22.dahlia',
+        });
+      }
+    }
+    return stripeClient;
+  }
+
+  // Create Checkout Session
+  app.post("/api/create-checkout-session", async (req, res) => {
+    try {
+      const stripe = getStripe();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured on the server." });
+      }
+
+      const { planName, price, uid } = req.body;
+      
+      // Basic price parsing (assuming AED 100/mo format or just a number)
+      let unitAmount = 0;
+      if (price) {
+        const matches = price.toString().match(/\d+/g);
+        if (matches) {
+          unitAmount = parseInt(matches.join('')) * 100; // Convert to cents/fils
+        }
+      }
+
+      if (unitAmount <= 0) {
+        return res.status(400).json({ error: "Invalid price" });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'aed',
+              product_data: {
+                name: `DBC ${planName} Plan`,
+              },
+              unit_amount: unitAmount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/dashboard?payment_success=true&session_id={CHECKOUT_SESSION_ID}&plan=${encodeURIComponent(planName)}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/dashboard?payment_canceled=true`,
+        metadata: {
+          uid: uid,
+          plan: planName
+        }
+      });
+
+      res.json({ id: session.id, url: session.url });
+    } catch (error: any) {
+      console.error("Stripe Error:", error);
+      res.status(500).json({ error: error.message || "Failed to create payment session" });
+    }
+  });
 
   // Email API setup
   app.post("/api/send-email", async (req, res) => {

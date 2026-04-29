@@ -45,9 +45,21 @@ export default function AdminDirectory() {
     });
   }, [allProfiles, searchTerm, filter]);
 
-  const toggleFeatured = (id: string) => {
-    // Only updates static for now
-    setStaticProfiles(staticProfiles.map((p: any) => p.id === id ? { ...p, featured: !p.featured } : p));
+  const toggleFeatured = async (id: string, isDb?: boolean) => {
+    if (isDb) {
+      try {
+        const docRef = doc(db, 'profiles', id);
+        const profile = dbProfiles.find(p => p.id === id);
+        if (profile) {
+          await updateDoc(docRef, { featured: !profile.featured });
+          setDbProfiles(dbProfiles.map(p => p.id === id ? { ...p, featured: !p.featured } : p));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      setStaticProfiles(staticProfiles.map((p: any) => p.id === id ? { ...p, featured: !p.featured } : p));
+    }
   };
 
   return (
@@ -152,7 +164,7 @@ export default function AdminDirectory() {
                   </td>
                   <td style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                       <div style={{ width: 32, height: 16, background: p.featured ? '#2563eb' : '#e2e8f0', borderRadius: 10, position: 'relative', cursor: 'pointer' }} onClick={() => toggleFeatured(p.id)}>
+                       <div style={{ width: 32, height: 16, background: p.featured ? '#2563eb' : '#e2e8f0', borderRadius: 10, position: 'relative', cursor: 'pointer' }} onClick={() => toggleFeatured(p.id, p.isDb)}>
                          <div style={{ width: 12, height: 12, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: p.featured ? 18 : 2, transition: 'all 0.2s' }}></div>
                        </div>
                        <span style={{ fontSize: 12, color: p.featured ? '#2563eb' : '#64748b', fontWeight: 600 }}>{p.featured ? 'Featured' : 'Standard'}</span>

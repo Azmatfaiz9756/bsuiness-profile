@@ -13,6 +13,7 @@ interface ChatSession {
   lastMessage: string;
   status: 'Active' | 'Queued' | 'Closed';
   updatedAt: any;
+  profileId: string;
 }
 
 interface Message {
@@ -37,11 +38,14 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
 
   // Listen to sessions
   useEffect(() => {
-    const q = query(
-      collection(db, 'chat_sessions'),
-      where('profileId', '==', profileId),
-      orderBy('updatedAt', 'desc')
-    );
+    // If profileId is 'platform', we show ALL sessions (Super Agent mode)
+    const q = profileId === 'platform' 
+      ? query(collection(db, 'chat_sessions'), orderBy('updatedAt', 'desc'))
+      : query(
+          collection(db, 'chat_sessions'),
+          where('profileId', '==', profileId),
+          orderBy('updatedAt', 'desc')
+        );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const sessData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChatSession));
@@ -95,8 +99,8 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         try {
           const prompt = `Translate the following text to ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang}. Output ONLY the translated text, without any additional comments:\n\n${lastMsg.text}`;
           const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt
+            model: 'gemini-1.5-flash',
+            contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;
           
@@ -148,8 +152,8 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         
         try {
           const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt
+            model: 'gemini-1.5-flash',
+            contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;
           if (result) {
@@ -234,7 +238,12 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
                       <span className="font-bold text-sm text-slate-900 truncate tracking-tight">{s.customerName}</span>
                       {s.status === 'Queued' && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
                     </div>
-                    <p className="text-[10px] text-slate-500 truncate font-medium">{s.lastMessage}</p>
+                    <div className="flex items-center gap-2">
+                       {profileId === 'platform' && (
+                         <span className="text-[9px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase">{s.profileId}</span>
+                       )}
+                       <p className="text-[10px] text-slate-500 truncate font-medium">{s.lastMessage}</p>
+                    </div>
                   </div>
                 </button>
               ))

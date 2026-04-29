@@ -151,16 +151,16 @@ function BannerForm({ editForm, setEditForm, fonts, animations }: { editForm: an
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Title</label>
-        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} />
+        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.title || ''} onChange={e => setEditForm({...editForm, title: e.target.value})} />
       </div>
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
-        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.desc} onChange={e => setEditForm({...editForm, desc: e.target.value})} />
+        <input type="text" className="w-full border border-slate-300 rounded-lg p-2" value={editForm.desc || ''} onChange={e => setEditForm({...editForm, desc: e.target.value})} />
       </div>
       
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Background Type</label>
-        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.background} onChange={e => setEditForm({...editForm, background: e.target.value})}>
+        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.background || 'gradient'} onChange={e => setEditForm({...editForm, background: e.target.value})}>
           <option value="gradient">Gradient Colors</option>
           <option value="image">Image/GIF URL</option>
         </select>
@@ -171,42 +171,42 @@ function BannerForm({ editForm, setEditForm, fonts, animations }: { editForm: an
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">Color Start</label>
             <div className="flex gap-2">
-              <input type="color" className="w-10 h-10 p-1 bg-white border border-slate-200 rounded cursor-pointer" value={editForm.colorStart} onChange={e => setEditForm({...editForm, colorStart: e.target.value})} />
-              <input type="text" className="w-full border border-slate-300 rounded-lg p-2 text-sm" value={editForm.colorStart} onChange={e => setEditForm({...editForm, colorStart: e.target.value})} />
+              <input type="color" className="w-10 h-10 p-1 bg-white border border-slate-200 rounded cursor-pointer" value={editForm.colorStart || '#000000'} onChange={e => setEditForm({...editForm, colorStart: e.target.value})} />
+              <input type="text" className="w-full border border-slate-300 rounded-lg p-2 text-sm" value={editForm.colorStart || ''} onChange={e => setEditForm({...editForm, colorStart: e.target.value})} />
             </div>
           </div>
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">Color End</label>
             <div className="flex gap-2">
-              <input type="color" className="w-10 h-10 p-1 bg-white border border-slate-200 rounded cursor-pointer" value={editForm.colorEnd} onChange={e => setEditForm({...editForm, colorEnd: e.target.value})} />
-              <input type="text" className="w-full border border-slate-300 rounded-lg p-2 text-sm" value={editForm.colorEnd} onChange={e => setEditForm({...editForm, colorEnd: e.target.value})} />
+              <input type="color" className="w-10 h-10 p-1 bg-white border border-slate-200 rounded cursor-pointer" value={editForm.colorEnd || '#000000'} onChange={e => setEditForm({...editForm, colorEnd: e.target.value})} />
+              <input type="text" className="w-full border border-slate-300 rounded-lg p-2 text-sm" value={editForm.colorEnd || ''} onChange={e => setEditForm({...editForm, colorEnd: e.target.value})} />
             </div>
           </div>
         </div>
       ) : (
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-2">Background Image/GIF URL</label>
-          <input type="text" className="w-full border border-slate-300 rounded-lg p-2" placeholder="https://..." value={editForm.imageUrl} onChange={e => setEditForm({...editForm, imageUrl: e.target.value})} />
+          <input type="text" className="w-full border border-slate-300 rounded-lg p-2" placeholder="https://..." value={editForm.imageUrl || ''} onChange={e => setEditForm({...editForm, imageUrl: e.target.value})} />
         </div>
       )}
 
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Font Family</label>
-        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.font} onChange={e => setEditForm({...editForm, font: e.target.value})}>
+        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.font || 'sans'} onChange={e => setEditForm({...editForm, font: e.target.value})}>
           {fonts.map(f => <option key={f} value={f}>{f}</option>)}
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Motion Animation</label>
-        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.animation} onChange={e => setEditForm({...editForm, animation: e.target.value})}>
+        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.animation || 'none'} onChange={e => setEditForm({...editForm, animation: e.target.value})}>
           {animations.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
       </div>
 
       <div>
         <label className="block text-sm font-bold text-slate-700 mb-2">Overlay Image Type</label>
-        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.imageType} onChange={e => setEditForm({...editForm, imageType: e.target.value})}>
+        <select className="w-full border border-slate-300 rounded-lg p-2" value={editForm.imageType || 'none'} onChange={e => setEditForm({...editForm, imageType: e.target.value})}>
           <option value="none">None</option>
           <option value="icon">Emoji Icon</option>
           <option value="image">Image/GIF URL</option>
@@ -216,14 +216,14 @@ function BannerForm({ editForm, setEditForm, fonts, animations }: { editForm: an
       {editForm.imageType === 'icon' && (
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-2">Emoji Icon</label>
-          <input type="text" className="w-full border border-slate-300 rounded-lg p-2 text-2xl" maxLength={2} value={editForm.icon} onChange={e => setEditForm({...editForm, icon: e.target.value})} />
+          <input type="text" className="w-full border border-slate-300 rounded-lg p-2 text-2xl" maxLength={2} value={editForm.icon || ''} onChange={e => setEditForm({...editForm, icon: e.target.value})} />
         </div>
       )}
       
       {editForm.imageType === 'image' && (
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-2">Overlay Image URL</label>
-          <input type="text" className="w-full border border-slate-300 rounded-lg p-2" placeholder="https://..." value={editForm.imageUrl} onChange={e => setEditForm({...editForm, imageUrl: e.target.value})} />
+          <input type="text" className="w-full border border-slate-300 rounded-lg p-2" placeholder="https://..." value={editForm.imageUrl || ''} onChange={e => setEditForm({...editForm, imageUrl: e.target.value})} />
         </div>
       )}
     </div>
