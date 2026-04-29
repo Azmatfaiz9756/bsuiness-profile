@@ -25,27 +25,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
     setLoading(true);
     
     try {
-      if (method === 'stripe') {
-        const response = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            planName: plan.name,
-            price: plan.price,
-            uid: user.uid
-          }),
-        });
+      const response = await fetch(`${window.location.origin}/api/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planName: plan.name,
+          price: plan.price,
+          uid: user.uid
+        }),
+      });
 
-        const data = await response.json();
-        
-        if (data.url) {
-          window.location.href = data.url;
-          return; // Wait for redirect
-        } else {
-          throw new Error(data.error || 'Failed to create checkout session');
-        }
+      const data = await response.json();
+      
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session');
       }
     } catch (err: any) {
       console.error("Payment error:", err);
