@@ -9,6 +9,7 @@ import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import LiveAgentPanel from './LiveAgentPanel';
 
 function DashboardChatTester({ profile }: { profile: any }) {
+  const { user } = useAppContext();
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -134,6 +135,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
             await addDoc(collection(db, col), {
               ...fc.args,
               profileId: profile.id,
+              ownerId: profile.ownerId || user.uid,
               createdAt: serverTimestamp(),
               status: fc.name === 'book_appointment' ? 'Pending' : 'New',
               source: 'Dashboard Tester'

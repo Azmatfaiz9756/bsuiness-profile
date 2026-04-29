@@ -23,6 +23,9 @@ import AdminLeads from './pages/admin/Leads';
 import BannerSettings from './pages/admin/BannerSettings';
 import AdminJobs from './pages/admin/AdminJobs';
 
+// Live Agent for Platform
+import LiveAgentPanel from './pages/dashboard/LiveAgentPanel';
+
 // Frontend Pages
 import FrontendHome from './pages/frontend/Home';
 import FrontendTemplates from './pages/frontend/Templates';
@@ -82,6 +85,7 @@ export default function App() {
             <Route path="wallets" element={<AdminWallets />} />
             <Route path="referrals" element={<AdminReferrals />} />
             <Route path="directory" element={<AdminDirectory />} />
+            <Route path="super-agent" element={<div className="h-[calc(100vh-64px)] w-full"><LiveAgentPanel profileId="platform" /></div>} />
             <Route path="dns-help" element={<AdminDNSHelp />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>

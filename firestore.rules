@@ -25,20 +25,31 @@ service cloud.firestore {
       allow write: if isOwner(uid);
     }
 
-    // Appointments & Leads: Visitors can create, signed-in users (owners) can manage
+    // Appointments & Leads: Visitors can create, owner can manage
     match /appointments/{appId} {
       allow create: if true;
-      allow read, update, delete: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
+      );
     }
     match /leads/{leadId} {
       allow create: if true;
-      allow read, update, delete: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
+      );
     }
 
     // Followers & Campaigns
     match /followers/{folId} {
       allow create: if true;
-      allow read, update, delete: if isSignedIn();
+      allow read, update, delete: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
+      );
     }
     match /campaigns/{cmpId} {
       allow read: if true;
@@ -48,14 +59,24 @@ service cloud.firestore {
     // Chat Sessions: Secure capability-based access for guests
     match /chat_sessions/{sessionId} {
       allow create: if true;
-      allow get: if true; // Capable if sessionId is known
-      allow list: if isSignedIn(); // Only dashboard can list all
+      allow get: if true; // Guest needs this if they have the ID
+      // Only list if the profile belongs to the signed-in user OR it's the platform and user is a super admin
+      allow list: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
+      );
+      
       allow update: if true;
-      allow delete: if isSignedIn();
+      allow delete: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid || 
+        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
+        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
+      );
       
       match /messages/{messageId} {
         allow create: if true;
-        allow read: if true; // Allowed since they know the parent sessionId
+        allow read: if true; // Inherits obscurity of sessionId
         allow update, delete: if isSignedIn();
       }
     }

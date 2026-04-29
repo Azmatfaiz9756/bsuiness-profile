@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { loginWithGoogle, logout } from '../../firebase';
 
@@ -136,6 +136,11 @@ export const AdminLayout = () => {
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">DIRECTORY</div>
             <Link onClick={closeMenu} to="/admin/directory" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/directory')}`}>
                <Users size={18} /> Directory
+            </Link>
+
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">SUPPORT</div>
+            <Link onClick={closeMenu} to="/admin/super-agent" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/super-agent')}`}>
+               <MessageSquare size={18} /> Super Agent Chat
             </Link>
 
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">SYSTEM</div>

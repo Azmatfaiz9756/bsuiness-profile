@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
-import { MessageSquare, User, Send, CheckCircle2, Clock } from 'lucide-react';
+import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
+import { AGENT_LANGUAGES } from '../../lib/languages';
+import { GoogleGenAI } from '@google/genai';
 
 interface ChatSession {
   id: string;
   customerName: string;
   customerEmail?: string;
+  customerLang?: string;
   lastMessage: string;
   status: 'Active' | 'Queued' | 'Closed';
   updatedAt: any;
@@ -17,6 +20,8 @@ interface Message {
   text: string;
   senderType: 'Customer' | 'Agent' | 'AI';
   timestamp: any;
+  translations?: Record<string, string>;
+  originalText?: string;
 }
 
 export default function LiveAgentPanel({ profileId }: { profileId: string }) {
@@ -24,7 +29,11 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [agentLang, setAgentLang] = useState(localStorage.getItem('agent_chat_lang') || 'en');
+  const [isTranslating, setIsTranslating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
   // Listen to sessions
   useEffect(() => {
@@ -70,20 +79,97 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
     return () => unsubscribe();
   }, [selectedSessionId]);
 
+  // Auto-translate incoming customer messages
+  useEffect(() => {
+    if (!selectedSessionId || messages.length === 0) return;
+    
+    const translateMessages = async () => {
+      // Only target the last message from customer if it hasn't been translated
+      const lastMsg = [...messages].reverse().find(m => m.senderType === 'Customer');
+      if (!lastMsg) return;
+
+      const selectedSession = sessions.find(s => s.id === selectedSessionId);
+      const cusLang = selectedSession?.customerLang || 'en';
+      
+      if (cusLang !== agentLang && (!lastMsg.translations || !lastMsg.translations[agentLang])) {
+        try {
+          const prompt = `Translate the following text to ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang}. Output ONLY the translated text, without any additional comments:\n\n${lastMsg.text}`;
+          const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt
+          });
+          const result = response.text;
+          
+          if (result) {
+            await updateDoc(doc(db, `chat_sessions/${selectedSessionId}/messages`, lastMsg.id), {
+              [`translations.${agentLang}`]: result.trim()
+            });
+          }
+        } catch (err: any) {
+          console.error("Translation fail:", err);
+          if (err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')) {
+            // Silently fail for auto-translation to avoid spamming the console
+            // The UI will show "Translating..." or similar for a bit
+          }
+        }
+      }
+    };
+
+    translateMessages();
+  }, [messages, agentLang, selectedSessionId, sessions]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const changeAgentLang = (lang: string) => {
+    setAgentLang(lang);
+    localStorage.setItem('agent_chat_lang', lang);
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedSessionId) return;
 
     const text = input.trim();
     setInput('');
+    setIsTranslating(true);
+
+    let sentText = text;
+    let originalText = text;
+    let translations: any = {};
+
+    const sess = sessions.find(s => s.id === selectedSessionId);
+    const cusLang = sess?.customerLang || 'en';
 
     try {
+      if (agentLang !== cusLang) {
+        // Translate agent's message into customer's language
+        const prompt = `Translate the following text from ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang} to ${cusLang}. Output ONLY the translated text, without any additional comments:\n\n${text}`;
+        
+        try {
+          const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt
+          });
+          const result = response.text;
+          if (result) {
+            sentText = result.trim();
+            translations[cusLang] = sentText;
+            translations[agentLang] = text;
+          }
+        } catch (genAiErr: any) {
+          console.error("Gemini translation error:", genAiErr);
+          if (genAiErr.message?.includes('429')) {
+             alert("AI Translation is currently busy. Sending message in your language instead.");
+          }
+        }
+      }
+
       await addDoc(collection(db, `chat_sessions/${selectedSessionId}/messages`), {
         senderType: 'Agent',
-        text,
+        text: sentText,
+        originalText,
+        translations,
         timestamp: serverTimestamp()
       });
 
@@ -94,9 +180,12 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
       });
     } catch (err) {
       console.error("Error sending message:", err);
-      import('../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+      try {
+        const { handleFirestoreError, OperationType } = await import('../../lib/firestoreUtils');
         handleFirestoreError(err, OperationType.WRITE, `chat_sessions/${selectedSessionId}`);
-      });
+      } catch (e) {}
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -118,7 +207,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
     <div className="flex flex-col h-[calc(100vh-200px)] bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
       <div className="flex flex-1 overflow-hidden">
         {/* Sessions List */}
-        <div className="w-full md:w-80 border-r border-slate-100 flex flex-col bg-slate-50/30">
+        <div className={`${selectedSessionId ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r border-slate-100 flex-col bg-slate-50/30`}>
           <div className="p-4 border-b border-slate-100 bg-white">
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
               <MessageSquare size={16} className="text-blue-600" /> Active Chats
@@ -154,12 +243,18 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         </div>
 
         {/* Chat Area */}
-        <div className="hidden md:flex flex-1 flex-col bg-white">
+        <div className={`${selectedSessionId ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white`}>
           {selectedSessionId ? (
             <>
               {/* Chat Header */}
               <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedSessionId(null)}
+                    className="md:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
                   <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs text-slate-500">
                     {selectedSession?.customerName.charAt(0)}
                   </div>
@@ -168,40 +263,92 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
                     <p className="text-[10px] font-bold text-slate-400 m-0">{selectedSession?.customerEmail || 'Guest User'}</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => closeSession(selectedSessionId)}
-                  className="px-3 py-1.5 bg-red-50 text-red-600 text-[10px] font-black rounded-lg hover:bg-red-100 transition-colors border border-red-100"
-                >
-                  Close Chat
-                </button>
+                
+                <div className="flex items-center gap-2">
+                  <div className="relative group">
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold hover:bg-slate-100 transition">
+                      <Globe size={14} />
+                      {AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || 'Language'}
+                    </button>
+                    <div className="absolute right-0 top-full mt-1 hidden group-hover:block bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden py-1 z-10 w-32">
+                      {AGENT_LANGUAGES.map(lang => (
+                        <button
+                          key={lang.id}
+                          onClick={() => changeAgentLang(lang.id)}
+                          className={`block w-full text-left px-4 py-2 text-xs font-bold hover:bg-slate-50 transition ${agentLang === lang.id ? 'text-blue-600 bg-blue-50/50' : 'text-slate-600'}`}
+                        >
+                          {lang.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => closeSession(selectedSessionId)}
+                    className="px-3 py-1.5 bg-red-50 text-red-600 text-[10px] font-black rounded-lg hover:bg-red-100 transition-colors border border-red-100"
+                  >
+                    Close Chat
+                  </button>
+                </div>
               </div>
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 bg-slate-50/20">
-                {messages.map((m, i) => (
-                  <div 
-                    key={m.id} 
-                    className={`flex flex-col ${m.senderType === 'Agent' ? 'items-end' : (m.senderType === 'AI' ? 'items-center' : 'items-start')}`}
-                  >
-                    {m.senderType === 'AI' && (
-                       <div className="bg-slate-100 text-slate-400 py-1 px-3 rounded-full text-[9px] font-bold mb-2 uppercase tracking-widest border border-slate-200">
-                         AI Assisted Handled
-                       </div>
-                    )}
+                {messages.map((m, i) => {
+                  const isAgent = m.senderType === 'Agent';
+                  const isAI = m.senderType === 'AI';
+                  let displayMessage = m.text;
+                  let subtitleInfo: React.ReactNode = null;
+
+                  if (isAgent) {
+                    if (m.originalText && agentLang === selectedSession?.customerLang) {
+                      displayMessage = m.originalText;
+                    } else if (m.originalText) {
+                      displayMessage = m.translations?.[agentLang] || m.originalText;
+                    } else {
+                      displayMessage = m.text;
+                    }
+                  } else {
+                    if (agentLang !== selectedSession?.customerLang && m.translations?.[agentLang]) {
+                       displayMessage = m.translations[agentLang];
+                       subtitleInfo = <span className="opacity-75">Translated from {selectedSession?.customerLang}</span>;
+                    } else if (agentLang !== selectedSession?.customerLang) {
+                       subtitleInfo = <span className="opacity-75 italic text-slate-300">Translating...</span>;
+                    }
+                  }
+
+                  return (
                     <div 
-                      className={`max-w-[80%] p-3 px-4 rounded-2xl text-sm font-medium shadow-sm border ${
-                        m.senderType === 'Agent' 
-                          ? 'bg-blue-600 text-white border-blue-600 rounded-tr-none' 
-                          : 'bg-white text-slate-900 border-slate-100 rounded-tl-none'
-                      }`}
+                      key={m.id} 
+                      className={`flex flex-col ${isAgent ? 'items-end' : (isAI ? 'items-center' : 'items-start')}`}
                     >
-                      {m.text}
+                      {isAI && (
+                         <div className="bg-slate-100 text-slate-400 py-1 px-3 rounded-full text-[9px] font-bold mb-2 uppercase tracking-widest border border-slate-200">
+                           AI Assisted Handled
+                         </div>
+                      )}
+                      <div 
+                        className={`max-w-[80%] p-3 px-4 rounded-2xl text-sm font-medium shadow-sm border ${
+                          isAgent 
+                            ? 'bg-blue-600 text-white border-blue-600 rounded-tr-none' 
+                            : 'bg-white text-slate-900 border-slate-100 rounded-tl-none'
+                        }`}
+                      >
+                        {displayMessage}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 px-1">
+                        <span className="text-[9px] font-bold text-slate-400">
+                          {m.timestamp?.toDate ? m.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                        </span>
+                        {subtitleInfo && (
+                          <span className="text-[9px] font-bold text-slate-400">• {subtitleInfo}</span>
+                        )}
+                        {isAgent && selectedSession?.customerLang && selectedSession.customerLang !== agentLang && (
+                           <span className="text-[9px] font-bold text-slate-400">• Sent in {selectedSession.customerLang}</span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-[9px] font-bold text-slate-400 mt-1 px-1">
-                      {m.timestamp?.toDate ? m.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
 

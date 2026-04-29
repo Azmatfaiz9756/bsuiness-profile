@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { db } from '../../../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+import { CHAT_LANGUAGES } from "../../../lib/languages";
 import { useAppContext } from "../../../context/AppContext";
 
 export default function ProfileChatbot({ profile }: { profile: any }) {
@@ -209,9 +210,11 @@ Assist visitors with inquiries about the business, services, and contact informa
     try {
       const sessDoc = await addDoc(collection(db, 'chat_sessions'), {
         profileId: profile.id,
+        ownerId: profile.ownerId || (profile.id === 'platform' ? 'platform' : profile.id),
         customerName: visitorDetails?.name || customerName || 'Visitor',
         customerPhone: visitorDetails?.phone || '',
         customerEmail: customerEmail || '',
+        customerLang: selectedLang || 'en',
         status: 'Queued',
         lastMessage: 'Requested human agent',
         updatedAt: serverTimestamp()
@@ -391,6 +394,7 @@ Assist visitors with inquiries about the business, services, and contact informa
             await addDoc(collection(db, col), {
               ...args,
               profileId: profile.id,
+              ownerId: profile.ownerId || (profile.id === 'platform' ? 'platform' : profile.id),
               createdAt: serverTimestamp(),
               status: fc.name === 'book_appointment' ? 'Pending' : 'New',
               source: 'AI Chatbot'
@@ -519,28 +523,26 @@ Assist visitors with inquiries about the business, services, and contact informa
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>Select Chat Language</h3>
                   <p style={{ margin: 0, fontSize: 13, color: '#64748b', marginBottom: 16, padding: '0 20px' }}>Choose your preferred language to start the conversation.</p>
                   
-                  {[
-                    { id: 'en', label: 'English (Business)', flag: '🇬🇧' },
-                    { id: 'hi', label: 'Hindustani (Urdu/Hindi)', flag: '🇮🇳' },
-                    { id: 'ar', label: 'Arabic (العربية)', flag: '🇦🇪' }
-                  ].map(lang => (
-                    <motion.button 
-                      key={lang.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleSelectLang(lang.id)} 
-                      style={{ 
-                        width: '85%', padding: '14px', background: '#fff', 
-                        border: '1.5px solid #e2e8f0', borderRadius: 16, 
-                        fontWeight: 600, cursor: 'pointer', display: 'flex', 
-                        alignItems: 'center', justifyContent: 'center', gap: 10,
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
-                      }}
-                    >
-                      <span style={{ fontSize: 20 }}>{lang.flag}</span>
-                      <span>{lang.label}</span>
-                    </motion.button>
-                  ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxHeight: '400px', overflowY: 'auto', alignItems: 'center' }}>
+                    {CHAT_LANGUAGES.map(lang => (
+                      <motion.button 
+                        key={lang.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleSelectLang(lang.id)} 
+                        style={{ 
+                          width: '85%', padding: '14px', background: '#fff', 
+                          border: '1.5px solid #e2e8f0', borderRadius: 16, 
+                          fontWeight: 600, cursor: 'pointer', display: 'flex', 
+                          alignItems: 'center', justifyContent: 'center', gap: 10,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+                        }}
+                      >
+                        <span style={{ fontSize: 20 }}>{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </motion.button>
+                    ))}
+                  </div>
                 </motion.div>
               ) : showIdentityForm ? (
                 <motion.form 

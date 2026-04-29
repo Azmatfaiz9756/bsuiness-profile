@@ -30,6 +30,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase";
 
+import ProfileChatbot from "../profile/components/ProfileChatbot";
+
 function HeroSection() {
   return (
     <div className="relative bg-slate-900 border-b border-slate-800 overflow-hidden min-h-[600px] flex flex-col justify-center">
@@ -851,6 +853,20 @@ export default function FrontendHome() {
           </div>
         </motion.div>
       </div>
+
+      <ProfileChatbot profile={{
+        id: 'platform',
+        name: 'DBC Support',
+        title: 'Virtual Assistant',
+        company: 'DBC Network',
+        bio: 'Official DBC AI assistant.',
+        services: [
+          { title: 'Digital Business Cards', description: 'NFC-enabled dynamic cards' },
+          { title: 'Platform Support', description: 'User guidance and premium support' }
+        ],
+        email: 'support@dbc.network',
+        phone: ''
+      }} />
     </div>
   );
 }
