@@ -13,7 +13,7 @@ interface PaymentModalProps {
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, plan }) => {
   const { user } = useAppContext();
-  const [method, setMethod] = useState<'stripe' | 'tabby'>('stripe');
+  const [method, setMethod] = useState<'stripe'>('stripe');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
@@ -46,24 +46,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
         } else {
           throw new Error(data.error || 'Failed to create checkout session');
         }
-      } else {
-        // Tabby fallback simulation
-        await new Promise(r => setTimeout(r, 2500));
-        
-        // Update plan in Firestore
-        const userRef = doc(db, 'profiles', user.uid);
-        await updateDoc(userRef, {
-          plan: plan.name,
-          updatedAt: new Date().toISOString()
-        });
-
-        setLoading(false);
-        setSuccess(true);
-
-        setTimeout(() => {
-          onClose();
-          navigate('/dashboard');
-        }, 2000);
       }
     } catch (err: any) {
       console.error("Payment error:", err);
@@ -121,19 +103,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
                         <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest">Stripe</span>
                       </div>
                       <div className="text-xs text-slate-500 font-medium">Visa, Mastercard, Apple Pay, Google Pay</div>
-                    </div>
-                  </div>
-                </label>
-
-                <label className={`block border-2 rounded-2xl p-5 cursor-pointer transition-all ${method === 'tabby' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
-                  <div className="flex items-center gap-4">
-                    <input type="radio" name="payment_method" checked={method === 'tabby'} onChange={() => setMethod('tabby')} className="w-5 h-5 accent-amber-500" />
-                    <div>
-                      <div className="font-black text-slate-900 text-sm flex items-center gap-2 mb-1">
-                        Split in 4, Interest-Free
-                        <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-black uppercase tracking-widest">Tabby</span>
-                      </div>
-                      <div className="text-xs text-slate-500 font-medium">Pay 25% today, the rest over 3 months</div>
                     </div>
                   </div>
                 </label>

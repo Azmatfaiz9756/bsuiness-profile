@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && npx esbuild server.ts --bundle --platform=node --target=node18 --outfile=dist/server.cjs --external:express --external:vite",
+    "build": "vite build && npx esbuild server.ts --bundle --platform=node --target=node18 --outfile=dist/server.cjs --packages=external",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
