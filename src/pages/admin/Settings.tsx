@@ -154,21 +154,25 @@ export default function AdminSettings() {
                 <input type="number" value={formData.referralPurchaseWindow || 0} onChange={e => handleChange('referralPurchaseWindow', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Referrer Reward (Amount)</label>
-                <input type="number" value={formData.referrerReward || 0} onChange={e => handleChange('referrerReward', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Normal User Sharing Reward</label>
+                <input type="number" value={formData.referralNormalUserReward || 0} onChange={e => handleChange('referralNormalUserReward', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Referee Reward (Amount)</label>
-                <input type="number" value={formData.refereeReward || 0} onChange={e => handleChange('refereeReward', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Profile Owner Shared Profile Reward</label>
+                <input type="number" value={formData.referralProfileOwnerReward || 0} onChange={e => handleChange('referralProfileOwnerReward', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Profile Owner Direct Commission</label>
+                <input type="number" value={formData.referralDirectCommission || 0} onChange={e => handleChange('referralDirectCommission', Number(e.target.value))} style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} />
               </div>
             </div>
           </div>
 
           <div>
             <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, borderBottom: '1px solid #e5e7eb', paddingBottom: 8 }}>Manage Subscription Plans</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {(formData.plans || []).map((plan: any, idx: number) => (
-                <div key={idx} style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb' }}>
+                <div key={idx} style={{ padding: 20, border: '1px solid #e5e7eb', borderRadius: 16, background: '#f9fafb' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
                     <div>
                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Plan Name</label>
@@ -180,7 +184,7 @@ export default function AdminSettings() {
                           newPlans[idx].name = e.target.value;
                           setFormData({...formData, plans: newPlans});
                         }}
-                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
                       />
                     </div>
                     <div>
@@ -193,7 +197,7 @@ export default function AdminSettings() {
                           newPlans[idx].price = e.target.value;
                           setFormData({...formData, plans: newPlans});
                         }}
-                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
                       />
                     </div>
                     <div>
@@ -206,10 +210,45 @@ export default function AdminSettings() {
                           newPlans[idx].badge = e.target.value;
                           setFormData({...formData, plans: newPlans});
                         }}
-                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
                       />
                     </div>
                   </div>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 10 }}>Included Features & Modules</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e5e7eb' }}>
+                      {[
+                        'Custom Templates', 'E-commerce Shop', 'Lead Capture Form',
+                        'Appointment Booking', 'AI Chatbot', 'Analytics Dashboard',
+                        'Referral Program', 'Premium Themes', 'Custom Domain Link',
+                        'SEO Tools', 'WhatsApp Integration', 'Digital Business Card'
+                      ].map(feature => {
+                        const isChecked = plan.features?.includes(feature);
+                        return (
+                          <label key={feature} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={isChecked}
+                              onChange={e => {
+                                const newPlans = [...formData.plans];
+                                const currentFeatures = newPlans[idx].features || [];
+                                if (e.target.checked) {
+                                  newPlans[idx].features = [...currentFeatures, feature];
+                                } else {
+                                  newPlans[idx].features = currentFeatures.filter((f: string) => f !== feature);
+                                }
+                                setFormData({...formData, plans: newPlans});
+                              }}
+                              style={{ width: 16, height: 16 }}
+                            />
+                            {feature}
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <input 
                       type="checkbox" 
@@ -221,7 +260,7 @@ export default function AdminSettings() {
                       }}
                       id={`popular-${idx}`}
                     />
-                    <label htmlFor={`popular-${idx}`} style={{ fontSize: 13, color: '#374151' }}>Mark as Popular</label>
+                    <label htmlFor={`popular-${idx}`} style={{ fontSize: 13, color: '#374151', fontWeight: 600 }}>Mark as Recommended/Popular Plan</label>
                   </div>
                 </div>
               ))}

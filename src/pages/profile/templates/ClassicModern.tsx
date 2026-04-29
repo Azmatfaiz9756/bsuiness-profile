@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
 import { db } from "../../../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useAppContext } from "../../../context/AppContext";
 import {
   Linkedin,
   Twitter,
@@ -34,7 +35,8 @@ import {
   Share2,
   X,
   Users,
-  Bird
+  Bird,
+  Briefcase
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -58,6 +60,7 @@ export default function ClassicModern({
   profile: any;
   onExit: () => void;
 }) {
+  const { jobOpenings, siteSettings } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
   const [activeTab, setActiveTab] = useState('home');
@@ -67,6 +70,28 @@ export default function ClassicModern({
   const [followerInfo, setFollowerInfo] = useState({ name: '', phone: '', email: '' });
   const [followLoading, setFollowLoading] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
+  const [applyingJob, setApplyingJob] = useState<any>(null);
+
+  const profileJobs = jobOpenings?.filter((j: any) => j.profileId === profile.id && j.status === 'Open') || [];
+
+  const getTheme = () => {
+    switch(profile.profession) {
+      case 'Welder': return { bg: 'linear-gradient(135deg, #ea580c, #7c2d12)', icon: '🔥', primary: '#ea580c' };
+      case 'Doctor': return { bg: 'linear-gradient(135deg, #0ea5e9, #0369a1)', icon: '⚕️', primary: '#0ea5e9' };
+      case 'Carpenter': return { bg: 'linear-gradient(135deg, #d97706, #78350f)', icon: '🪚', primary: '#d97706' };
+      case 'AC Technician': return { bg: 'linear-gradient(135deg, #38bdf8, #0284c7)', icon: '❄️', primary: '#0284c7' };
+      case 'Electrician': return { bg: 'linear-gradient(135deg, #eab308, #854d0e)', icon: '⚡', primary: '#eab308' };
+      case 'Plumber': return { bg: 'linear-gradient(135deg, #06b6d4, #164e63)', icon: '💧', primary: '#06b6d4' };
+      case 'Mechanic': return { bg: 'linear-gradient(135deg, #64748b, #334155)', icon: '🔧', primary: '#475569' };
+      case 'Engineer': return { bg: 'linear-gradient(135deg, #3b82f6, #1e3a8a)', icon: '📐', primary: '#2563eb' };
+      case 'Lawyer': return { bg: 'linear-gradient(135deg, #1e293b, #0f172a)', icon: '⚖️', primary: '#1e293b' };
+      case 'Chef': return { bg: 'linear-gradient(135deg, #ef4444, #7f1d1d)', icon: '👨‍🍳', primary: '#ef4444' };
+      case 'Real Estate Agent': return { bg: 'linear-gradient(135deg, #0f766e, #115e59)', icon: '🏢', primary: '#0d9488' };
+      default: return { bg: 'linear-gradient(135deg, #1a1a2e, #1a56db)', icon: '', primary: '#1e3a8a' };
+    }
+  };
+
+  const themeVars = getTheme();
 
   const handleFollow = async () => {
     if (!followerInfo.email) return alert("Please provide your email to follow.");
@@ -103,13 +128,14 @@ export default function ClassicModern({
     { id: 'home', label: 'Home', icon: <Contact2 size={20} />, show: true },
     { id: 'services', label: 'Services', icon: <Sparkles size={20} />, show: profile.services && profile.services.length > 0 },
     { id: 'shop', label: 'Store', icon: <ShoppingBag size={20} />, show: profile.products && profile.products.length > 0 },
+    { id: 'jobs', label: 'Hiring', icon: <Briefcase size={20} />, show: profileJobs.length > 0 },
     { id: 'inquiry', label: 'Inquiry', icon: <Mail size={20} />, show: true }
   ].filter(item => item.show);
 
   const SectionContainer = ({ icon, title, children, id }: any) => {
     return (
       <div id={id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: '#1e3a8a' }}>
+        <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: themeVars.primary }}>
           {icon}
           {title}
         </div>
@@ -178,6 +204,18 @@ export default function ClassicModern({
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
           }
+          @keyframes floatEffect {
+            0% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+            50% { transform: translateY(-20px) rotate(10deg); opacity: 0.2; }
+            100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+          }
+          .floating-icon {
+            position: absolute;
+            animation: floatEffect 6s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+            color: ${themeVars.primary};
+          }
           .gallery-slider {
             display: flex;
             gap: 10px;
@@ -198,23 +236,28 @@ export default function ClassicModern({
           minHeight: "100vh",
           position: "relative",
           boxShadow: "0 0 20px rgba(0,0,0,0.05)",
+          overflow: "hidden",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            padding: "12px 16px",
-          }}
-        >
+        {/* Animated Background Icons based on Profession */}
+        {themeVars.icon && (
+          <>
+            <div className="floating-icon" style={{ top: '10%', left: '5%', fontSize: '40px', animationDelay: '0s' }}>{themeVars.icon}</div>
+            <div className="floating-icon" style={{ top: '40%', right: '10%', fontSize: '60px', animationDelay: '2s' }}>{themeVars.icon}</div>
+            <div className="floating-icon" style={{ top: '70%', left: '15%', fontSize: '50px', animationDelay: '4s' }}>{themeVars.icon}</div>
+            <div className="floating-icon" style={{ top: '85%', right: '5%', fontSize: '30px', animationDelay: '1s' }}>{themeVars.icon}</div>
+          </>
+        )}
+        <div style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
           <div
             style={{
-              background: "#dbeafe",
+              background: "rgba(219, 234, 254, 0.9)",
               color: "#1e40af",
               fontSize: 11,
               padding: "4px 10px",
               borderRadius: 20,
               fontWeight: 700,
+              backdropFilter: "blur(4px)",
             }}
           >
             {profile.plan.toUpperCase()}
@@ -224,14 +267,22 @@ export default function ClassicModern({
           style={{
             background: profile.bannerVideo || profile.bannerUrl
               ? "#000"
-              : "linear-gradient(135deg,#1a1a2e,#1a56db)",
+              : themeVars.bg,
             height: 180,
             position: "relative",
             borderBottomLeftRadius: 30,
             borderBottomRightRadius: 30,
             overflow: "hidden",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
+          {themeVars.icon && (!profile.bannerVideo && !profile.bannerUrl) && (
+             <div style={{ position: 'absolute', fontSize: '100px', opacity: 0.1, right: -10, bottom: -20, transform: 'rotate(-15deg)' }}>
+                {themeVars.icon}
+             </div>
+          )}
           {profile.bannerUrl && !profile.bannerVideo && (
             <img 
               src={profile.bannerUrl} 
@@ -283,20 +334,21 @@ export default function ClassicModern({
               alignItems: "center",
               justifyContent: "center",
               boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+              border: `3px solid ${themeVars.primary}`
             }}
           >
             <div
               style={{
                 width: 90,
                 height: 90,
-                background: "#dbeafe",
+                background: themeVars.primary,
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: 28,
                 fontWeight: 800,
-                color: "#1e40af",
+                color: "#fff",
                 overflow: 'hidden'
               }}
             >
@@ -1459,6 +1511,49 @@ export default function ClassicModern({
           </SectionContainer>
           )}
 
+          {activeTab === 'jobs' && profileJobs.length > 0 && (
+            <SectionContainer title="Career Opportunities" icon={<Briefcase size={18} />}>
+              {applyingJob ? (
+                <div style={{ padding: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: themeVars.primary }}>Apply for {applyingJob.title}</h3>
+                    <button onClick={() => setApplyingJob(null)} style={{ background: '#f1f5f9', border: 'none', padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Back to Jobs</button>
+                  </div>
+                  <input type="text" placeholder="Full Name" style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #d1d5db", marginBottom: 12, boxSizing: "border-box" }} />
+                  <input type="email" placeholder="Email Address" style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #d1d5db", marginBottom: 12, boxSizing: "border-box" }} />
+                  <input type="text" placeholder="Phone Number" style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #d1d5db", marginBottom: 12, boxSizing: "border-box" }} />
+                  <textarea placeholder="Tell us about your experience..." rows={4} style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #d1d5db", marginBottom: 16, fontFamily: "inherit", boxSizing: "border-box" }}></textarea>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 8, color: '#475569' }}>Upload Resume / CV / Portofolio Link</label>
+                  <input type="text" placeholder="Google Drive / Dropbox Link to Resume" style={{ width: "100%", padding: 12, borderRadius: 8, border: "1px solid #d1d5db", marginBottom: 20, boxSizing: "border-box" }} />
+                  
+                  <button onClick={() => { alert("Application submitted successfully!"); setApplyingJob(null); }} style={{ width: '100%', background: themeVars.primary, color: '#fff', padding: 14, borderRadius: 8, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+                    Submit Application
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {profileJobs.map((job: any) => (
+                    <div key={job.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, background: '#f8fafc' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                        <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{job.title}</h4>
+                        <span style={{ fontSize: 11, fontWeight: 700, background: '#e0e7ff', color: '#4338ca', padding: '4px 8px', borderRadius: 20 }}>{job.type}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: '#64748b', marginBottom: 12, display: 'flex', gap: 12 }}>
+                        <span>💰 {job.salary}</span>
+                      </div>
+                      <p style={{ fontSize: 14, color: '#475569', marginBottom: 12, lineHeight: 1.5 }}>
+                        {job.description}
+                      </p>
+                      <button onClick={() => setApplyingJob(job)} style={{ background: themeVars.primary, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                        Apply Now
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SectionContainer>
+          )}
+
           {activeTab === 'inquiry' && (
             <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
             <div
@@ -2031,8 +2126,8 @@ export default function ClassicModern({
                 Refer & Earn Rewards
               </div>
               <div style={{ fontSize: 13, color: "#dbeafe", marginBottom: 16, textAlign: 'left', lineHeight: 1.5 }}>
-                <div style={{ marginBottom: 8 }}>• <strong>1 Month Free Trial:</strong> All new business profiles get a full month free trial to explore all features.</div>
-                <div>• <strong>Referral Success:</strong> If your referral purchases any plan within <strong>35 days</strong> of signing up, your referral is marked successful and you both earn rewards!</div>
+                <div style={{ marginBottom: 8 }}>• <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial to explore all features.</div>
+                <div>• <strong>Referral Success:</strong> If your referral purchases any plan within <strong>{siteSettings?.referralPurchaseWindow || 35} days</strong> of signing up, your referral is marked successful and you both earn rewards!</div>
               </div>
               <div
                 style={{
@@ -2069,7 +2164,7 @@ export default function ClassicModern({
           </SectionContainer>
           )}
 
-          {hasTestimonials && (
+          {activeTab === 'home' && hasTestimonials && (
             <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {profile.testimonials.map((test: any, i: number) => (

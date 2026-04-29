@@ -13,6 +13,8 @@ import {
   Search,
   Filter,
   Loader2,
+  MessageSquare,
+  Bot
 } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -73,56 +75,202 @@ function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Hero Image/Card */}
-        <div className="flex-1 flex justify-center md:justify-end w-full">
+        {/* Animated Mobile Device Mockup */}
+        <div className="flex-1 flex justify-center md:justify-end w-full relative h-[650px]">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative w-full max-w-[320px] aspect-[4/5]"
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+            className="relative rounded-[3rem] border-[8px] border-slate-900 bg-slate-900 shadow-2xl overflow-hidden aspect-[9/19] w-[320px] shrink-0 z-10"
           >
-            {/* Front Card */}
-            <div className="absolute inset-0 bg-white rounded-[40px] shadow-2xl p-6 flex flex-col border border-slate-200 z-20">
-              <div className="absolute top-0 left-0 right-0 h-32 bg-slate-900 flex items-start justify-end p-6 rounded-t-[38px]">
-                <div className="text-sky-400 bg-white/10 p-2 rounded-full backdrop-blur-md">
-                  <Zap size={20} />
-                </div>
-              </div>
-              <div className="mt-16 relative z-10 flex flex-col grow items-center">
-                <div className="w-24 h-24 bg-white rounded-full p-1 shadow-xl mb-4">
-                  <img
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
-                    alt="Alex"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                </div>
-                <div className="text-2xl font-black text-slate-900 leading-tight">
-                  Alex Rivera
-                </div>
-                <div className="text-sm font-bold text-sky-600 uppercase tracking-widest mt-1 mb-6">
-                  Founder @ TechEdge
-                </div>
-
-                <div className="grid grid-cols-4 gap-2 w-full mb-auto">
-                  {[...Array(4)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="aspect-square bg-slate-50 rounded-[14px] flex items-center justify-center text-slate-400 border border-slate-100"
-                    >
-                      <LayoutGrid size={18} />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="w-full py-4 bg-slate-900 text-white rounded-2xl text-center font-black text-sm uppercase tracking-widest mt-6">
-                  NFC Enabled
-                </div>
-              </div>
+            {/* iPhone Notch */}
+            <div className="absolute top-0 inset-x-0 h-7 flex justify-center z-50">
+              <div className="w-32 h-6 bg-slate-900 rounded-b-xl"></div>
             </div>
+            
+            {/* Profile Screen Mockup - Executive Dark Theme */}
+            <div className="w-full h-full bg-[#111] overflow-hidden relative flex flex-col text-white font-sans">
+               {/* Background Image / Gradient */}
+               <div className="h-48 relative bg-gradient-to-b from-slate-700 to-[#111] overflow-hidden">
+                 <div 
+                   className="absolute inset-0 opacity-40 mix-blend-overlay bg-cover bg-center" 
+                   style={{ backgroundImage: "url('https://images.unsplash.com/photo-1512632578888-1c4b8bce1b48?auto=format&fit=crop&q=80&w=1000')" }}
+                 />
+                 <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#111] to-transparent z-10" />
+               </div>
+               
+               <div className="flex-1 relative px-5 pb-5 flex flex-col items-center -mt-16 z-20">
+                  {/* Avatar */}
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                    className="w-28 h-28 bg-[#111] rounded-full p-1 shadow-2xl mb-4 border border-[#333]"
+                  >
+                    <div className="w-full h-full rounded-full bg-slate-800 overflow-hidden relative">
+                       <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400&h=400" alt="Avatar" className="w-full h-full object-cover" />
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.5 }}
+                     className="text-center w-full"
+                  >
+                    <h3 className="text-2xl font-bold text-white flex items-center justify-center gap-2">Azmat Faiz <span className="text-blue-500">🦅</span></h3>
+                    <p className="text-[#c2410c] text-sm mt-1">Luxury Real Estate Broker</p>
+                    <p className="text-[#888] text-xs font-medium tracking-widest mt-1 uppercase">Dubai Premier Estates</p>
+                    
+                    <div className="flex justify-center mt-4">
+                      <div className="inline-flex items-center gap-2 border border-[#333] px-3 py-1 rounded-full bg-[#1a1a1a]">
+                         <div className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse"></div>
+                         <span className="text-[10px] font-bold tracking-wider text-white">12420 VISITS</span>
+                      </div>
+                    </div>
 
-            {/* Back Card Decoration (Peek) */}
-            <div className="absolute inset-0 bg-sky-500 rounded-[40px] shadow-2xl translate-x-4 translate-y-4 rotate-3 z-10 flex items-center justify-center p-8 border border-sky-400"></div>
-            <div className="absolute inset-0 bg-slate-800 rounded-[40px] shadow-xl -translate-x-4 translate-y-8 -rotate-3 z-0" />
+                    <p className="text-[11px] text-[#aaa] mt-5 px-2 leading-relaxed">
+                      Award-winning real estate broker specializing in luxury properties in Dubai. Helping investors find their perfect home or high-yield investment properties.
+                    </p>
+                    
+                    <div className="flex justify-center gap-4 mt-6">
+                      <div className="text-sky-600"><svg xmlns="http://www.w3.org/2000/submit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></div>
+                      <div className="text-white"><svg xmlns="http://www.w3.org/2000/submit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg></div>
+                      <div className="text-pink-500"><svg xmlns="http://www.w3.org/2000/submit" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-6">
+                      <div className="bg-[#22c55e] border-none text-white rounded py-2 font-bold text-xs shadow-md">
+                        Get Directions
+                      </div>
+                      <div className="bg-[#3b82f6] border-none text-white rounded py-2 font-bold text-xs shadow-md">
+                        Save Contact
+                      </div>
+                    </div>
+                  </motion.div>
+               </div>
+
+               {/* Simulated Floating AI Chatbot Button */}
+               <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 1, type: "spring", bounce: 0.5 }}
+                  className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)] z-50 cursor-pointer"
+               >
+                  <Bot size={28} className="text-white" />
+               </motion.div>
+            </div>
+          </motion.div>
+          
+          {/* Floating Badges */}
+          <motion.div 
+             animate={{ y: [0, -10, 0] }}
+             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+             className="absolute top-1/4 -right-12 sm:-right-24 md:-right-12 lg:-right-24 bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-3 z-0 md:z-20 scale-75 sm:scale-100"
+          >
+             <div className="w-10 h-10 rounded-full bg-blue-900/50 text-blue-400 flex items-center justify-center">
+               <Bot size={20} />
+             </div>
+             <div>
+               <div className="text-xs font-bold text-slate-400">AI Chatbot</div>
+               <div className="text-sm font-extrabold text-white">Answering Leads</div>
+             </div>
+          </motion.div>
+          
+          <motion.div 
+             animate={{ y: [0, 10, 0] }}
+             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+             className="absolute bottom-1/4 -left-12 sm:-left-24 md:-left-12 lg:-left-24 bg-slate-900/80 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-slate-800 flex items-center gap-3 z-0 md:z-20 scale-75 sm:scale-100"
+          >
+             <div className="w-10 h-10 rounded-full bg-amber-900/50 text-amber-500 flex items-center justify-center font-bold">
+               12k
+             </div>
+             <div>
+               <div className="text-xs font-bold text-slate-400">Profile Views</div>
+               <div className="text-sm font-extrabold text-white">+12% this week</div>
+             </div>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PromotionalShowcase() {
+  const benefits = [
+    {
+      title: "Interactive Digital Identity",
+      desc: "Share your contact info, social links, and portfolio with a single tap using our NFC-enabled smart cards.",
+      icon: <Share2 className="text-amber-500" size={24} />,
+    },
+    {
+      title: "AI-Powered Chat Assistant",
+      desc: "Let your own AI virtual assistant answer client inquiries, capture leads, and book appointments 24/7 directly from your profile.",
+      icon: <Bot className="text-amber-500" size={24} />,
+    },
+    {
+      title: "Real-time Analytics",
+      desc: "Track profile views, tap engagement, and measure the exact ROI of your networking efforts.",
+      icon: <BarChart3 className="text-amber-500" size={24} />,
+    },
+    {
+      title: "Customizable Premium Branding",
+      desc: "Choose from multiple professional templates like 'Executive Dark' and personalize them to match your unique brand identity.",
+      icon: <Sparkles className="text-amber-500" size={24} />,
+    },
+  ];
+
+  return (
+    <div className="py-24 bg-slate-950 border-b border-slate-900 overflow-hidden relative">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -z-10 -translate-x-1/2 translate-y-1/2"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-amber-500 font-bold text-sm tracking-wide uppercase mb-4 border border-slate-800">
+            <Sparkles size={16} /> Premium Business Profiles
+          </div>
+          <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
+            More than just a business card. <br className="hidden md:block"/>
+            <span className="text-amber-500">It's your AI-powered business toolkit.</span>
+          </h2>
+          <p className="text-lg text-slate-400 leading-relaxed font-medium">
+            See why leading luxury professionals and executives trust DBC to manage their digital presence, automate lead capture, and stand out from the crowd.
+          </p>
+        </div>
+
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 text-center lg:text-left">
+          {/* Benefits List */}
+          <div className="w-full flex flex-col gap-8 md:grid md:grid-cols-2">
+            {benefits.map((benefit, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                viewport={{ once: true }}
+                className="flex gap-4 group items-start text-left bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:bg-slate-800 transition-colors"
+              >
+                <div className="shrink-0 mt-1">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-500/20 group-hover:shadow-lg transition-all duration-300">
+                    {benefit.icon}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-amber-500 transition-colors">{benefit.title}</h3>
+                  <p className="text-slate-400 leading-relaxed font-medium text-sm">{benefit.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+             initial={{ opacity: 0 }}
+             whileInView={{ opacity: 1 }}
+             transition={{ delay: 0.6 }}
+             viewport={{ once: true }}
+             className="mt-8 pt-8 border-t border-slate-800 w-full flex justify-center lg:justify-end col-span-2 hidden"
+          >
           </motion.div>
         </div>
       </div>
@@ -131,7 +279,7 @@ function HeroSection() {
 }
 
 export default function FrontendHome() {
-  const { user, setIsLoginModalOpen } = useAppContext();
+  const { user, setIsLoginModalOpen, profiles: staticProfiles } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Business Types");
   const [activeCity, setActiveCity] = useState("All Cities");
@@ -173,22 +321,44 @@ export default function FrontendHome() {
 
       let q = query(collection(db, "profiles"), orderBy("name"), limit(12));
 
+      let dbDocs: any[] = [];
       if (isInitial) {
         const snapshot = await getDocs(q);
-        const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setProfiles(docs);
+        dbDocs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
         setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
         setHasMore(snapshot.docs.length === 12);
+        
+        // Merge with static profiles
+        const combined = [...staticProfiles];
+        dbDocs.forEach(dbp => {
+          if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
+            combined.push(dbp);
+          }
+        });
+        setProfiles(combined);
       } else if (lastDoc) {
         const nextQ = query(q, startAfter(lastDoc));
         const snapshot = await getDocs(nextQ);
-        const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        setProfiles((prev) => [...prev, ...docs]);
+        dbDocs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        
+        setProfiles((prev) => {
+          const combined = [...prev];
+          dbDocs.forEach(dbp => {
+             if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
+               combined.push(dbp);
+             }
+          });
+          return combined;
+        });
+        
         setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
         setHasMore(snapshot.docs.length === 12);
       }
     } catch (err) {
       console.error("Error fetching profiles:", err);
+      if (isInitial) {
+         setProfiles([...staticProfiles]);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -215,6 +385,9 @@ export default function FrontendHome() {
     <div className="bg-slate-50 min-h-screen pb-16 font-sans overflow-x-hidden">
       {/* Animated Hero */}
       <HeroSection />
+
+      {/* Promotional Showcase */}
+      <PromotionalShowcase />
 
       {/* Brand Hero Section */}
       <div

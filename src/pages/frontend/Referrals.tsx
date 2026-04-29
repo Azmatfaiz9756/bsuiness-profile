@@ -9,8 +9,9 @@ export default function FrontendReferrals() {
   
   const trialPeriod = siteSettings.trialPeriod || '1 Month';
   const purchaseWindow = siteSettings.referralPurchaseWindow || 35;
-  const referrerReward = siteSettings.referrerReward || 50;
-  const refereeReward = siteSettings.refereeReward || 50;
+  const referralNormalUserReward = siteSettings.referralNormalUserReward || 1;
+  const referralProfileOwnerReward = siteSettings.referralProfileOwnerReward || 5;
+  const referralDirectCommission = siteSettings.referralDirectCommission || 20;
   const currency = siteSettings.currency || 'AED';
 
   const copyRef = () => {
@@ -24,10 +25,15 @@ export default function FrontendReferrals() {
       <div className="bg-gradient-to-br from-indigo-600 to-blue-500 text-white p-8 md:p-12 rounded-3xl text-center mb-8 shadow-lg shadow-blue-500/20">
         <Gift size={48} className="mx-auto mb-6 text-white" />
         <h1 className="text-3xl md:text-4xl font-extrabold mb-4">Refer & Earn Rewards</h1>
-        <p className="text-base md:text-lg text-blue-50 max-w-xl mx-auto mb-8 leading-relaxed">
-          Invite other businesses to join Dubai Digital Connect. All new business profiles get a <strong>{trialPeriod} Free Trial</strong>. 
-          If they purchase any plan within <strong>{purchaseWindow} days</strong>, you earn {currency} {referrerReward} and they get {currency} {refereeReward}!
-        </p>
+        <div className="text-base md:text-lg text-blue-50 max-w-2xl mx-auto mb-8 leading-relaxed space-y-4">
+          <p>
+            When you share a business profile and it leads to a premium plan sale within {purchaseWindow} days, everyone wins! All new profiles get a {trialPeriod} Free Trial.
+          </p>
+          <ul className="text-left list-disc pl-5 mt-4 space-y-2 bg-black/10 rounded-xl p-4 backdrop-blur-sm">
+            <li><strong>As a Normal User:</strong> Share any profile. If they purchase a plan, you earn <strong>{referralNormalUserReward} {currency}</strong> per sale, and the profile owner earns <strong>{referralProfileOwnerReward} {currency}</strong>.</li>
+            <li><strong>As a Profile Owner:</strong> Share your own profile directly. If someone signs up and buys a plan through your link, you earn a <strong>{referralDirectCommission} {currency}</strong> direct commission!</li>
+          </ul>
+        </div>
         <div className="bg-white p-2 rounded-xl flex flex-col md:flex-row gap-2 max-w-md mx-auto shadow-sm">
           <input 
             type="text" 

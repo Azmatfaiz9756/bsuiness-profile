@@ -112,6 +112,12 @@ export const AdminLayout = () => {
             <Link onClick={closeMenu} to="/admin/products" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/products')}`}>
                <Tag size={18} /> Products
             </Link>
+            <Link onClick={closeMenu} to="/admin/banners" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/banners')}`}>
+               <Tag size={18} /> Shop Banners
+            </Link>
+            <Link onClick={closeMenu} to="/admin/jobs" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/jobs')}`}>
+               <Tag size={18} /> Job Openings
+            </Link>
             <Link onClick={closeMenu} to="/admin/shop-orders" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/shop-orders')}`}>
                <ShoppingBag size={18} /> Shop Orders
             </Link>

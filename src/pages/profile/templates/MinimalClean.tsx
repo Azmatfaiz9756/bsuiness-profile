@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
 import {
@@ -50,6 +51,7 @@ export default function MinimalClean({
   profile: any;
   onExit: () => void;
 }) {
+  const { jobOpenings, siteSettings } = useAppContext();
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
@@ -88,6 +90,25 @@ export default function MinimalClean({
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const getTheme = () => {
+    switch(profile.profession) {
+      case 'Welder': return { icon: '🔥', primary: '#ea580c' };
+      case 'Doctor': return { icon: '⚕️', primary: '#0ea5e9' };
+      case 'Carpenter': return { icon: '🪚', primary: '#d97706' };
+      case 'AC Technician': return { icon: '❄️', primary: '#0284c7' };
+      case 'Electrician': return { icon: '⚡', primary: '#eab308' };
+      case 'Plumber': return { icon: '💧', primary: '#06b6d4' };
+      case 'Mechanic': return { icon: '🔧', primary: '#475569' };
+      case 'Engineer': return { icon: '📐', primary: '#2563eb' };
+      case 'Lawyer': return { icon: '⚖️', primary: '#1e293b' };
+      case 'Chef': return { icon: '👨‍🍳', primary: '#ef4444' };
+      case 'Real Estate Agent': return { icon: '🏢', primary: '#0d9488' };
+      default: return { icon: '', primary: '#111827' };
+    }
+  };
+
+  const themeVars = getTheme();
 
   const handleWhatsAppShare = () => {
     if (!sharePhone) return alert("Enter a mobile number");
@@ -157,15 +178,7 @@ export default function MinimalClean({
           position: "relative",
         }}
       >
-        <div
-          style={{
-            padding: "24px",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            background: "#fff",
-          }}
-        >
+        <div style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
           <div
             style={{
               color: "#09090b",
@@ -173,8 +186,9 @@ export default function MinimalClean({
               padding: "4px 10px",
               borderRadius: 999,
               fontWeight: 600,
-              border: "1px solid #e4e4e7",
-              background: "#fff",
+              border: "1px solid rgba(228, 228, 231, 0.8)",
+              background: "rgba(255, 255, 255, 0.9)",
+              backdropFilter: "blur(4px)",
             }}
           >
             {profile.plan.toUpperCase()}
@@ -1477,8 +1491,8 @@ export default function MinimalClean({
                       Refer & Earn Rewards
                     </div>
                     <div style={{ fontSize: 13, color: "#71717a", marginBottom: 16, lineHeight: 1.5 }}>
-                      <div style={{ marginBottom: 8 }}>• <strong>1 Month Free Trial:</strong> All new business profiles get a full month free trial.</div>
-                      <div>• <strong>Referral Success:</strong> If your referral purchases within <strong>35 days</strong>, both of you earn rewards!</div>
+                      <div style={{ marginBottom: 8 }}>• <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial.</div>
+                      <div>• <strong>Referral Success:</strong> If your referral purchases within <strong>{siteSettings?.referralPurchaseWindow || 35} days</strong>, both of you earn rewards!</div>
                     </div>
                     <div
                       style={{

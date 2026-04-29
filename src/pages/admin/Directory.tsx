@@ -1,24 +1,53 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, ArrowUpRight, CheckCircle, Clock } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 export default function AdminDirectory() {
-  const { profiles, setProfiles } = useAppContext();
+  const { profiles: staticProfiles, setProfiles: setStaticProfiles } = useAppContext();
+  const [dbProfiles, setDbProfiles] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
 
+  useEffect(() => {
+    const fetchDbProfiles = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'profiles'));
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setDbProfiles(data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchDbProfiles();
+  }, []);
+
+  const allProfiles = useMemo(() => {
+    const combined = [...staticProfiles];
+    dbProfiles.forEach(dbp => {
+      if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
+        combined.push(dbp);
+      }
+    });
+    return combined;
+  }, [staticProfiles, dbProfiles]);
+
   const filteredProfiles = useMemo(() => {
-    return profiles.filter((p: any) => {
-      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           p.company.toLowerCase().includes(searchTerm.toLowerCase());
+    return allProfiles.filter((p: any) => {
+      const pName = p.name || '';
+      const pComp = p.company || '';
+      const matchesSearch = pName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           pComp.toLowerCase().includes(searchTerm.toLowerCase());
       if (filter === 'featured') return matchesSearch && p.featured;
       if (filter === 'vip') return matchesSearch && p.plan === 'VIP Executive';
       return matchesSearch;
     });
-  }, [profiles, searchTerm, filter]);
+  }, [allProfiles, searchTerm, filter]);
 
   const toggleFeatured = (id: string) => {
-    setProfiles(profiles.map((p: any) => p.id === id ? { ...p, featured: !p.featured } : p));
+    // Only updates static for now
+    setStaticProfiles(staticProfiles.map((p: any) => p.id === id ? { ...p, featured: !p.featured } : p));
   };
 
   return (
@@ -37,11 +66,11 @@ export default function AdminDirectory() {
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <div className="stat-card">
           <div className="stat-label">TOTAL MEMBERS</div>
-          <div className="stat-value">{profiles.length}</div>
+          <div className="stat-value">{allProfiles.length}</div>
         </div>
         <div className="stat-card gold">
           <div className="stat-label">FEATURED</div>
-          <div className="stat-value">{profiles.filter((p: any) => p.featured).length}</div>
+          <div className="stat-value">{allProfiles.filter((p: any) => p.featured).length}</div>
         </div>
         <div className="stat-card green">
           <div className="stat-label">DIRECTORY VIEWS</div>
@@ -99,7 +128,7 @@ export default function AdminDirectory() {
                 <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 32, height: 32, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#2563eb' }}>{p.avatar}</div>
+                      <div style={{ width: 32, height: 32, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#2563eb' }}>{p.avatar || (p.name ? p.name[0].toUpperCase() : 'U')}</div>
                       <div>
                         <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{p.name}</div>
                         <div style={{ fontSize: 10, color: '#94a3b8' }}>ID: {p.id}</div>
@@ -131,7 +160,7 @@ export default function AdminDirectory() {
                   </td>
                   <td style={{ padding: '16px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                       <a href={`/profile/${p.slug}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', background: '#f1f5f9', color: '#475569', padding: '6px', borderRadius: 6 }}>
+                       <a href={`/profile/${p.slug || p.id}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', background: '#f1f5f9', color: '#475569', padding: '6px', borderRadius: 6 }}>
                          <Search size={14} />
                        </a>
                        <button style={{ background: '#f1f5f9', color: '#475569', border: 'none', padding: '6px', borderRadius: 6, cursor: 'pointer' }}>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
 import {
@@ -52,6 +53,7 @@ export default function ExecutiveDark({
   profile: any;
   onExit: () => void;
 }) {
+  const { jobOpenings, siteSettings } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
 
@@ -170,20 +172,12 @@ export default function ExecutiveDark({
           borderRight: "1px solid #222",
         }}
       >
-        <div
-          style={{
-            padding: "20px",
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            background: "#000",
-            borderBottom: "1px solid #222",
-          }}
-        >
+        <div style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
           <div
             style={{
-              background: "#b45309",
-              border: "1px solid #78350f",
+              background: "rgba(180, 83, 9, 0.9)",
+              border: "1px solid rgba(120, 53, 15, 0.8)",
+              backdropFilter: "blur(4px)",
               color: "#fff",
               fontSize: 10,
               padding: "4px 8px",
@@ -1468,8 +1462,8 @@ export default function ExecutiveDark({
                   Refer & Earn Rewards
                 </div>
                 <div style={{ fontSize: 13, color: "#aaa", marginBottom: 20, textAlign: 'left', lineHeight: 1.6 }}>
-                  <div style={{ marginBottom: 10 }}>✦ <strong>1 Month Free Trial:</strong> All new business profiles get a full month free trial.</div>
-                  <div>✦ <strong>Referral Success:</strong> If your referral purchases any plan within <strong>35 days</strong>, your referral is marked successful and you both earn rewards!</div>
+                  <div style={{ marginBottom: 10 }}>✦ <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial.</div>
+                  <div>✦ <strong>Referral Success:</strong> If your referral purchases any plan within <strong>{siteSettings?.referralPurchaseWindow || 35} days</strong>, your referral is marked successful and you both earn rewards!</div>
                 </div>
                 <div
                   style={{

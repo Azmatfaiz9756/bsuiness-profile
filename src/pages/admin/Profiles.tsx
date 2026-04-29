@@ -1,13 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Link } from 'react-router-dom';
 import { Settings, X, Save, Edit3, Globe, Shield, Link as LinkIcon, Search } from 'lucide-react';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 export default function AdminProfiles() {
-  const { profiles, setProfiles } = useAppContext();
+  const { profiles: staticProfiles, setProfiles: setStaticProfiles } = useAppContext();
+  const [dbProfiles, setDbProfiles] = useState<any[]>([]);
   const [editingProfile, setEditingProfile] = useState<any>(null);
   const [editTab, setEditTab] = useState('seo');
   const [formData, setFormData] = useState<any>({});
+  
+  useEffect(() => {
+    const fetchDbProfiles = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'profiles'));
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true }));
+        setDbProfiles(data);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchDbProfiles();
+  }, [editingProfile]);
+
+  const allProfiles = useMemo(() => {
+    const combined = [...staticProfiles];
+    dbProfiles.forEach(dbp => {
+      if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
+        combined.push(dbp);
+      }
+    });
+    return combined;
+  }, [staticProfiles, dbProfiles]);
 
   const handleEditClick = (profile: any) => {
     setFormData({ ...profile, seo: profile.seo || { title: '', desc: '', keywords: '' } });
@@ -15,17 +41,24 @@ export default function AdminProfiles() {
     setEditTab('seo'); // Default to SEO tab per user request
   };
 
-  const handleSave = () => {
-    if (formData.isNew) {
-      const newProfile = { ...formData };
-      delete newProfile.isNew;
-      setProfiles([newProfile, ...profiles]);
-      alert('New profile created successfully!');
-    } else {
-      setProfiles(profiles.map((p: any) => p.id === formData.id ? formData : p));
+  const handleSave = async () => {
+    try {
+      if (formData.isDb) {
+        // Save to Firebase
+        const docRef = doc(db, 'profiles', formData.ownerId || formData.id);
+        const dataToSave = { ...formData };
+        delete dataToSave.isDb;
+        await updateDoc(docRef, dataToSave);
+      } else {
+        // Save to Static
+        setStaticProfiles(staticProfiles.map((p: any) => p.id === formData.id ? formData : p));
+      }
       alert('Profile updated securely for optimal SEO ranking!');
+      setEditingProfile(null);
+    } catch(e) {
+      console.error(e);
+      alert('Failed to save profile. Ensure you have permissions.');
     }
-    setEditingProfile(null);
   };
 
   const handleSeoChange = (field: string, value: string) => {
@@ -39,27 +72,8 @@ export default function AdminProfiles() {
     <>
       <div className="page-header">
         <div>
-          <h2 style={{fontSize: 20, fontWeight: 800}}>Profile Management</h2>
-        </div>
-        <div style={{display: 'flex', gap: 10}}>
-          <button onClick={() => {
-            setFormData({
-              id: `DBC${Date.now().toString().slice(-9)}`,
-              name: '',
-              company: '',
-              bio: '',
-              title: '',
-              email: '',
-              phone: '',
-              plan: 'Premium',
-              views: 0,
-              slug: '',
-              seo: { title: '', desc: '', keywords: '' },
-              isNew: true
-            });
-            setEditingProfile({ name: 'New Profile' });
-            setEditTab('basic');
-          }} className="topbar-btn btn-gold">+ New Profile</button>
+          <h2 style={{fontSize: 20, fontWeight: 800}}>Profile Management (Registered Users)</h2>
+          <p style={{fontSize: 13, color: 'var(--text3)', marginTop: 4}}>Manage SEO and details for users who registered.</p>
         </div>
       </div>
 
@@ -83,7 +97,7 @@ export default function AdminProfiles() {
             </tr>
           </thead>
           <tbody>
-            {profiles.map((p: any) => (
+            {allProfiles.map((p: any) => (
               <tr key={p.id}>
                 <td>
                   <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
@@ -142,7 +156,25 @@ export default function AdminProfiles() {
                      <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Full Name</label><input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
                      <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Job Title</label><input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
                    </div>
-                   <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Company / Organization</label><input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                     <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Company / Organization</label><input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Profession / Skill Theme</label>
+                       <select value={formData.profession || ''} onChange={e => setFormData({...formData, profession: e.target.value})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, background: '#fff' }}>
+                         <option value="">Standard (Corporate)</option>
+                         <option value="Welder">Welder</option>
+                         <option value="Doctor">Doctor / Medical</option>
+                         <option value="Carpenter">Carpenter</option>
+                         <option value="AC Technician">AC Technician</option>
+                         <option value="Electrician">Electrician</option>
+                         <option value="Plumber">Plumber</option>
+                         <option value="Mechanic">Auto Mechanic</option>
+                         <option value="Engineer">Engineer</option>
+                         <option value="Lawyer">Lawyer / Legal</option>
+                         <option value="Chef">Chef / Culinary</option>
+                       </select>
+                     </div>
+                   </div>
                    <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Bio</label><textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, fontFamily: 'inherit' }} /></div>
                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, background: '#f9fafb', padding: 16, borderRadius: 8, border: '1px solid #e5e7eb' }}>
                      <div><label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Total Visits (Profile Views)</label><input type="number" value={formData.views || 0} onChange={e => setFormData({...formData, views: parseInt(e.target.value, 10)})} style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} /></div>

@@ -17,6 +17,8 @@ import AdminSettings from './pages/admin/Settings';
 import AdminReferrals from './pages/admin/Referrals';
 import AdminDirectory from './pages/admin/Directory';
 import AdminLeads from './pages/admin/Leads';
+import BannerSettings from './pages/admin/BannerSettings';
+import AdminJobs from './pages/admin/AdminJobs';
 
 // Frontend Pages
 import FrontendHome from './pages/frontend/Home';
@@ -57,6 +59,8 @@ export default function App() {
             <Route path="profiles" element={<AdminProfiles />} />
             <Route path="leads" element={<AdminLeads />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="banners" element={<BannerSettings />} />
+            <Route path="jobs" element={<AdminJobs />} />
             <Route path="shop-orders" element={<AdminShopOrders />} />
             <Route path="promo-codes" element={<AdminPromoCodes />} />
             <Route path="wallets" element={<AdminWallets />} />

@@ -195,7 +195,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
 }
 
 export default function OwnerDashboard() {
-  const { user, authLoading } = useAppContext();
+  const { user, authLoading, siteSettings } = useAppContext();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -440,6 +440,9 @@ export default function OwnerDashboard() {
             <button onClick={() => { setSidebarTab('marketing'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
               <Megaphone size={20} /> <span className="flex-1">Broadcast Marketing</span>
             </button>
+            <button onClick={() => { setSidebarTab('applications'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Users size={20} /> <span className="flex-1">Job Applications</span>
+            </button>
             <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
               <MessageSquare size={20} /> <span className="flex-1">Smart AI Chatbot</span>
             </button>
@@ -519,21 +522,20 @@ export default function OwnerDashboard() {
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {sidebarTab === 'profile' && (
             <>
-              <div className="flex border-b border-slate-200 bg-slate-50 overflow-x-auto scrollbar-hide whitespace-nowrap">
-                 <button onClick={() => setActiveTab('basic')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'basic' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Basic Info</button>
-                 <button onClick={() => setActiveTab('contact')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'contact' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Contact & Location</button>
-                 <button onClick={() => setActiveTab('social')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'social' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Socials</button>
-                 <button onClick={() => setActiveTab('business')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'business' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Services</button>
-                 <button onClick={() => setActiveTab('products')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'products' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Products (Store)</button>
-                 <button onClick={() => setActiveTab('testimonials')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'testimonials' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Testimonials</button>
-                 <button onClick={() => setActiveTab('faq')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'faq' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>FAQs</button>
-                 <button onClick={() => setActiveTab('hours')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'hours' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Business Hours</button>
-                 <button onClick={() => setActiveTab('media')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'media' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Media & Gallery</button>
-                 <button onClick={() => setActiveTab('bank')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'bank' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Bank Details</button>
-                 <button onClick={() => setActiveTab('widgets')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Action Buttons</button>
-                 {(profile.plan === 'Pro' || profile.plan === 'Enterprise') && (
-                   <button onClick={() => setActiveTab('theme')} className={`px-5 py-4 border-b-2 font-semibold text-sm transition-colors whitespace-nowrap ${activeTab === 'theme' ? 'bg-white border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>💎 Theme</button>
-                 )}
+              <div className="flex bg-slate-100 p-2 overflow-x-auto scrollbar-hide whitespace-nowrap gap-2 no-scrollbar border-b border-slate-200" style={{ WebkitOverflowScrolling: 'touch' }}>
+                 <button onClick={() => setActiveTab('basic')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'basic' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Basic Info</button>
+                 <button onClick={() => setActiveTab('contact')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'contact' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Contact & Location</button>
+                 <button onClick={() => setActiveTab('social')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'social' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Socials</button>
+                 <button onClick={() => setActiveTab('jobs')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'jobs' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Hiring (Jobs)</button>
+                 <button onClick={() => setActiveTab('theme')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'theme' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>💎 Theme Layout</button>
+                 <button onClick={() => setActiveTab('business')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'business' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Services</button>
+                 <button onClick={() => setActiveTab('products')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Products (Store)</button>
+                 <button onClick={() => setActiveTab('testimonials')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'testimonials' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Testimonials</button>
+                 <button onClick={() => setActiveTab('faq')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'faq' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>FAQs</button>
+                 <button onClick={() => setActiveTab('hours')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'hours' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Business Hours</button>
+                 <button onClick={() => setActiveTab('media')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'media' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Media & Gallery</button>
+                 <button onClick={() => setActiveTab('bank')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'bank' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Bank Details</button>
+                 <button onClick={() => setActiveTab('widgets')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Action Buttons</button>
               </div>
               <div className="p-4 md:p-6 lg:p-8">
                 {activeTab === 'basic' && (
@@ -588,7 +590,7 @@ export default function OwnerDashboard() {
                       <input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider text-wrap">Promotional Banner / Announcement</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-normal break-words">Promotional Banner / Announcement</label>
                       <input type="text" value={formData.announcement || ''} placeholder="e.g. 50% Off Winter Sale!" onChange={e => setFormData({...formData, announcement: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
                     <div className="flex flex-col gap-1.5">
@@ -813,6 +815,47 @@ export default function OwnerDashboard() {
                            </div>
                         ))}
                         {(!formData.products || formData.products.length === 0) && <div className="text-slate-500 text-sm italic">No products added yet.</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'jobs' && (
+                  <div className="flex flex-col gap-8">
+                    <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <div>
+                          <h3 className="m-0 text-base font-bold text-slate-800">Job Openings</h3>
+                          <p className="m-1 text-xs text-slate-500">Post jobs and hire candidates directly from your digital profile.</p>
+                        </div>
+                        <button onClick={() => setFormData({...formData, jobOpenings: [...(formData.jobOpenings || []), { title: '', type: 'Full-time', location: '', salary: '', description: '', link: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors shrink-0">+ Add Job</button>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        {(formData.jobOpenings || []).map((job: any, index: number) => (
+                           <div key={`job-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <input type="text" placeholder="Job Title (e.g. Sales Manager)" value={job.title || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].title = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <select value={job.type || 'Full-time'} onChange={e => { const j = [...formData.jobOpenings]; j[index].type = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
+                                 <option value="Full-time">Full-time</option>
+                                 <option value="Part-time">Part-time</option>
+                                 <option value="Contract">Contract</option>
+                                 <option value="Freelance">Freelance</option>
+                               </select>
+                             </div>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                               <input type="text" placeholder="Location (e.g. Dubai, UAE / Remote)" value={job.location || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].location = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <input type="text" placeholder="Salary Range (Optional)" value={job.salary || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].salary = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                             </div>
+                             <textarea placeholder="Job Description & Requirements" value={job.description || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].description = e.target.value; setFormData({...formData, jobOpenings: j}); }} rows={3} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                             <div className="grid grid-cols-1 gap-3">
+                               <input type="url" placeholder="Application Link (e.g. Google Form or external site - Optional)" value={job.link || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].link = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                             </div>
+                             <div className="flex justify-end mt-2">
+                               <button onClick={() => { const j = [...formData.jobOpenings]; j.splice(index, 1); setFormData({...formData, jobOpenings: j}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove Job</button>
+                             </div>
+                           </div>
+                        ))}
+                        {(!formData.jobOpenings || formData.jobOpenings.length === 0) && <div className="text-slate-500 text-sm italic">No job openings posted.</div>}
                       </div>
                     </div>
                   </div>
@@ -1051,7 +1094,7 @@ export default function OwnerDashboard() {
                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Profile Layout & Theme</h3>
                       <p className="m-0 text-sm text-slate-500 mb-6 underline decoration-blue-500/30">Select a layout and style for your digital profile.</p>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                         <div onClick={() => setFormData({...formData, template: 'classic'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'classic' || !formData.template ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                           <div className="bg-slate-200 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
                           <div className="font-bold text-slate-900">Classic Modern</div>
@@ -1066,6 +1109,29 @@ export default function OwnerDashboard() {
                           <div className="border border-slate-100 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
                           <div className="font-bold text-slate-900">Minimal Clean</div>
                         </div>
+                      </div>
+
+                      <div className="pt-6 border-t border-slate-200">
+                        <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Profession / Skill Theme</h3>
+                        <p className="m-0 text-sm text-slate-500 mb-6">Select automated thematic design settings based on your profession.</p>
+                        <select 
+                          value={formData.profession || ''} 
+                          onChange={e => setFormData({...formData, profession: e.target.value})} 
+                          className="w-full max-w-sm p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans"
+                        >
+                           <option value="">Standard (Corporate)</option>
+                           <option value="Welder">Welder</option>
+                           <option value="Doctor">Doctor / Medical</option>
+                           <option value="Carpenter">Carpenter</option>
+                           <option value="AC Technician">AC Technician</option>
+                           <option value="Electrician">Electrician</option>
+                           <option value="Plumber">Plumber</option>
+                           <option value="Mechanic">Auto Mechanic</option>
+                           <option value="Engineer">Engineer</option>
+                           <option value="Lawyer">Lawyer / Legal</option>
+                           <option value="Chef">Chef / Culinary</option>
+                           <option value="Real Estate Agent">Real Estate Agent</option>
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -1467,6 +1533,23 @@ export default function OwnerDashboard() {
             </div>
           )}
 
+          {sidebarTab === 'applications' && (
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-4 md:p-8">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                 <div>
+                   <h2 className="m-0 text-xl font-bold text-slate-800">Job Applications</h2>
+                   <p className="m-1 text-sm text-slate-500">View and manage candidates who have applied to your job postings.</p>
+                 </div>
+              </div>
+              
+              <div className="flex flex-col gap-4">
+                 <div className="bg-slate-50 border border-slate-200 p-8 text-center rounded-xl">
+                   <p className="text-slate-500 font-medium">No job applications have been strictly received directly yet. Once a candidate submits their resume from your profile, it will appear here.</p>
+                 </div>
+              </div>
+            </div>
+          )}
+
           {sidebarTab === 'chatbot' && (
             <div className="p-4 md:p-8">
                <div className="mb-8">
@@ -1638,7 +1721,7 @@ export default function OwnerDashboard() {
                 <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
                   <div className="flex-1">
                      <h3 className="text-2xl font-bold text-slate-900 mb-2">Your Unified Referral Link</h3>
-                     <p className="text-slate-500 mb-6">Any traffic you send to our plans page using this link guarantees your commission if they subscribe.</p>
+                     <p className="text-slate-500 mb-6">Share your profile link. If you refer a business directly and they subscribe to a paid plan, you earn a <strong className="text-emerald-600">{siteSettings?.referralDirectCommission || 20} {siteSettings?.currency || 'AED'} direct commission</strong>!</p>
                      
                      <div className="flex flex-col sm:flex-row items-stretch gap-3">
                         <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center overflow-x-auto">
