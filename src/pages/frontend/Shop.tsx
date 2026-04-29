@@ -2,9 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { ShoppingCart, Heart, Search, ArrowLeft, Package, MapPin, Tag, CreditCard, Wallet, Trash2, Star, ChevronRight, Menu, X, Filter, SlidersHorizontal, Check, User, ArrowRight, Zap, Gift } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function FrontendShop() {
+  const navigate = useNavigate();
   const { products, cart, setCart, wishlist, setWishlist, userOrders, setUserOrders, addresses, walletBalance, setWalletBalance, siteSettings, user, profiles, shopBanners } = useAppContext();
   const [view, setView] = useState<'catalog' | 'product' | 'cart' | 'checkout' | 'orders' | 'wishlist'>('catalog');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -33,24 +34,26 @@ export default function FrontendShop() {
     return () => clearInterval(int);
   }, [view, shopBanners]);
 
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
   // Extract unique categories and brands
   const categories = useMemo(() => ['All', ...Array.from(new Set(products.map((p: any) => p.category).filter(Boolean)))], [products]);
   const brands = useMemo(() => Array.from(new Set(products.map((p: any) => p.brand).filter(Boolean))), [products]);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
-    if (search) result = result.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || (p.brand && p.brand.toLowerCase().includes(search.toLowerCase())));
-    if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory);
-    if (selectedBrands.length > 0) result = result.filter(p => selectedBrands.includes(p.brand));
-    result = result.filter(p => p.price <= priceRange);
+    if (search) result = result.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase()) || (p.brand && p.brand.toLowerCase().includes(search.toLowerCase())));
+    if (selectedCategory !== 'All') result = result.filter((p: any) => p.category === selectedCategory);
+    if (selectedBrands.length > 0) result = result.filter((p: any) => selectedBrands.includes(p.brand));
+    result = result.filter((p: any) => p.price <= priceRange);
     
-    if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
-    if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
+    if (sortBy === 'price-low') result.sort((a: any, b: any) => a.price - b.price);
+    if (sortBy === 'price-high') result.sort((a: any, b: any) => b.price - a.price);
     if (sortBy === 'newest') result.reverse();
     return result;
   }, [products, search, selectedCategory, selectedBrands, priceRange, sortBy]);
 
-  const topSelling = useMemo(() => [...products].sort((a, b) => a.stock - b.stock).slice(0, 4), [products]);
+  const topSelling = useMemo(() => [...products].sort((a: any, b: any) => a.stock - b.stock).slice(0, 4), [products]);
 
   const toggleBrand = (brand: string) => setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
 
@@ -77,6 +80,19 @@ export default function FrontendShop() {
 
   const handleCheckout = () => {
     if (paymentMethod === 'wallet' && walletBalance < total) { alert('Insufficient wallet balance'); return; }
+    
+    if (paymentMethod === 'card') {
+      setIsProcessingPayment(true);
+      setTimeout(() => {
+        setIsProcessingPayment(false);
+        completeOrder();
+      }, 2500); // Simulate network request for payment gateway
+    } else {
+      completeOrder();
+    }
+  };
+
+  const completeOrder = () => {
     if (paymentMethod === 'wallet') setWalletBalance((prev: number) => prev - total);
     
     const newOrder = { id: `ORD-${Date.now()}`, items: cart, total, addressId: selectedAddress, status: 'Placed', date: new Date().toLocaleDateString() };
@@ -85,8 +101,39 @@ export default function FrontendShop() {
     alert('Order placed successfully!');
   };
 
+  const handleExitShop = () => {
+    const confirm = window.confirm("Do you want to exit the shop and back to Homepage?");
+    if (confirm) {
+        navigate('/');
+    }
+  };
+
+  const handleBack = () => {
+    if (view === 'catalog') {
+        handleExitShop();
+    } else {
+        setView('catalog');
+    }
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen font-sans relative">
+      {/* Payment Processing Overlay */}
+      <AnimatePresence>
+        {isProcessingPayment && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 backdrop-blur-md">
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 text-center">
+              <div className="w-16 h-16 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin mb-6"></div>
+              <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Processing Payment</h3>
+              <p className="text-slate-500 text-sm font-medium">Please do not close this window or press back. Contacting secure gateway...</p>
+              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-4 w-full opacity-50">
+                <div className="text-[10px] font-black tracking-widest uppercase">Secured By Stripe</div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {showMobileSidebar && (
@@ -137,12 +184,13 @@ export default function FrontendShop() {
 
       {/* Header */}
       <header className="bg-slate-900 text-white sticky top-0 z-50 shadow-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between p-4 gap-6">
-          <div className="flex items-center gap-4">
-             {view !== 'catalog' && (
-              <button onClick={() => setView('catalog')} className="p-2 hover:bg-slate-800 rounded-full transition"><ArrowLeft size={20} /></button>
-            )}
-            <h1 className="text-xl font-black tracking-tight"><Link to="/shop">STOREFRONT</Link></h1>
+        <div className="max-w-7xl mx-auto flex items-center justify-between p-3 md:p-4 gap-4 md:gap-6">
+          <div className="flex items-center gap-2 md:gap-4 shrink-0">
+             <button onClick={handleBack} className="p-2 hover:bg-slate-800 rounded-full transition flex items-center gap-1 group">
+               <ArrowLeft size={18} />
+               <span className="hidden md:inline text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">Back</span>
+             </button>
+            <h1 className="text-lg md:text-xl font-black tracking-tight"><Link to="/shop">STOREFRONT</Link></h1>
           </div>
           
           <div className="flex-1 max-w-2xl hidden md:flex items-center relative">
@@ -155,7 +203,7 @@ export default function FrontendShop() {
             </select>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6 shrink-0">
             {user ? (
                <div className="hidden lg:flex items-center gap-3">
                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">{user.email?.[0].toUpperCase()}</div>
@@ -168,28 +216,38 @@ export default function FrontendShop() {
                <Link to="/profile/placeholder" className="hidden lg:flex items-center gap-2 text-sm font-semibold hover:text-blue-400 transition"><User size={18}/> Login</Link>
             )}
 
-            <button onClick={() => setView('orders')} className="flex flex-col items-center gap-1 hover:text-blue-400 transition"><Package size={20} /><span className="text-[10px] font-bold">Orders</span></button>
-            <button onClick={() => setView('wishlist')} className="relative flex flex-col items-center gap-1 hover:text-blue-400 transition">
-              <Heart size={20} /><span className="text-[10px] font-bold">Wishlist</span>
-              {wishlist.length > 0 && <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{wishlist.length}</span>}
+            <button onClick={() => setView('orders')} className="flex flex-col items-center gap-0.5 md:gap-1 hover:text-blue-400 transition text-slate-400">
+              <Package size={18} />
+              <span className="text-[8px] md:text-[10px] font-bold">Orders</span>
             </button>
-            <button onClick={() => setView('cart')} className="relative flex flex-col items-center gap-1 hover:text-blue-400 transition">
-              <ShoppingCart size={20} /><span className="text-[10px] font-bold">Cart</span>
-              {cart.length > 0 && <span className="absolute -top-1 -right-2 bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{cart.length}</span>}
+            <button onClick={() => setView('wishlist')} className="relative flex flex-col items-center gap-0.5 md:gap-1 hover:text-blue-400 transition text-slate-400">
+              <Heart size={18} />
+              <span className="text-[8px] md:text-[10px] font-bold">Wishlist</span>
+              {wishlist.length > 0 && <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">{wishlist.length}</span>}
             </button>
-            <button className="md:hidden" onClick={() => setShowMobileSidebar(true)}><Menu size={24} /></button>
+            <button onClick={() => setView('cart')} className="relative flex flex-col items-center gap-0.5 md:gap-1 hover:text-blue-400 transition text-slate-400">
+              <ShoppingCart size={18} />
+              <span className="text-[8px] md:text-[10px] font-bold">Cart</span>
+              {cart.length > 0 && <span className="absolute -top-1 -right-2 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full">{cart.length}</span>}
+            </button>
+            <button className="md:hidden p-2" onClick={() => setShowMobileSidebar(true)}><Menu size={20} /></button>
           </div>
         </div>
         
         {/* Marquee Navigation Bar */}
         {view === 'catalog' && (
-          <div className="bg-slate-800 border-t border-slate-700 py-2 overflow-hidden flex items-center relative">
-            <div className="flex gap-8 whitespace-nowrap animate-pulse px-4">
-              <span className="text-sm font-bold text-amber-400 flex items-center gap-2"><Zap size={14}/> SPECIAL OFFER: GET 20% OFF WALLET RECHARGES</span>
-              <span className="text-sm font-medium text-slate-300">|</span>
-              <span className="text-sm font-bold text-blue-400 flex items-center gap-2"><Tag size={14}/> FREE SHIPPING ON ORDERS OVER 500 AED</span>
-              <span className="text-sm font-medium text-slate-300">|</span>
-              <span className="text-sm font-bold text-green-400 flex items-center gap-2"><Gift size={14}/> NEW ARRIVALS: METAL NFC CARDS</span>
+          <div className="bg-slate-800 border-t border-slate-700 py-1.5 overflow-hidden flex items-center relative">
+            <div className="flex gap-4 md:gap-8 whitespace-nowrap px-4 animate-marquee">
+              {[1, 2].map((loop) => (
+                <React.Fragment key={loop}>
+                  <span className="text-[10px] md:text-sm font-bold text-amber-400 flex items-center gap-2"><Zap size={12}/> SPECIAL OFFER: GET 20% OFF WALLET RECHARGES</span>
+                  <span className="text-xs font-medium text-slate-500">|</span>
+                  <span className="text-[10px] md:text-sm font-bold text-blue-400 flex items-center gap-2"><Tag size={12}/> FREE SHIPPING ON ORDERS OVER 500 AED</span>
+                  <span className="text-xs font-medium text-slate-500">|</span>
+                  <span className="text-[10px] md:text-sm font-bold text-green-400 flex items-center gap-2"><Gift size={12}/> NEW ARRIVALS: METAL NFC CARDS</span>
+                  <span className="text-xs font-medium text-slate-500">|</span>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         )}
@@ -254,7 +312,7 @@ export default function FrontendShop() {
             <div className="flex flex-col gap-8">
               {/* Sliders */}
               {(shopBanners && shopBanners.length > 0) && (
-                <div className="relative h-64 md:h-80 rounded-3xl overflow-hidden shadow-lg group">
+                <div className="relative h-48 md:h-80 rounded-2xl md:rounded-3xl overflow-hidden shadow-lg group">
                   <AnimatePresence mode="wait">
                     {(() => {
                       const banner = shopBanners[currentSlide];
@@ -278,19 +336,19 @@ export default function FrontendShop() {
 
                       return (
                         <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.5 }}
-                          className={`absolute inset-0 p-8 md:p-12 flex items-center justify-between ${fontClass}`} style={bgStyle}>
+                          className={`absolute inset-0 p-6 md:p-12 flex items-center justify-between ${fontClass}`} style={bgStyle}>
                           {banner.background === 'image' && <div className="absolute inset-0 bg-black/40 z-0" />}
                           
-                          <div className="max-w-md text-white z-10 mix-blend-plus-lighter relative">
-                            <motion.span {...anim} className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold tracking-widest uppercase mb-4">Featured Item</motion.span>
-                            <motion.h2 {...anim} className="text-4xl md:text-5xl font-black mb-4 leading-tight">{banner.title}</motion.h2>
-                            <motion.p {...anim} className="text-lg text-white/80 font-medium mb-6">{banner.desc}</motion.p>
-                            <motion.button {...anim} className="bg-white text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-100 transition shadow-xl">Shop Now <ArrowRight size={18}/></motion.button>
+                          <div className="max-w-[70%] md:max-w-md text-white z-10 mix-blend-plus-lighter relative">
+                            <motion.span {...anim} className="inline-block px-2 md:px-3 py-0.5 md:py-1 bg-white/20 backdrop-blur-md rounded-full text-[8px] md:text-xs font-bold tracking-widest uppercase mb-2 md:mb-4">Featured Item</motion.span>
+                            <motion.h2 {...anim} className="text-xl md:text-5xl font-black mb-2 md:mb-4 leading-tight">{banner.title}</motion.h2>
+                            <motion.p {...anim} className="text-[10px] md:text-lg text-white/80 font-medium mb-4 md:mb-6 line-clamp-2 md:line-clamp-none">{banner.desc}</motion.p>
+                            <motion.button {...anim} className="bg-white text-slate-900 px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl font-bold text-xs md:text-base flex items-center gap-2 hover:bg-slate-100 transition shadow-xl">Shop Now <ArrowRight size={14}/></motion.button>
                           </div>
-                          <motion.div initial={{ x: 50, opacity: 0, rotate: -20 }} animate={{ x: 0, opacity: 1, rotate: 0 }} transition={{ delay: 0.3, type: 'spring' }} className="hidden md:flex text-[120px] filter drop-shadow-2xl z-10 relative text-white">
+                          <motion.div initial={{ x: 50, opacity: 0, rotate: -20 }} animate={{ x: 0, opacity: 1, rotate: 0 }} transition={{ delay: 0.3, type: 'spring' }} className="absolute -right-4 md:relative md:right-0 text-[100px] md:text-[120px] filter drop-shadow-2xl z-10 text-white/20 md:text-white">
                             {banner.imageType === 'icon' ? banner.icon : (
                               banner.imageType === 'image' && banner.imageUrl ? (
-                                <img src={banner.imageUrl} alt={banner.title} className="w-48 h-48 object-contain" />
+                                <img src={banner.imageUrl} alt={banner.title} className="w-32 h-32 md:w-48 md:h-48 object-contain" />
                               ) : null
                             )}
                           </motion.div>
@@ -300,9 +358,9 @@ export default function FrontendShop() {
                   </AnimatePresence>
                   
                   {/* Slider indicators */}
-                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+                  <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-20">
                     {shopBanners.map((_: any, i: number) => (
-                      <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1.5 rounded-full transition-all ${i === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/40'}`} />
+                      <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1 md:h-1.5 rounded-full transition-all ${i === currentSlide ? 'w-4 md:w-8 bg-white' : 'w-1 md:w-2 bg-white/40'}`} />
                     ))}
                   </div>
                 </div>
@@ -603,34 +661,34 @@ export default function FrontendShop() {
 
 // Reusable Product Card
 const ProductCard = ({ p, siteSettings, toggleWishlist, wishlist, setView, setSelectedProduct, addToCart }: any) => (
-  <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 group relative flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+  <div className="bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-100 group relative flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
     {/* Badges */}
-    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-      {p.stock === 0 && <span className="bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm uppercase tracking-widest">Out of Stock</span>}
-      {p.discountPrice && <span className="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded shadow-sm uppercase tracking-widest">Sale</span>}
+    <div className="absolute top-2 md:top-4 left-2 md:left-4 z-10 flex flex-col gap-1 md:gap-2">
+      {p.stock === 0 && <span className="bg-slate-900 text-white text-[8px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 md:py-1 rounded shadow-sm uppercase tracking-widest">Out of Stock</span>}
+      {p.discountPrice && <span className="bg-red-500 text-white text-[8px] md:text-[10px] font-black px-1.5 md:px-2 py-0.5 md:py-1 rounded shadow-sm uppercase tracking-widest">Sale</span>}
     </div>
     
-    <button onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }} className={`absolute top-4 right-4 z-10 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md transition ${wishlist.includes(p.id) ? 'text-red-500' : 'text-slate-300 hover:text-slate-400'}`}>
-      <Heart size={18} className={wishlist.includes(p.id) ? 'fill-red-500' : ''} />
+    <button onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }} className={`absolute top-2 md:top-4 right-2 md:right-4 z-10 w-8 h-8 md:w-10 md:h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md transition ${wishlist.includes(p.id) ? 'text-red-500' : 'text-slate-300 hover:text-slate-400'}`}>
+      <Heart size={16} className={wishlist.includes(p.id) ? 'fill-red-500' : ''} />
     </button>
     
-    <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="aspect-[4/3] bg-slate-50 flex items-center justify-center text-7xl md:text-8xl cursor-pointer relative overflow-hidden">
+    <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="aspect-[4/3] bg-slate-50 flex items-center justify-center text-5xl md:text-8xl cursor-pointer relative overflow-hidden">
       <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.3 }} className="z-0 filter drop-shadow-md">
         {p.icon || '📦'}
       </motion.div>
     </div>
     
-    <div className="p-5 flex flex-col flex-1">
-      <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">{p.brand || p.category}</div>
-      <h3 onClick={() => { setSelectedProduct(p); setView('product'); }} className="font-bold text-slate-900 text-base mb-3 leading-snug cursor-pointer group-hover:text-blue-600 transition line-clamp-2">{p.name}</h3>
+    <div className="p-3 md:p-5 flex flex-col flex-1">
+      <div className="text-[8px] md:text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 md:mb-2">{p.brand || p.category}</div>
+      <h3 onClick={() => { setSelectedProduct(p); setView('product'); }} className="font-bold text-slate-900 text-xs md:text-base mb-2 md:mb-3 leading-snug cursor-pointer group-hover:text-blue-600 transition line-clamp-2">{p.name}</h3>
       
       <div className="mt-auto flex items-end justify-between">
         <div>
-           {p.discountPrice && <div className="text-xs text-slate-400 line-through font-bold mb-0.5">{siteSettings.currency} {p.discountPrice}</div>}
-           <div className="font-black text-xl text-slate-900">{siteSettings.currency} {p.price}</div>
+           {p.discountPrice && <div className="text-[10px] text-slate-400 line-through font-bold mb-0.5">{siteSettings.currency} {p.discountPrice}</div>}
+           <div className="font-black text-sm md:text-xl text-slate-900">{siteSettings.currency} {p.price}</div>
         </div>
-        <button onClick={() => addToCart(p)} disabled={p.stock === 0} className={`w-12 h-12 flex items-center justify-center rounded-2xl transition ${p.stock === 0 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:scale-105 active:scale-95'}`}>
-          <ShoppingCart size={18} />
+        <button onClick={() => addToCart(p)} disabled={p.stock === 0} className={`w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl md:rounded-2xl transition ${p.stock === 0 ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/20 hover:scale-105 active:scale-95'}`}>
+          <ShoppingCart size={16} />
         </button>
       </div>
     </div>

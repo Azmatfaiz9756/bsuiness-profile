@@ -248,21 +248,6 @@ export default function ClassicModern({
             <div className="floating-icon" style={{ top: '85%', right: '5%', fontSize: '30px', animationDelay: '1s' }}>{themeVars.icon}</div>
           </>
         )}
-        <div style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
-          <div
-            style={{
-              background: "rgba(219, 234, 254, 0.9)",
-              color: "#1e40af",
-              fontSize: 11,
-              padding: "4px 10px",
-              borderRadius: 20,
-              fontWeight: 700,
-              backdropFilter: "blur(4px)",
-            }}
-          >
-            {profile.plan.toUpperCase()}
-          </div>
-        </div>
         <div
           style={{
             background: profile.bannerVideo || profile.bannerUrl
@@ -2129,20 +2114,32 @@ export default function ClassicModern({
                 <div style={{ marginBottom: 8 }}>• <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial to explore all features.</div>
                 <div>• <strong>Referral Success:</strong> If your referral purchases any plan within <strong>{siteSettings?.referralPurchaseWindow || 35} days</strong> of signing up, your referral is marked successful and you both earn rewards!</div>
               </div>
-              <div
-                style={{
-                  background: "#fff",
-                  color: "#1e40af",
-                  padding: 12,
-                  borderRadius: 8,
-                  fontFamily: "monospace",
-                  fontWeight: 700,
-                  fontSize: 16,
-                  marginBottom: 12,
-                  wordBreak: "break-all",
-                }}
-              >
-                {window.location.origin}/plans?ref={profile.id || ""}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${profile.id || ""}`);
+                    alert("Referral link copied!");
+                  }}
+                  style={{
+                    flex: 1,
+                    background: "#fff",
+                    color: "#1e40af",
+                    border: "1px solid #1e40af",
+                    padding: 12,
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: 14,
+                    marginBottom: 12,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px"
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copy Referral Link
+                </button>
               </div>
               <Link
                 to="/plans"

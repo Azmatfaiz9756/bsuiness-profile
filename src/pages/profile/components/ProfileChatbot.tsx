@@ -1,17 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Bot, X, Briefcase, Languages, Trash2, CalendarCheck, UserPlus } from 'lucide-react';
+import { Send, Bot, X, Briefcase, Languages, Trash2, CalendarCheck, UserPlus, Headset } from 'lucide-react';
 import { motion, AnimatePresence } from "motion/react";
 import { db } from '../../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { GoogleGenAI, Type } from "@google/genai";
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+import { useAppContext } from "../../../context/AppContext";
 
 export default function ProfileChatbot({ profile }: { profile: any }) {
+  const { user } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<'hi' | 'en' | 'ar' | null>(null);
-  
+  const [liveChatSessionId, setLiveChatSessionId] = useState<string | null>(null);
+  const [isLiveAgentRequesting, setIsLiveAgentRequesting] = useState(false);
+
+  const [showIdentityForm, setShowIdentityForm] = useState(false);
+  const [identityForm, setIdentityForm] = useState({ name: '', phone: '' });
+  const [visitorDetails, setVisitorDetails] = useState<{name: string, phone: string, id: string} | null>(null);
+
+  const lsPrefix = `chat_${profile?.id}_${user?.uid || 'guest'}`;
+  const lsKeyLang = `${lsPrefix}_lang`;
+  const lsKeyHistory = `${lsPrefix}_history`;
+  const lsKeySession = `${lsPrefix}_session`;
+  const lsKeyVisitor = `${lsPrefix}_visitor`;
+
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -81,70 +95,236 @@ Assist visitors with inquiries about the business, services, and contact informa
 ساعد الزوار في التعرف على الخدمات والتواصل.`
   };
 
-  // Persist language and history
+  // Persist language, history and session ID
   useEffect(() => {
-    const savedLang = localStorage.getItem(`chat_lang_${profile?.id}`);
-    if (savedLang) setSelectedLang(savedLang as any);
+    const savedTimestamp = localStorage.getItem(`${lsKeyHistory}_time`);
+    const now = new Date().getTime();
 
-    const savedHistory = localStorage.getItem(`chat_history_${profile?.id}`);
-    if (savedHistory) {
-      try { setMessages(JSON.parse(savedHistory)); } catch (e) {}
+    if (savedTimestamp && now - parseInt(savedTimestamp) > 15 * 60 * 1000) {
+      // Clear history if more than 15 minutes have passed since last activity
+      localStorage.removeItem(lsKeyHistory);
+      localStorage.removeItem(lsKeyLang);
+      localStorage.removeItem(lsKeySession);
+      localStorage.removeItem(`${lsKeyHistory}_time`);
+      localStorage.removeItem(lsKeyVisitor);
+    } else {
+      const savedLang = localStorage.getItem(lsKeyLang);
+      if (savedLang) setSelectedLang(savedLang as any);
+
+      const savedHistory = localStorage.getItem(lsKeyHistory);
+      if (savedHistory) {
+        try { setMessages(JSON.parse(savedHistory)); } catch (e) {}
+      }
+      
+      const savedSessionId = localStorage.getItem(lsKeySession);
+      if (savedSessionId) setLiveChatSessionId(savedSessionId);
+
+      const savedVisitor = localStorage.getItem(lsKeyVisitor);
+      if (savedVisitor) {
+        try { setVisitorDetails(JSON.parse(savedVisitor)); } catch (e) {}
+      } else if (user) {
+        setVisitorDetails({ name: user.displayName || 'User', phone: '', id: user.uid });
+      }
     }
-  }, [profile?.id]);
+
+    // Set interval to clear if open window becomes inactive
+    const interval = setInterval(() => {
+      const stamp = localStorage.getItem(`${lsKeyHistory}_time`);
+      if (stamp && new Date().getTime() - parseInt(stamp) > 15 * 60 * 1000) {
+        localStorage.removeItem(lsKeyHistory);
+        localStorage.removeItem(lsKeyLang);
+        localStorage.removeItem(lsKeySession);
+        localStorage.removeItem(`${lsKeyHistory}_time`);
+        localStorage.removeItem(lsKeyVisitor);
+        setSelectedLang(null);
+        setMessages([]);
+        setVisitorDetails(null);
+        setLiveChatSessionId(null);
+        if (isOpen) setIsOpen(false);
+      }
+    }, 60000); // check every minute
+
+    return () => clearInterval(interval);
+  }, [lsKeyLang, lsKeyHistory, lsKeySession, lsKeyVisitor, user, isOpen]);
 
   useEffect(() => {
     if (selectedLang) {
-       localStorage.setItem(`chat_lang_${profile?.id}`, selectedLang);
+       localStorage.setItem(lsKeyLang, selectedLang);
        if (messages.length === 0) {
          setMessages([{ role: 'model', content: greetings[selectedLang] }]);
        }
     }
-  }, [selectedLang, profile?.id]);
+  }, [selectedLang, lsKeyLang]);
 
   useEffect(() => {
     if (messages.length > 0) {
-      localStorage.setItem(`chat_history_${profile?.id}`, JSON.stringify(messages));
+      localStorage.setItem(lsKeyHistory, JSON.stringify(messages));
+      localStorage.setItem(`${lsKeyHistory}_time`, new Date().getTime().toString());
     }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, profile?.id]);
+  }, [messages, lsKeyHistory]);
+
+  useEffect(() => {
+    if (liveChatSessionId) {
+      localStorage.setItem(lsKeySession, liveChatSessionId);
+    } else {
+      localStorage.removeItem(lsKeySession);
+    }
+  }, [liveChatSessionId, lsKeySession]);
+
+  // Real-time listener for live agent messages
+  useEffect(() => {
+    if (!liveChatSessionId) return;
+
+    const q = query(
+      collection(db, `chat_sessions/${liveChatSessionId}/messages`),
+      orderBy('timestamp', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data();
+          if (data.senderType === 'Agent') {
+            setMessages(prev => {
+              // Avoid duplicates
+              const exists = prev.some(m => m.content === data.text && m.role === 'model');
+              if (exists) return prev;
+              return [...prev, { role: 'model', content: data.text }];
+            });
+          }
+        }
+      });
+    }, (error) => {
+      import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+        handleFirestoreError(error, OperationType.GET, `chat_sessions/${liveChatSessionId}/messages`);
+      });
+    });
+
+    return () => unsubscribe();
+  }, [liveChatSessionId]);
+
+  const startLiveChat = async (customerName: string, customerEmail?: string) => {
+    setIsLiveAgentRequesting(true);
+    try {
+      const sessDoc = await addDoc(collection(db, 'chat_sessions'), {
+        profileId: profile.id,
+        customerName: visitorDetails?.name || customerName || 'Visitor',
+        customerPhone: visitorDetails?.phone || '',
+        customerEmail: customerEmail || '',
+        status: 'Queued',
+        lastMessage: 'Requested human agent',
+        updatedAt: serverTimestamp()
+      });
+      
+      setLiveChatSessionId(sessDoc.id);
+      
+      // Add initial message
+      await addDoc(collection(db, `chat_sessions/${sessDoc.id}/messages`), {
+        senderType: 'Customer',
+        text: 'I want to talk to a human agent.',
+        timestamp: serverTimestamp()
+      });
+
+      setMessages(prev => [...prev, { role: 'model', content: selectedLang === 'hi' ? "Zaroor! Main ek live agent ko connect kar raha hoon. Please line pe bane rahein..." : "Sure! Connecting you to a live agent. Please stay online..." }]);
+    } catch (e) {
+      console.error(e);
+      import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+        handleFirestoreError(e, OperationType.WRITE, 'chat_sessions');
+      });
+      setMessages(prev => [...prev, { role: 'model', content: "Sorry, live support is currently unavailable." }]);
+    }
+    setIsLiveAgentRequesting(false);
+  };
 
   const clearChat = () => {
     if (window.confirm('Delete chat history?')) {
       const initialMsg = greetings[selectedLang || 'en'];
       setMessages([{ role: 'model', content: initialMsg }]);
-      localStorage.setItem(`chat_history_${profile?.id}`, JSON.stringify([{ role: 'model', content: initialMsg }]));
+      localStorage.setItem(lsKeyHistory, JSON.stringify([{ role: 'model', content: initialMsg }]));
     }
   };
 
   const changeLanguage = () => {
     setSelectedLang(null);
     setMessages([]);
-    localStorage.removeItem(`chat_history_${profile?.id}`);
-    localStorage.removeItem(`chat_lang_${profile?.id}`);
+    localStorage.removeItem(lsKeyHistory);
+    localStorage.removeItem(lsKeyLang);
+  };
+
+  const handleSelectLang = (langId: any) => {
+    if (!visitorDetails && !user) {
+      setSelectedLang(langId);
+      setShowIdentityForm(true);
+    } else {
+      setSelectedLang(langId);
+    }
+  };
+
+  const submitIdentity = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identityForm.name || !identityForm.phone) return;
+    const newVisitor = { 
+      name: identityForm.name.trim(), 
+      phone: identityForm.phone.trim(), 
+      id: `guest_${Date.now()}_${Math.random().toString(36).substring(2,9)}`
+    };
+    setVisitorDetails(newVisitor);
+    localStorage.setItem(lsKeyVisitor, JSON.stringify(newVisitor));
+    setShowIdentityForm(false);
   };
 
   const sendMessage = async (customMessage?: string) => {
     const textToSend = customMessage !== undefined ? customMessage : input.trim();
-    if (!textToSend || loading || !selectedLang) return;
+    if (!textToSend || loading || !selectedLang || isLiveAgentRequesting) return;
     
     if (customMessage === undefined) setInput('');
     setMessages(prev => [...prev, { role: 'user', content: textToSend }]);
+
+    // IF LIVE CHAT IS ACTIVE, SEND TO FIRESTORE
+    if (liveChatSessionId) {
+      try {
+        await addDoc(collection(db, `chat_sessions/${liveChatSessionId}/messages`), {
+          senderType: 'Customer',
+          text: textToSend,
+          timestamp: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'chat_sessions', liveChatSessionId), {
+          lastMessage: textToSend,
+          updatedAt: serverTimestamp()
+        });
+      } catch (e) {
+        console.error("LiveChat Error:", e);
+        import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+          handleFirestoreError(e, OperationType.WRITE, `chat_sessions/${liveChatSessionId}`);
+        });
+      }
+      return;
+    }
+
     setLoading(true);
 
     try {
       const history = messages.map(msg => ({
-        role: msg.role === 'model' ? 'model' : 'user',
+        role: msg.role === 'model' ? ('model' as const) : ('user' as const),
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-flash-latest';
+      // Use recommended model
+      const modelName = 'gemini-3-flash-preview';
       const systemInstruction = profile?.aiPrompt || prompts[selectedLang];
+
+      const chatContents = [
+        ...history,
+        { role: 'user', parts: [{ text: textToSend }] }
+      ];
 
       const response = await ai.models.generateContent({
         model: modelName,
-        contents: [...history, { role: 'user', parts: [{ text: textToSend }] }],
+        contents: chatContents,
         config: {
-          systemInstruction: systemInstruction,
+          systemInstruction,
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           tools: [{
             functionDeclarations: [
               {
@@ -174,19 +354,42 @@ Assist visitors with inquiries about the business, services, and contact informa
                   },
                   required: ["name", "email", "message"]
                 }
+              },
+              {
+                name: "talk_to_human",
+                description: "Hand over the chat to a live human agent. Call this if the user specifically asks to talk to a person, an agent, or if the AI cannot help further.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING, description: "Customer's name" },
+                    email: { type: Type.STRING, description: "Customer's email (optional)" }
+                  },
+                  required: ["name"]
+                }
               }
             ]
           }]
         }
       });
 
-      if (response.functionCalls) {
+      const functionCalls = response.functionCalls;
+
+      if (functionCalls && functionCalls.length > 0) {
         const results = [];
-        for (const fc of response.functionCalls) {
+        for (const fc of functionCalls) {
+          if (!fc) continue;
+          if (fc.name === 'talk_to_human') {
+            const args = fc.args as { name: string; email?: string };
+            await startLiveChat(args.name, args.email);
+            results.push({ name: fc.name, response: { success: true, message: "Human agent requested. Connection pending." } });
+            continue;
+          }
+
           const col = fc.name === 'book_appointment' ? 'appointments' : 'leads';
+          const args = fc.args as any;
           try {
             await addDoc(collection(db, col), {
-              ...fc.args,
+              ...args,
               profileId: profile.id,
               createdAt: serverTimestamp(),
               status: fc.name === 'book_appointment' ? 'Pending' : 'New',
@@ -194,33 +397,50 @@ Assist visitors with inquiries about the business, services, and contact informa
             });
             results.push({ name: fc.name, response: { success: true } });
           } catch (e) {
+            console.error("DB Write Error:", e);
             results.push({ name: fc.name, response: { success: false, error: "DB Error" } });
+            import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+              handleFirestoreError(e, OperationType.WRITE, col);
+            });
           }
         }
 
-        // Send results back to AI
+        const finalContents = [
+          ...chatContents,
+          response.candidates?.[0]?.content as any,
+          { role: 'user', parts: results.map(r => ({ functionResponse: r as any })) }
+        ];
+
         const finalResponse = await ai.models.generateContent({
           model: modelName,
-          contents: [
-            ...history, 
-            { role: 'user', parts: [{ text: textToSend }] },
-            { role: 'model', parts: response.functionCalls.map(fc => ({ functionCall: fc })) },
-            { role: 'user', parts: results.map(r => ({ functionResponse: r })) }
-          ],
+          contents: finalContents,
           config: { systemInstruction }
         });
 
-        if (finalResponse.text) {
-          setMessages(prev => [...prev, { role: 'model', content: finalResponse.text || '' }]);
+        const finalText = finalResponse.text;
+        if (finalText) {
+          setMessages(prev => [...prev, { role: 'model', content: finalText }]);
         }
-      } else if (response.text) {
-        setMessages(prev => [...prev, { role: 'model', content: response.text || '' }]);
+      } else {
+        const text = response.text;
+        if (text) {
+          setMessages(prev => [...prev, { role: 'model', content: text }]);
+        }
       }
     } catch (err: any) {
       console.error("Gemini Error:", err);
-      setMessages(prev => [...prev, { role: 'model', content: 'Maaf kijiyega, kuch problem aa rahi hai.' }]);
+      // More detailed error for debugging in development
+      const errorMsg = err?.message || JSON.stringify(err);
+      if (errorMsg.includes('Requested entity was not found')) {
+         setMessages(prev => [...prev, { role: 'model', content: 'Model not found error. Please contact support.' }]);
+      } else if (errorMsg.includes('PERMISSION_DENIED') || errorMsg.includes('Missing or insufficient permissions')) {
+         setMessages(prev => [...prev, { role: 'model', content: 'Database permission error. Rules may be updating. Please wait a moment.' }]);
+      } else {
+         setMessages(prev => [...prev, { role: 'model', content: `Maaf kijiyega, kuch problem aa rahi hai. (${errorMsg.substring(0, 50)}...)` }]);
+      }
     }
     setLoading(false);
+
   };
 
   return (
@@ -308,7 +528,7 @@ Assist visitors with inquiries about the business, services, and contact informa
                       key={lang.id}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => setSelectedLang(lang.id as any)} 
+                      onClick={() => handleSelectLang(lang.id)} 
                       style={{ 
                         width: '85%', padding: '14px', background: '#fff', 
                         border: '1.5px solid #e2e8f0', borderRadius: 16, 
@@ -322,6 +542,48 @@ Assist visitors with inquiries about the business, services, and contact informa
                     </motion.button>
                   ))}
                 </motion.div>
+              ) : showIdentityForm ? (
+                <motion.form 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onSubmit={submitIdentity}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center', p: 16 }}
+                >
+                  <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>Join Chat</h3>
+                    <p style={{ margin: 0, fontSize: 13, color: '#64748b', marginTop: 4 }}>Please enter your details to start.</p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4, display: 'block' }}>Name</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={identityForm.name} 
+                      onChange={e => setIdentityForm({...identityForm, name: e.target.value})}
+                      style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none' }}
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4, display: 'block' }}>Mobile Number</label>
+                    <input 
+                      type="tel" 
+                      required
+                      value={identityForm.phone} 
+                      onChange={e => setIdentityForm({...identityForm, phone: e.target.value})}
+                      style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none' }}
+                      placeholder="Your mobile no."
+                    />
+                  </div>
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    style={{ width: '100%', padding: '14px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, marginTop: 8, cursor: 'pointer' }}
+                  >
+                    Start Chatting
+                  </motion.button>
+                </motion.form>
               ) : (
                 <>
                   {messages.map((msg, i) => (
@@ -362,7 +624,7 @@ Assist visitors with inquiries about the business, services, and contact informa
               )}
             </div>
 
-            {selectedLang && (
+            {selectedLang && !showIdentityForm && (
               <>
                 {messages.length <= 1 && (
                   <div style={{ padding: '0 16px 12px', background: '#f8fafc' }}>

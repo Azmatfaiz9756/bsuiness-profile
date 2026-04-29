@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import { useEffect } from 'react';
+import { doc, getDocFromServer } from 'firebase/firestore';
+import { db } from './firebase';
 
 // Layouts
 import { AdminLayout } from './pages/admin/AdminLayout';
@@ -34,6 +37,19 @@ import AdminDNSHelp from './pages/admin/DNSHelp';
 import OwnerDashboard from './pages/dashboard/OwnerDashboard';
 
 export default function App() {
+  useEffect(() => {
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    }
+    testConnection();
+  }, []);
+
   return (
     <AppProvider>
       <BrowserRouter>

@@ -63,6 +63,32 @@
         "sentAt": { "type": "string", "format": "date-time" }
       },
       "required": ["profileId", "message", "type"]
+    },
+    "ChatSession": {
+      "title": "Chat Session",
+      "description": "Conversation between a customer and a business",
+      "type": "object",
+      "properties": {
+        "profileId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Queued", "Closed"] },
+        "lastMessage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["profileId", "customerName", "status"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "Individual message in a chat session",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "senderType": { "type": "string", "enum": ["Customer", "Agent", "AI"] },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderType", "text", "timestamp"]
     }
   },
   "firestore": {
@@ -85,6 +111,14 @@
     "/campaigns/{id}": {
       "schema": "Campaign",
       "description": "Marketing broadcasts"
+    },
+    "/chat_sessions/{id}": {
+      "schema": "ChatSession",
+      "description": "Active and past support chats"
+    },
+    "/chat_sessions/{id}/messages/{msgId}": {
+      "schema": "ChatMessage",
+      "description": "Live messages"
     }
   }
 }

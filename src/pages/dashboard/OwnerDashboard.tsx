@@ -3,9 +3,10 @@ import { useAppContext } from '../../context/AppContext';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset } from 'lucide-react';
 import { motion } from 'motion/react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+import LiveAgentPanel from './LiveAgentPanel';
 
 function DashboardChatTester({ profile }: { profile: any }) {
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
@@ -69,18 +70,24 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
 
     try {
       const history = messages.map(msg => ({
-        role: msg.role === 'model' ? 'model' : 'user',
+        role: msg.role === 'model' ? ('model' as const) : ('user' as const),
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-flash-latest';
+      const modelName = 'gemini-3-flash-preview';
       const systemInstruction = profile.aiPrompt || prompts[selectedLang];
+
+      const chatContents = [
+        ...history,
+        { role: 'user', parts: [{ text: textToSend }] }
+      ];
 
       const response = await ai.models.generateContent({
         model: modelName,
-        contents: [...history, { role: 'user', parts: [{ text: textToSend }] }],
+        contents: chatContents,
         config: {
-          systemInstruction: systemInstruction,
+          systemInstruction,
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           tools: [{
             functionDeclarations: [
               {
@@ -116,9 +123,12 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
         }
       });
 
-      if (response.functionCalls) {
+      const functionCalls = response.functionCalls;
+
+      if (functionCalls && functionCalls.length > 0) {
         const results = [];
-        for (const fc of response.functionCalls) {
+        for (const fc of functionCalls) {
+          if (!fc) continue;
           const col = fc.name === 'book_appointment' ? 'appointments' : 'leads';
           try {
             await addDoc(collection(db, col), {
@@ -130,32 +140,44 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
             });
             results.push({ name: fc.name, response: { success: true } });
           } catch (e) {
+            console.error("DB Write Error:", e);
             results.push({ name: fc.name, response: { success: false, error: "DB Error" } });
+            import('../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+              handleFirestoreError(e, OperationType.WRITE, col);
+            });
           }
         }
 
+        const finalContents = [
+          ...chatContents,
+          response.candidates?.[0]?.content as any,
+          { role: 'user', parts: results.map(r => ({ functionResponse: r as any })) }
+        ];
+
         const finalResponse = await ai.models.generateContent({
           model: modelName,
-          contents: [
-            ...history, 
-            { role: 'user', parts: [{ text: textToSend }] },
-            { role: 'model', parts: response.functionCalls.map(fc => ({ functionCall: fc })) },
-            { role: 'user', parts: results.map(r => ({ functionResponse: r })) }
-          ],
+          contents: finalContents,
           config: { systemInstruction }
         });
 
-        if (finalResponse.text) {
-          setMessages(prev => [...prev, { role: 'model', content: finalResponse.text || '' }]);
+        const finalText = finalResponse.text;
+        if (finalText) {
+          setMessages(prev => [...prev, { role: 'model', content: finalText }]);
         }
-      } else if (response.text) {
-        setMessages(prev => [...prev, { role: 'model', content: response.text || '' }]);
+      } else {
+        const text = response.text;
+        if (text) {
+          setMessages(prev => [...prev, { role: 'model', content: text }]);
+        }
       }
     } catch (err: any) {
       console.error("Gemini Error:", err);
-      setMessages(prev => [...prev, { role: 'model', content: 'Connection error' }]);
+      // Detailed error for dashboard testing
+      const errorMsg = err?.message || JSON.stringify(err);
+      setMessages(prev => [...prev, { role: 'model', content: `AI Error: ${errorMsg}` }]);
     }
     setLoading(false);
+
   };
 
   return (
@@ -208,6 +230,8 @@ export default function OwnerDashboard() {
   const [campaignData, setCampaignData] = useState({ subject: '', message: '', imageUrl: '', type: 'WhatsApp' });
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
+  const [invitationEmail, setInvitationEmail] = useState('');
+  const [invitationRole, setInvitationRole] = useState('Member (Customizable Profile)');
 
   const [toastMessage, setToastMessage] = useState('');
 
@@ -219,6 +243,41 @@ export default function OwnerDashboard() {
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
+  };
+
+  const handleExportLeads = () => {
+    if (appointments.length === 0) {
+      showToast("No leads to export");
+      return;
+    }
+    const headers = ["Date", "Name", "Type", "Email", "Phone", "Message"];
+    const csvContent = [
+      headers.join(","),
+      ...appointments.map(l => {
+        const date = l.createdAt?.seconds 
+          ? new Date(l.createdAt.seconds * 1000).toLocaleDateString()
+          : new Date().toLocaleDateString();
+        return [
+          date,
+          `"${l.name || 'Anonymous'}"`,
+          l.source || 'Lead',
+          l.email || '',
+          l.phone || '',
+          `"${(l.message || '').replace(/"/g, '""')}"`
+        ].join(",");
+      })
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `dbc_leads_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Leads exported to CSV");
   };
 
   useEffect(() => {
@@ -250,6 +309,12 @@ export default function OwnerDashboard() {
             plan: 'Pro',
             status: 'Active',
             views: 0,
+            referralCount: 0,
+            referralPending: 0,
+            referralEarnings: 0,
+            role: 'Admin',
+            companyId: user.uid,
+            teamMembers: [],
             seo: { title: '', desc: '', keywords: '' },
             announcement: 'Special Offer: 20% off all consultations this month!',
             socials: {
@@ -347,6 +412,9 @@ export default function OwnerDashboard() {
             setAppointments(data);
           } catch(err) {
             console.error(err);
+            import('../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+              handleFirestoreError(err, OperationType.LIST, 'appointments/leads');
+            });
           }
         };
         fetchAll();
@@ -401,57 +469,107 @@ export default function OwnerDashboard() {
         </div>
       )}
       {/* Mobile Top Header */}
-      <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-[60]">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs uppercase">DBC</div>
-          <span className="font-bold text-white text-base">Business Portal</span>
+      <div className="md:hidden flex h-14 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-[40]">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-[10px] uppercase">DBC</div>
+          <span className="font-bold text-white text-sm">Business Portal</span>
         </div>
-        <button className="text-slate-400 hover:text-white p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <Link to="/" className="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg">Exit</Link>
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Sidebar Overlay for Mobile */}
+        {/* Sidebar Overlay for Mobile More Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="md:hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-end" onClick={() => setIsMobileMenuOpen(false)}>
+            <div className="bg-slate-900 w-full rounded-t-3xl border-t border-slate-800 p-6 flex flex-col gap-2 pb-24" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-white font-bold mb-4 px-2">More Options</h3>
+              <button onClick={() => { setSidebarTab('marketing'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
+              </button>
+              <button onClick={() => { setSidebarTab('agent'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
+              </button>
+              <button onClick={() => { setSidebarTab('applications'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
+              </button>
+              <button onClick={() => { setSidebarTab('plan'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Shield size={20} /> <span className="flex-1 text-left">Plan & Billing</span>
+              </button>
+              <button onClick={() => { setSidebarTab('referrals'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
+              </button>
+            </div>
+          </div>
         )}
 
-        {/* Sidebar */}
-        <div className={`
-          fixed md:relative z-50 flex flex-col w-[280px] h-[calc(100vh-64px)] md:h-full bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out
-          ${isMobileMenuOpen ? 'left-0' : '-left-[280px] md:left-0'}
-        `}>
-          <div className="hidden md:flex flex-col px-6 py-8 border-b border-slate-800">
+        {/* Mobile Native Bottom Navigation */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[50] bg-slate-900 border-t border-slate-800 pb-4 shadow-2xl flex justify-around px-2 py-2">
+           <button onClick={() => { setSidebarTab('profile'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'profile' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <LayoutDashboard size={20} />
+             <span className="text-[9px] font-bold">Profile</span>
+           </button>
+           <button onClick={() => { setSidebarTab('analytics'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'analytics' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <BarChart3 size={20} />
+             <span className="text-[9px] font-bold">Stats</span>
+           </button>
+           <button onClick={() => { setSidebarTab('appointments'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'appointments' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <Calendar size={20} />
+             <span className="text-[9px] font-bold">Leads</span>
+           </button>
+           <button onClick={() => { setSidebarTab('agent'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'agent' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <Headset size={20} />
+             <span className="text-[9px] font-bold">Agent</span>
+           </button>
+           <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'chatbot' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <MessageSquare size={20} />
+             <span className="text-[9px] font-bold">AI Chat</span>
+           </button>
+           <button onClick={() => setIsMobileMenuOpen(true)} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <Menu size={20} />
+             <span className="text-[9px] font-bold">More</span>
+           </button>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden md:flex md:relative z-50 flex-col w-[280px] h-full bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out">
+          <div className="flex flex-col px-6 py-8 border-b border-slate-800">
             <h2 className="m-0 text-xl font-black text-white tracking-tight">Business Portal</h2>
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Dubai Digital Connect</span>
           </div>
 
           <div className="flex flex-col flex-1 py-6 overflow-y-auto px-3 gap-1">
-            <button onClick={() => { setSidebarTab('profile'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <LayoutDashboard size={20} /> <span className="flex-1">My Digital Profile</span>
+            <button onClick={() => setSidebarTab('profile')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <LayoutDashboard size={20} /> <span className="flex-1 text-left">My Digital Profile</span>
             </button>
-            <button onClick={() => { setSidebarTab('analytics'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <BarChart3 size={20} /> <span className="flex-1">Analytics & Stats</span>
+            <button onClick={() => setSidebarTab('analytics')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <BarChart3 size={20} /> <span className="flex-1 text-left">Analytics & Stats</span>
             </button>
-            <button onClick={() => { setSidebarTab('appointments'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Calendar size={20} /> <span className="flex-1">Appointments & Leads</span>
+            <button onClick={() => setSidebarTab('appointments')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Calendar size={20} /> <span className="flex-1 text-left">Appointments & Leads</span>
             </button>
-            <button onClick={() => { setSidebarTab('marketing'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Megaphone size={20} /> <span className="flex-1">Broadcast Marketing</span>
+            <button onClick={() => setSidebarTab('marketing')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
             </button>
-            <button onClick={() => { setSidebarTab('applications'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Users size={20} /> <span className="flex-1">Job Applications</span>
+            <button onClick={() => setSidebarTab('agent')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
             </button>
-            <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <MessageSquare size={20} /> <span className="flex-1">Smart AI Chatbot</span>
+            <button onClick={() => setSidebarTab('applications')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
             </button>
-            <button onClick={() => { setSidebarTab('plan'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Shield size={20} /> <span className="flex-1">Plan & Billing</span>
+            <button onClick={() => setSidebarTab('chatbot')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <MessageSquare size={20} /> <span className="flex-1 text-left">Smart AI Chatbot</span>
             </button>
-            <button onClick={() => { setSidebarTab('referrals'); setIsMobileMenuOpen(false); }} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Users size={20} /> <span className="flex-1">Referral Program</span>
+            <button onClick={() => setSidebarTab('plan')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Shield size={20} /> <span className="flex-1 text-left">Plan & Billing</span>
             </button>
+            <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
+            </button>
+            {profile?.plan === 'Enterprise' && (
+              <button onClick={() => setSidebarTab('team')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Users size={20} /> <span className="flex-1 text-left">Team Management</span>
+              </button>
+            )}
           </div>
           
           <div className="p-6 border-t border-slate-800 shrink-0">
@@ -462,8 +580,8 @@ export default function OwnerDashboard() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden text-slate-900">
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full pb-24 md:pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-0">
               <h1 className="m-0 text-xl md:text-2xl font-extrabold text-slate-900">Manage Your Digital Card</h1>
               <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-1 shrink-0">
@@ -519,25 +637,25 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-full">
           {sidebarTab === 'profile' && (
             <>
-              <div className="flex bg-slate-100 p-2 overflow-x-auto scrollbar-hide whitespace-nowrap gap-2 no-scrollbar border-b border-slate-200" style={{ WebkitOverflowScrolling: 'touch' }}>
-                 <button onClick={() => setActiveTab('basic')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'basic' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Basic Info</button>
-                 <button onClick={() => setActiveTab('contact')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'contact' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Contact & Location</button>
-                 <button onClick={() => setActiveTab('social')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'social' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Socials</button>
-                 <button onClick={() => setActiveTab('jobs')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'jobs' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Hiring (Jobs)</button>
-                 <button onClick={() => setActiveTab('theme')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'theme' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>💎 Theme Layout</button>
-                 <button onClick={() => setActiveTab('business')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'business' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Services</button>
-                 <button onClick={() => setActiveTab('products')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Products (Store)</button>
-                 <button onClick={() => setActiveTab('testimonials')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'testimonials' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Testimonials</button>
-                 <button onClick={() => setActiveTab('faq')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'faq' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>FAQs</button>
-                 <button onClick={() => setActiveTab('hours')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'hours' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Business Hours</button>
-                 <button onClick={() => setActiveTab('media')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'media' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Media & Gallery</button>
-                 <button onClick={() => setActiveTab('bank')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'bank' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Bank Details</button>
-                 <button onClick={() => setActiveTab('widgets')} className={`px-4 py-2 rounded-full font-bold text-sm transition-all whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white shadow text-blue-600' : 'bg-transparent text-slate-500 hover:bg-slate-200'}`}>Action Buttons</button>
+              <div className="flex bg-slate-100/80 p-1.5 overflow-x-auto scrollbar-hide whitespace-nowrap gap-1.5 no-scrollbar border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md" style={{ WebkitOverflowScrolling: 'touch' }}>
+                 <button onClick={() => setActiveTab('basic')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'basic' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Basic Info</button>
+                 <button onClick={() => setActiveTab('contact')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'contact' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Contact & Map</button>
+                 <button onClick={() => setActiveTab('social')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'social' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Social Links</button>
+                 <button onClick={() => setActiveTab('jobs')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'jobs' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Hiring</button>
+                 <button onClick={() => setActiveTab('theme')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'theme' ? 'bg-white shadow-md text-blue-700 scale-[1.02] border border-blue-100' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>💎 Layouts</button>
+                 <button onClick={() => setActiveTab('business')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'business' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Services</button>
+                 <button onClick={() => setActiveTab('products')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Shop</button>
+                 <button onClick={() => setActiveTab('testimonials')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'testimonials' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Reviews</button>
+                 <button onClick={() => setActiveTab('faq')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'faq' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>FAQs</button>
+                 <button onClick={() => setActiveTab('hours')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'hours' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Timing</button>
+                 <button onClick={() => setActiveTab('media')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'media' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Gallery</button>
+                 <button onClick={() => setActiveTab('bank')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'bank' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Payments</button>
+                 <button onClick={() => setActiveTab('widgets')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Custom</button>
               </div>
-              <div className="p-4 md:p-6 lg:p-8">
+              <div className="p-4 md:p-6 lg:p-8 overflow-y-auto">
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-1.5">
@@ -618,15 +736,17 @@ export default function OwnerDashboard() {
                             const btn = document.getElementById("ai-bio-btn");
                             if(btn) btn.innerHTML = "Generating...";
                             try {
-                              const aiInstance: any = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-                              const model = aiInstance.getGenerativeModel({ model: 'gemini-1.5-flash' });
-                              const result = await model.generateContent(`Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.`);
-                              const response = await result.response;
-                              const text = response.text();
+                              const aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+                              const res = await aiInstance.models.generateContent({
+                                model: 'gemini-3-flash-preview',
+                                contents: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.`
+                              });
+                              const text = res.text;
                               if(text) {
-                                setFormData({...formData, bio: text});
+                                setFormData({...formData, bio: text.trim()});
                               }
                             } catch(e) {
+                              console.error("AI Magic Writer Error:", e);
                               alert("Failed to generate bio.");
                             }
                             if(btn) btn.innerHTML = "✨ AI Magic Writer";
@@ -1301,6 +1421,18 @@ export default function OwnerDashboard() {
             </div>
           )}
 
+          {sidebarTab === 'agent' && (
+             <div className="p-4 md:p-8 h-full flex flex-col">
+               <div className="mb-6 shrink-0">
+                 <h2 className="text-2xl font-black text-slate-900 m-0">Live Agent Panel</h2>
+                 <p className="text-slate-500 m-0 mt-1 text-sm">Support your customers in real-time. Handed over from AI assistant.</p>
+               </div>
+               <div className="flex-1 min-h-0">
+                 <LiveAgentPanel profileId={profile.id} />
+               </div>
+             </div>
+          )}
+
           {sidebarTab === 'appointments' && (
             <div className="p-4 md:p-8">
                <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -1308,38 +1440,46 @@ export default function OwnerDashboard() {
                    <h2 className="text-2xl font-black text-slate-900 m-0">Appointments & Leads</h2>
                    <p className="text-slate-500 m-0 mt-1 text-sm">Real-time management for all incoming customer queries</p>
                  </div>
-                 <button 
-                  onClick={async () => {
-                    const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-                    try {
-                       await addDoc(collection(db, 'leads'), {
-                          profileId: profile.id,
-                          name: 'Rohan Sharma',
-                          email: 'rohan.s@example.com',
-                          phone: '+971 50 123 4567',
-                          company: 'Dubai Tech Ventures',
-                          message: 'I am interested in your services for my new startup in Dubai Silicon Oasis. Please call.',
-                          source: 'Contact Form',
-                          createdAt: serverTimestamp()
-                       });
-                       await addDoc(collection(db, 'appointments'), {
-                          profileId: profile.id,
-                          customerName: 'Sarah Jenkins',
-                          customerEmail: 'sarah.j@example.com',
-                          date: '2024-05-15',
-                          time: '11:00',
-                          source: 'Profile Booking',
-                          createdAt: serverTimestamp()
-                       });
-                       alert('Dubai Demo samples created! Please refresh or toggle the tab.');
-                    } catch(e) {
-                      alert('Failed to add sample data.');
-                    }
-                  }}
-                  className="px-5 py-2 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10 flex items-center gap-2"
-                >
-                  <Plus size={14} /> Load Dubai Leads Demo
-                </button>
+                 <div className="flex flex-wrap gap-3">
+                   <button 
+                     onClick={handleExportLeads}
+                     className="px-5 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-black rounded-xl hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2"
+                   >
+                     <Download size={14} /> Export CSV
+                   </button>
+                   <button 
+                    onClick={async () => {
+                      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+                      try {
+                         await addDoc(collection(db, 'leads'), {
+                            profileId: profile.id,
+                            name: 'Rohan Sharma',
+                            email: 'rohan.s@example.com',
+                            phone: '+971 50 123 4567',
+                            company: 'Dubai Tech Ventures',
+                            message: 'I am interested in your services for my new startup in Dubai Silicon Oasis. Please call.',
+                            source: 'Contact Form',
+                            createdAt: serverTimestamp()
+                         });
+                         await addDoc(collection(db, 'appointments'), {
+                            profileId: profile.id,
+                            customerName: 'Sarah Jenkins',
+                            customerEmail: 'sarah.j@example.com',
+                            date: '2024-05-15',
+                            time: '11:00',
+                            source: 'Profile Booking',
+                            createdAt: serverTimestamp()
+                         });
+                         showToast('Dubai Demo samples created!');
+                      } catch(e) {
+                        showToast('Failed to add sample data.');
+                      }
+                    }}
+                    className="px-5 py-2 bg-slate-900 text-white text-xs font-black rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10 flex items-center gap-2"
+                  >
+                    <Plus size={14} /> Load Dubai Leads Demo
+                  </button>
+                 </div>
                </div>
 
                {appointments.length === 0 ? (
@@ -1641,17 +1781,18 @@ export default function OwnerDashboard() {
                   <div className="relative z-10 text-center md:text-right bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl min-w-[200px]">
                      <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">MEMBERSHIP COST</div>
                      <div className="text-4xl font-black tabular-nums">
-                        {profile.plan === 'Premium' ? '$49' : profile.plan === 'Pro' ? '$19' : '$0'}
+                        {profile.plan === 'Enterprise' ? '$199' : profile.plan === 'Premium' ? '$49' : profile.plan === 'Pro' ? '$19' : '$0'}
                         <span className="text-sm font-bold text-slate-500 ml-1">/mo</span>
                      </div>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                    {[
                      { name: 'Basic', price: 'Free', features: ['5 Services', 'Basic Profile', 'QR Code'], color: 'slate' },
                      { name: 'Pro', price: '$19', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'], color: 'blue', popular: true },
-                     { name: 'Premium', price: '$49', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'], color: 'indigo' }
+                     { name: 'Premium', price: '$49', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'], color: 'indigo' },
+                     { name: 'Enterprise', price: '$199', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'], color: 'slate' }
                    ].map((plan) => (
                      <div key={plan.name} className={`relative p-8 rounded-[2rem] border-2 transition-all group ${profile.plan === plan.name ? 'border-blue-600 bg-blue-50/20 ring-4 ring-blue-500/5' : 'border-slate-100 bg-white hover:border-slate-300 shadow-sm hover:shadow-xl'}`}>
                        {plan.popular && (
@@ -1690,6 +1831,117 @@ export default function OwnerDashboard() {
                 </div>
               </div>
             </div>
+          )}
+
+          {sidebarTab === 'team' && (
+             <div className="p-4 md:p-8">
+               <div className="mb-8">
+                 <h2 className="text-2xl font-black text-slate-900 m-0">Team Management</h2>
+                 <p className="text-slate-500 m-0 mt-1 text-sm">Control digital profiles for your entire organization</p>
+               </div>
+
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                       <h4 className="text-lg font-black text-slate-900 m-0 mb-6 flex items-center gap-2">
+                         <Users size={20} className="text-blue-600" /> Organization Members
+                       </h4>
+                       
+                       {(profile.teamMembers || []).length === 0 ? (
+                         <div className="py-12 flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-center">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
+                              <Users size={30} />
+                            </div>
+                            <h5 className="font-black text-slate-700 m-0">No team members yet</h5>
+                            <p className="text-xs text-slate-500 mt-2">Invite your employees or partners to create their DBC profiles.</p>
+                         </div>
+                       ) : (
+                         <div className="space-y-4">
+                            {profile.teamMembers.map((m: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">{m.name?.charAt(0)}</div>
+                                  <div>
+                                    <div className="font-bold text-sm text-slate-900">{m.name}</div>
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase">{m.email} • {m.role}</div>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-bold rounded-lg border border-slate-200">Manage</button>
+                                  <button className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg border border-red-100">Remove</button>
+                                </div>
+                              </div>
+                            ))}
+                         </div>
+                       )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                       <h4 className="text-sm font-black text-slate-900 m-0 mb-4">Invite Member</h4>
+                       <div className="space-y-4">
+                          <input 
+                            type="email" 
+                            placeholder="Employee Email..." 
+                            value={invitationEmail}
+                            onChange={(e) => setInvitationEmail(e.target.value)}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold" 
+                          />
+                          <select 
+                            value={invitationRole}
+                            onChange={(e) => setInvitationRole(e.target.value)}
+                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold"
+                          >
+                             <option>Member (Customizable Profile)</option>
+                             <option>View-Only (Admin Managed)</option>
+                          </select>
+                          <button 
+                            onClick={async () => {
+                              if (!invitationEmail) {
+                                showToast("Please enter an email");
+                                return;
+                              }
+                              const currentMembers = profile.teamMembers || [];
+                              if (currentMembers.length >= 10) {
+                                showToast("Team limit reached. Upgrade for more seats.");
+                                return;
+                              }
+                              const newMember = {
+                                name: invitationEmail.split('@')[0],
+                                email: invitationEmail,
+                                role: invitationRole,
+                                status: 'Pending'
+                              };
+                              const updatedMembers = [...currentMembers, newMember];
+                              try {
+                                await setDoc(doc(db, 'profiles', user.uid), { teamMembers: updatedMembers }, { merge: true });
+                                setProfile({ ...profile, teamMembers: updatedMembers });
+                                setInvitationEmail('');
+                                showToast(`Invitation sent to ${invitationEmail}`);
+                              } catch(e) {
+                                showToast("Failed to send invitation");
+                              }
+                            }}
+                            className="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                          >
+                            Send Invitation
+                          </button>
+                       </div>
+                    </div>
+
+                    <div className="bg-slate-900 rounded-3xl p-6 text-white border border-slate-800">
+                       <div className="flex items-center justify-between mb-4">
+                          <h5 className="text-xs font-black uppercase tracking-widest m-0">Seat Utilization</h5>
+                          <span className="text-[10px] font-bold text-emerald-400">{(profile.teamMembers?.length || 0)} / 10 used</span>
+                       </div>
+                       <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((profile.teamMembers?.length || 0) / 10) * 100}%` }} />
+                       </div>
+                    </div>
+                  </div>
+               </div>
+             </div>
           )}
 
           {sidebarTab === 'referrals' && (

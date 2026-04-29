@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, CreditCard, ShieldCheck } from 'lucide-react';
+import { X, CreditCard, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { useAppContext } from '../context/AppContext';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -9,7 +12,8 @@ interface PaymentModalProps {
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, plan }) => {
-  const [method, setMethod] = useState<'stripe' | 'razorpay'>('stripe');
+  const { user } = useAppContext();
+  const [method, setMethod] = useState<'stripe' | 'tabby'>('stripe');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
@@ -17,88 +21,117 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
   if (!isOpen) return null;
 
   const handlePayment = async () => {
+    if (!user || !plan) return;
     setLoading(true);
-    // Simulate real API call to VPS
-    await new Promise(r => setTimeout(r, 2000));
-    setLoading(false);
-    setSuccess(true);
+    
+    try {
+      // Simulate secure payment gateway connection suitable for UAE
+      await new Promise(r => setTimeout(r, 2500));
+      
+      // Update plan in Firestore
+      const userRef = doc(db, 'profiles', user.uid);
+      await updateDoc(userRef, {
+        plan: plan.name,
+        updatedAt: new Date().toISOString()
+      });
 
-    setTimeout(() => {
-      onClose();
-      navigate('/dashboard');
-    }, 2000);
+      setLoading(false);
+      setSuccess(true);
+
+      setTimeout(() => {
+        onClose();
+        navigate('/dashboard');
+      }, 2000);
+    } catch (err) {
+      console.error("Payment sync error:", err);
+      alert("Payment successful but failed to update profile. Please contact support.");
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden relative">
-        {!success && (
-          <button onClick={onClose} className="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
-             <X size={20} />
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
+        {!success && !loading && (
+          <button onClick={onClose} className="absolute right-6 top-6 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 rounded-full p-1.5">
+             <X size={18} />
           </button>
         )}
 
-        <div className="p-6 sm:p-8">
+        <div className="p-8">
           {success ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck size={32} className="text-emerald-500" />
+              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 size={40} className="text-emerald-500" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">Payment Successful!</h2>
-              <p className="text-slate-500 mb-6">Your plan has been activated.</p>
-              <p className="text-sm text-slate-400">Redirecting to dashboard...</p>
+              <h2 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">Payment Successful!</h2>
+              <p className="text-slate-500 mb-6 font-medium">Your plan is activated and ready to go.</p>
+              <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                <div className="bg-emerald-500 h-full w-full origin-left animate-[scale-x_2s_ease-out_forwards]"></div>
+              </div>
+              <p className="text-xs text-slate-400 mt-4 font-bold uppercase tracking-widest">Redirecting</p>
             </div>
+          ) : loading ? (
+             <div className="text-center py-12 flex flex-col items-center">
+               <div className="w-16 h-16 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
+               <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Processing Payment</h3>
+               <p className="text-slate-500 text-sm font-medium">Please do not close this window or press back. Contacting secure gateway...</p>
+               <div className="mt-8 flex items-center justify-center gap-2 opacity-50">
+                 <ShieldCheck size={16} />
+                 <span className="text-[10px] font-black tracking-widest uppercase">Secured By Stripe</span>
+               </div>
+             </div>
           ) : (
             <>
-              <h2 className="text-xl font-bold text-slate-800 mb-2">Complete Payment</h2>
-              <p className="text-slate-500 mb-6 text-sm">
-                You are subscribing to the <strong className="text-slate-900">{plan?.name || 'Plan'}</strong> for {plan?.price || 'AED 0'}.
+              <h2 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">Complete Payment</h2>
+              <p className="text-slate-500 mb-8 text-sm font-medium">
+                You are subscribing to the <strong className="text-slate-900 font-black">{plan?.name || 'Plan'}</strong> for <strong className="text-blue-600 font-black">{plan?.price || 'AED 0'}</strong>.
               </p>
 
-              <div className="space-y-3 mb-6">
-                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${method === 'stripe' ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                  <div className="flex items-center gap-3">
-                    <input type="radio" name="payment_method" checked={method === 'stripe'} onChange={() => setMethod('stripe')} className="w-4 h-4 text-sky-600" />
+              <div className="space-y-3 mb-8">
+                <label className={`block border-2 rounded-2xl p-5 cursor-pointer transition-all ${method === 'stripe' ? 'border-blue-600 bg-blue-50/50 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
+                  <div className="flex items-center gap-4">
+                    <input type="radio" name="payment_method" checked={method === 'stripe'} onChange={() => setMethod('stripe')} className="w-5 h-5 accent-blue-600" />
                     <div>
-                      <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        Stripe <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-700 text-[10px] font-bold uppercase tracking-wider">International</span>
+                      <div className="font-black text-slate-900 text-sm flex items-center gap-2 mb-1">
+                        Secure Card Payment
+                        <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-[9px] font-black uppercase tracking-widest">Stripe</span>
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">Credit / Debit Card, Apple Pay, Google Pay</div>
+                      <div className="text-xs text-slate-500 font-medium">Visa, Mastercard, Apple Pay, Google Pay</div>
                     </div>
                   </div>
                 </label>
 
-                <label className={`block border rounded-lg p-4 cursor-pointer transition-colors ${method === 'razorpay' ? 'border-sky-500 bg-sky-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                  <div className="flex items-center gap-3">
-                    <input type="radio" name="payment_method" checked={method === 'razorpay'} onChange={() => setMethod('razorpay')} className="w-4 h-4 text-sky-600" />
+                <label className={`block border-2 rounded-2xl p-5 cursor-pointer transition-all ${method === 'tabby' ? 'border-amber-500 bg-amber-50/50 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
+                  <div className="flex items-center gap-4">
+                    <input type="radio" name="payment_method" checked={method === 'tabby'} onChange={() => setMethod('tabby')} className="w-5 h-5 accent-amber-500" />
                     <div>
-                      <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        Razorpay <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">India & UAE</span>
+                      <div className="font-black text-slate-900 text-sm flex items-center gap-2 mb-1">
+                        Split in 4, Interest-Free
+                        <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-black uppercase tracking-widest">Tabby</span>
                       </div>
-                      <div className="text-xs text-slate-500 mt-0.5">UPI, Cards, NetBanking</div>
+                      <div className="text-xs text-slate-500 font-medium">Pay 25% today, the rest over 3 months</div>
                     </div>
                   </div>
                 </label>
               </div>
 
-              <div className="bg-slate-50 p-4 rounded-lg mb-6 flex items-center gap-3 border border-slate-100">
-                <ShieldCheck size={24} className="text-emerald-500 shrink-0" />
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Payments are secured with 256-bit encryption. We do not store your card details on our servers.
+              <div className="bg-slate-50 p-4 rounded-xl mb-8 flex items-start gap-4 border border-slate-100">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                  <ShieldCheck size={20} className="text-emerald-500" />
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                  Your payments are secured with 256-bit encryption. We comply with UAE data protection laws and do not store card details.
                 </p>
               </div>
 
               <button
                 onClick={handlePayment}
                 disabled={loading}
-                className="w-full bg-slate-900 text-white font-bold p-3.5 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                className="w-full bg-slate-900 text-white font-black py-4 px-6 rounded-2xl hover:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all flex justify-center items-center gap-2 text-sm uppercase tracking-wider"
               >
-                {loading ? 'Processing...' : (
-                  <>
-                    <CreditCard size={18} />
-                    Pay {plan?.price || 'AED 0'} securely
-                  </>
-                )}
+                <CreditCard size={18} />
+                Pay {plan?.price || 'AED 0'} Securely
               </button>
             </>
           )}

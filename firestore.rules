@@ -1,33 +1,76 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Profiles: Anyone can read, owner can write
     match /profiles/{uid} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow write: if isOwner(uid);
     }
+
+    // Appointments & Leads: Visitors can create, signed-in users (owners) can manage
     match /appointments/{appId} {
-      allow create: if true; // Open to visitors
-      allow read, update, delete: if request.auth != null;
+      allow create: if true;
+      allow read, update, delete: if isSignedIn();
     }
     match /leads/{leadId} {
-      allow create: if true; // Open to visitors
-      allow read, update, delete: if request.auth != null;
+      allow create: if true;
+      allow read, update, delete: if isSignedIn();
     }
+
+    // Followers & Campaigns
     match /followers/{folId} {
       allow create: if true;
-      allow read, update, delete: if request.auth != null;
+      allow read, update, delete: if isSignedIn();
     }
     match /campaigns/{cmpId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null;
+      allow read: if true;
+      allow write: if isSignedIn();
     }
+
+    // Chat Sessions: Secure capability-based access for guests
+    match /chat_sessions/{sessionId} {
+      allow create: if true;
+      allow get: if true; // Capable if sessionId is known
+      allow list: if isSignedIn(); // Only dashboard can list all
+      allow update: if true;
+      allow delete: if isSignedIn();
+      
+      match /messages/{messageId} {
+        allow create: if true;
+        allow read: if true; // Allowed since they know the parent sessionId
+        allow update, delete: if isSignedIn();
+      }
+    }
+
+    // Other collections
     match /products/{prodId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isSignedIn();
     }
     match /settings/{doc} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isSignedIn();
+    }
+    match /test/{doc} {
+      allow read, write: if true;
     }
   }
 }

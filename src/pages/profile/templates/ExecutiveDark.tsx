@@ -172,23 +172,6 @@ export default function ExecutiveDark({
           borderRight: "1px solid #222",
         }}
       >
-        <div style={{ position: "absolute", top: 16, right: 16, zIndex: 10 }}>
-          <div
-            style={{
-              background: "rgba(180, 83, 9, 0.9)",
-              border: "1px solid rgba(120, 53, 15, 0.8)",
-              backdropFilter: "blur(4px)",
-              color: "#fff",
-              fontSize: 10,
-              padding: "4px 8px",
-              borderRadius: 4,
-              fontWeight: 700,
-              letterSpacing: 1,
-            }}
-          >
-            {profile.plan.toUpperCase()}
-          </div>
-        </div>
         {(profile.bannerVideo || profile.bannerUrl) && (
           <div
             style={{
@@ -1465,22 +1448,33 @@ export default function ExecutiveDark({
                   <div style={{ marginBottom: 10 }}>✦ <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial.</div>
                   <div>✦ <strong>Referral Success:</strong> If your referral purchases any plan within <strong>{siteSettings?.referralPurchaseWindow || 35} days</strong>, your referral is marked successful and you both earn rewards!</div>
                 </div>
-                <div
-                  style={{
-                    background: "#000",
-                    border: "1px solid #333",
-                    padding: 14,
-                    borderRadius: 4,
-                    fontFamily: "monospace",
-                    color: "#b45309",
-                    textAlign: "center",
-                    fontWeight: 700,
-                    fontSize: 16,
-                    marginBottom: 16,
-                    wordBreak: "break-all",
-                  }}
-                >
-                  {window.location.origin}/plans?ref={profile.id || ""}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${profile.id || ""}`);
+                      alert("Referral link copied!");
+                    }}
+                    style={{
+                      flex: 1,
+                      background: "#000",
+                      border: "1px solid #b45309",
+                      padding: 14,
+                      borderRadius: 4,
+                      color: "#b45309",
+                      textAlign: "center",
+                      fontWeight: 700,
+                      fontSize: 14,
+                      marginBottom: 16,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px"
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copy Referral Link
+                  </button>
                 </div>
                 <Link
                   to="/plans"
