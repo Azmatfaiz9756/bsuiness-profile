@@ -1,4 +1,5 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config();
 import express from "express";
 import path from "path";
 import Stripe from "stripe";
@@ -14,10 +15,18 @@ async function startServer() {
   let stripeClient: Stripe | null = null;
   const getStripe = () => {
     if (!stripeClient) {
-      if (process.env.STRIPE_SECRET_KEY) {
-        stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
-          apiVersion: '2026-04-22.dahlia',
+      // Trying common variations of stripe secret key
+      const secretKey = process.env.STRIPE_SECRET_KEY || process.env.stripe_secret_key || process.env.SK || process.env.sk || process.env.STRIPE_SK;
+      if (secretKey) {
+        stripeClient = new Stripe(secretKey, {
+          apiVersion: '2025-02-24.acacia' as any, // latest API version
         });
+        console.log("[Stripe] Successfully initialized Stripe client.");
+      } else {
+        console.warn("[Stripe] Stripe secret key NOT found in environment! Checked STRIPE_SECRET_KEY, SK, etc.");
+        // Log available env keys that contain 'STRIPE' or 'SK' to help debug (without logging values)
+        const envKeys = Object.keys(process.env).filter(k => k.toLowerCase().includes('stripe') || k.toLowerCase() === 'sk');
+        console.warn("[Stripe] Found these matching env keys instead (if any):", envKeys);
       }
     }
     return stripeClient;
