@@ -8,20 +8,35 @@ export default function FrontendPlans() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const trialPeriod = siteSettings.trialPeriod || '1 Month';
-  const plans = siteSettings?.plans?.length > 0 ? siteSettings.plans : [
+  const plans = [
     { name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
     { name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
     { name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
     { name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
   ];
 
-  const handleStartTrial = (plan: any) => {
+  const handleStartTrial = async (plan: any) => {
     if (!user) {
       setIsLoginModalOpen(true);
       return;
     }
-    setSelectedPlan(plan);
-    setIsPaymentModalOpen(true);
+
+    if (plan.price === 'Free') {
+      try {
+        const { doc, updateDoc } = await import('firebase/firestore');
+        const { db } = await import('../../firebase');
+        // If the user has a profile, update their plan to Free. If not, they'll create it later.
+        const userRef = doc(db, 'profiles', user.uid);
+        await updateDoc(userRef, { plan: plan.name, updatedAt: new Date().toISOString() });
+        alert(`Successfully subscribed to ${plan.name} plan!`);
+      } catch (err) {
+        console.error("Trial start error:", err);
+        alert('Could not start trial. Please try again or create a profile first.');
+      }
+    } else {
+        setSelectedPlan(plan);
+        setIsPaymentModalOpen(true);
+    }
   };
 
   return (

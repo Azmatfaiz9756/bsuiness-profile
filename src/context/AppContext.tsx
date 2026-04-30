@@ -239,9 +239,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     referralProfileOwnerReward: 5,
     referralDirectCommission: 20,
     plans: [
-      { id: 'standard', name: 'Standard', price: 'AED 299', popular: false, badge: 'STANDARD' },
-      { id: 'premium', name: 'Premium', price: 'AED 599', popular: true, badge: 'MOST POPULAR' },
-      { id: 'business_pro', name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO' }
+      { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC' },
+      { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR' },
+      { id: 'premium', name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM' },
+      { id: 'enterprise', name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE' }
     ]
   });
 

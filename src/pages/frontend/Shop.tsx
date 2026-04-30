@@ -21,7 +21,7 @@ export default function FrontendShop() {
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState(addresses && addresses[0] ? addresses[0].id : '');
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
+  const [paymentMethod, setPaymentMethod] = useState('card');
   
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -90,45 +90,32 @@ export default function FrontendShop() {
   const total = subtotal - discount;
 
   const handleCheckout = async () => {
-    if (paymentMethod === 'wallet' && walletBalance < total) { alert('Insufficient wallet balance'); return; }
-    
-    if (paymentMethod === 'card') {
-      setIsProcessingPayment(true);
-      try {
-        const response = await fetch(`${window.location.origin}/api/create-shop-checkout-session`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart,
-            uid: user?.uid || 'guest',
-            profileId: 'shop'
-          }),
-        });
-        const data = await response.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        } else {
-          throw new Error(data.error || 'Failed to create checkout session');
-        }
-      } catch (err: any) {
-        console.error("Shop payment error:", err);
-        alert(err.message || "Payment process failed. Please contact support.");
-        setIsProcessingPayment(false);
+    setIsProcessingPayment(true);
+    try {
+      const response = await fetch(`${window.location.origin}/api/create-shop-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cart,
+          uid: user?.uid || 'guest',
+          profileId: 'shop'
+        }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session');
       }
-    } else {
-      completeOrder();
+    } catch (err: any) {
+      console.error("Shop payment error:", err);
+      alert(err.message || "Payment process failed. Please contact support.");
+      setIsProcessingPayment(false);
     }
   };
 
-  const completeOrder = () => {
-    if (paymentMethod === 'wallet') setWalletBalance((prev: number) => prev - total);
-    
-    const newOrder = { id: `ORD-${Date.now()}`, items: cart, total, addressId: selectedAddress, status: 'Placed', date: new Date().toLocaleDateString() };
-    setUserOrders([...userOrders, newOrder]);
-    setCart([]); setDiscount(0); setCouponCode(''); setView('orders');
-    alert('Order placed successfully!');
-  };
+
 
   const handleExitShop = () => {
     const confirm = window.confirm("Do you want to exit the shop and back to Homepage?");
@@ -559,21 +546,13 @@ export default function FrontendShop() {
                           </div>
                         </div>
 
-                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                           <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3"><CreditCard className="text-green-600"/> Payment Method</h3>
                           <div className="grid gap-4">
-                             <label className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition ${paymentMethod === 'wallet' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}>
-                                <input type="radio" checked={paymentMethod === 'wallet'} onChange={() => setPaymentMethod('wallet')} className="w-5 h-5 accent-blue-600" />
-                                <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center"><Wallet size={20}/></div>
-                                <div>
-                                  <div className="font-bold text-slate-900 mb-1">DBC Wallet</div>
-                                  <div className={`text-sm font-bold ${walletBalance >= total ? 'text-green-600' : 'text-red-500'}`}>Bal: {siteSettings.currency} {walletBalance}</div>
-                                </div>
-                             </label>
-                             <label className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition ${paymentMethod === 'card' ? 'border-blue-600 bg-blue-50' : 'border-slate-100'}`}>
-                                <input type="radio" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="w-5 h-5 accent-blue-600" />
+                             <label className={`flex items-center gap-4 p-5 rounded-2xl border-2 cursor-pointer transition border-blue-600 bg-blue-50`}>
+                                <input type="radio" checked={true} readOnly className="w-5 h-5 accent-blue-600" />
                                 <div className="w-10 h-10 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center"><CreditCard size={20}/></div>
-                                <div className="font-bold text-slate-900">Credit / Debit Card</div>
+                                <div className="font-bold text-slate-900">Secure Card Payment (Stripe)</div>
                              </label>
                           </div>
                         </div>
@@ -609,7 +588,9 @@ export default function FrontendShop() {
                       {view === 'cart' ? (
                         <button onClick={() => setView('checkout')} className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition">Proceed to Checkout</button>
                       ) : (
-                        <button onClick={handleCheckout} disabled={paymentMethod === 'wallet' && walletBalance < total} className={`w-full font-black py-4 rounded-2xl transition ${paymentMethod === 'wallet' && walletBalance < total ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-green-500 text-white shadow-lg shadow-green-500/30 hover:bg-green-600'}`}>Place Order</button>
+                        <button onClick={handleCheckout} disabled={isProcessingPayment} className={`w-full font-black py-4 rounded-2xl transition ${isProcessingPayment ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-green-500 text-white shadow-lg shadow-green-500/30 hover:bg-green-600'}`}>
+                          {isProcessingPayment ? 'Processing...' : 'Place Order'}
+                        </button>
                       )}
                     </div>
                   </div>
