@@ -43,6 +43,23 @@ export const FrontendLayout = () => {
             <Link to="/referrals" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/referrals')}`}>Referrals</Link>
             <Link to="/leaderboard" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/leaderboard')}`}>Rank</Link>
             <Link to="/plans" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/plans')}`}>Plans</Link>
+            
+            <div className="h-4 w-px bg-slate-200"></div>
+
+            {/* Language Selector */}
+            <select 
+              value={user?.language || 'en'}
+              onChange={(e) => {
+                alert(`Language changed to ${e.target.value.toUpperCase()}. Full localization will be loaded.`);
+              }}
+              className="bg-transparent border-none outline-none text-sm font-medium text-slate-600 cursor-pointer"
+            >
+              <option value="en">🇺🇸 EN</option>
+              <option value="ar">🇦🇪 AR</option>
+              <option value="es">🇪🇸 ES</option>
+              <option value="fr">🇫🇷 FR</option>
+              <option value="de">🇩🇪 DE</option>
+            </select>
           </div>
 
           {/* Desktop Auth */}
@@ -81,6 +98,23 @@ export const FrontendLayout = () => {
             <Link onClick={closeMenu} to="/plans" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/plans')}`}>Plans</Link>
             
             <div className="h-px bg-slate-200 my-4"></div>
+
+            <div className="flex px-3 gap-2 pb-4">
+              <select 
+                value={user?.language || 'en'}
+                onChange={(e) => {
+                  alert(`Language changed to ${e.target.value.toUpperCase()}. Full localization will be loaded.`);
+                  closeMenu();
+                }}
+                className="bg-slate-100 p-2 rounded-lg flex-1 font-medium text-slate-700 outline-none"
+              >
+                <option value="en">English (US)</option>
+                <option value="ar">Arabic (UAE)</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+              </select>
+            </div>
 
             {authLoading ? (
               <span className="p-3 text-center text-slate-500">Loading...</span>

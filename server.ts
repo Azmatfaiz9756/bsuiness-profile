@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({ override: true });
 import express from "express";
 import path from "path";
 import Stripe from "stripe";
@@ -85,6 +85,53 @@ async function startServer() {
     }
   });
 
+  // Create Wallet Dashboard Checkout Session
+  app.post("/api/create-wallet-checkout-session", async (req, res) => {
+    try {
+      const stripe = getStripe();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured on the server." });
+      }
+
+      const { amount, uid } = req.body;
+
+      if (!amount || amount < 10) {
+        return res.status(400).json({ error: "Invalid top-up amount" });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "aed",
+              product_data: {
+                name: "Digital Wallet Top-up",
+                description: `Adding ${amount} AED to user wallet`,
+                images: ["https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=200"],
+              },
+              unit_amount: Math.round(amount * 100), // convert to smallest currency unit (cents/fils)
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${req.protocol}://${req.get("host")}/wallet?payment_success=true&session_id={CHECKOUT_SESSION_ID}&amount=${amount}`,
+        cancel_url: `${req.protocol}://${req.get("host")}/wallet?payment_canceled=true`,
+        metadata: {
+          uid: uid,
+          type: "wallet_topup",
+          amount: amount.toString()
+        },
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error("Wallet Stripe error:", error);
+      res.status(500).json({ error: error.message || "Failed to create wallet payment session" });
+    }
+  });
+
   // Create Shop Checkout Session
   app.post("/api/create-shop-checkout-session", async (req, res) => {
     try {
@@ -132,6 +179,60 @@ async function startServer() {
     } catch (error: any) {
       console.error("Stripe Shop Error:", error);
       res.status(500).json({ error: error.message || "Failed to create shop payment session" });
+    }
+  });
+
+  // Google Gemini AI Endpoint
+  app.post("/api/gemini/generateContent", async (req, res) => {
+    try {
+      // Dynamic import because @google/genai is only used for this endpoint
+      const { GoogleGenAI } = await import("@google/genai");
+      let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      // Remove any surrounding quotes, background comments, and whitespace
+      if (apiKey) {
+        apiKey = apiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
+      }
+      
+      if (!apiKey) {
+        console.error("[Gemini] API Key is empty or missing in environment variables.");
+        return res.status(500).json({ error: "Gemini API key not configured on server." });
+      }
+
+      console.log(`[Gemini] Using API Key starting with: ${apiKey.substring(0, 5)}...`);
+      const ai = new GoogleGenAI({ apiKey });
+      const { model, contents, config } = req.body;
+      console.log(`[Gemini] GenerateContent called. Requested model: ${model}`);
+      const response = await ai.models.generateContent({
+        model,
+        contents,
+        config
+      });
+      // Return specific fields so client code correctly sees text and functionCalls
+      res.json({
+        text: response.text,
+        functionCalls: response.functionCalls,
+        candidates: response.candidates
+      });
+    } catch (error: any) {
+      console.error("Gemini proxy error:", error);
+      let errorMsg = error.message || "Failed to generate AI response";
+      // Try to parse the JSON error from Google to make it cleaner
+      try {
+        if (errorMsg.includes('{') && errorMsg.includes('}')) {
+          const jsonMatch = errorMsg.match(/\{.*\}/s);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.error && parsed.error.message) {
+              errorMsg = parsed.error.message;
+            } else if (parsed.message) {
+              errorMsg = parsed.message;
+            }
+          }
+        }
+      } catch (e) {
+        // keep original if parsing fails
+      }
+      res.status(500).json({ error: errorMsg });
     }
   });
 

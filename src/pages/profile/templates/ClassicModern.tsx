@@ -60,7 +60,7 @@ export default function ClassicModern({
   profile: any;
   onExit: () => void;
 }) {
-  const { jobOpenings, siteSettings } = useAppContext();
+  const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
   const [activeTab, setActiveTab] = useState('home');
@@ -2117,7 +2117,14 @@ export default function ClassicModern({
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${profile.id || ""}`);
+                    if (!user) {
+                      alert("Please login first to refer friends!");
+                      if (setIsLoginModalOpen) setIsLoginModalOpen(true);
+                      return;
+                    }
+                    const userProfile = profiles?.find((p: any) => p.ownerId === user?.uid || p.email === user?.email);
+                    const referralCode = userProfile?.id || `DBC-${user.uid.substring(0, 8).toUpperCase()}`;
+                    navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${referralCode}`);
                     alert("Referral link copied!");
                   }}
                   style={{

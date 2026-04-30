@@ -3,7 +3,21 @@ import { db } from '../../firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
 import { AGENT_LANGUAGES } from '../../lib/languages';
-import { GoogleGenAI } from '@google/genai';
+
+class ProxyGoogleGenAI {
+  models = {
+    generateContent: async (args: any) => {
+      const resp = await fetch('/api/gemini/generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args)
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'AI generation failed');
+      return data;
+    }
+  };
+}
 
 interface ChatSession {
   id: string;
@@ -34,7 +48,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
   const [isTranslating, setIsTranslating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  const ai = new ProxyGoogleGenAI();
 
   // Listen to sessions
   useEffect(() => {
@@ -99,7 +113,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         try {
           const prompt = `Translate the following text to ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang}. Output ONLY the translated text, without any additional comments:\n\n${lastMsg.text}`;
           const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;
@@ -152,7 +166,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         
         try {
           const response = await ai.models.generateContent({
-            model: 'gemini-1.5-flash',
+            model: 'gemini-2.5-flash',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;

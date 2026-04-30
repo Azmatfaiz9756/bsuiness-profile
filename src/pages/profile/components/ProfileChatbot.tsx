@@ -3,9 +3,27 @@ import { Send, Bot, X, Briefcase, Languages, Trash2, CalendarCheck, UserPlus, He
 import { motion, AnimatePresence } from "motion/react";
 import { db } from '../../../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import { CHAT_LANGUAGES } from "../../../lib/languages";
 import { useAppContext } from "../../../context/AppContext";
+
+// Types corresponding to GoogleGenAI
+const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
+const ThinkingLevel = { LOW: 'LOW', HIGH: 'HIGH' };
+
+class ProxyGoogleGenAI {
+  models = {
+    generateContent: async (args: any) => {
+      const resp = await fetch('/api/gemini/generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args)
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'AI generation failed');
+      return data;
+    }
+  };
+}
 
 export default function ProfileChatbot({ profile }: { profile: any }) {
   const { user } = useAppContext();
@@ -27,7 +45,7 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const lsKeySession = `${lsPrefix}_session`;
   const lsKeyVisitor = `${lsPrefix}_visitor`;
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  const ai = new ProxyGoogleGenAI();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -287,11 +305,11 @@ Assist visitors with inquiries about the business, services, and contact informa
     setShowIdentityForm(false);
   };
 
-  const sendMessage = async (customMessage?: string) => {
-    const textToSend = customMessage !== undefined ? customMessage : input.trim();
+  const sendMessage = async (customMessage?: string | any) => {
+    const textToSend = typeof customMessage === 'string' ? customMessage : input.trim();
     if (!textToSend || loading || !selectedLang || isLiveAgentRequesting) return;
     
-    if (customMessage === undefined) setInput('');
+    if (typeof customMessage !== 'string') setInput('');
     setMessages(prev => [...prev, { role: 'user', content: textToSend }]);
 
     // IF LIVE CHAT IS ACTIVE, SEND TO FIRESTORE
@@ -310,7 +328,7 @@ Assist visitors with inquiries about the business, services, and contact informa
         console.error("LiveChat Error:", e);
         import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
           handleFirestoreError(e, OperationType.WRITE, `chat_sessions/${liveChatSessionId}`);
-        });
+        }).catch(err => console.error(err));
       }
       return;
     }
@@ -324,7 +342,7 @@ Assist visitors with inquiries about the business, services, and contact informa
       }));
 
       // Use recommended model
-      const modelName = 'gemini-1.5-flash';
+      const modelName = 'gemini-2.5-flash';
       const systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [
@@ -337,7 +355,6 @@ Assist visitors with inquiries about the business, services, and contact informa
         contents: chatContents as any,
         config: {
           systemInstruction: systemInstruction as any,
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           tools: [{
             functionDeclarations: [
               {
@@ -444,8 +461,15 @@ Assist visitors with inquiries about the business, services, and contact informa
     } catch (err: any) {
       console.error("Gemini Error:", err);
       // More detailed error for debugging in development
-      const errorMsg = err?.message || JSON.stringify(err);
-      if (errorMsg.includes('Requested entity was not found')) {
+      let errorMsg = "Unknown error";
+      try {
+        errorMsg = err?.message || (err && typeof err === 'object' ? JSON.stringify(err) : String(err));
+      } catch(e) {
+        errorMsg = "Unparseable error object.";
+      }
+      if (errorMsg.includes('API key not valid')) {
+         setMessages(prev => [...prev, { role: 'model', content: 'Connection Error: Invalid API Key on server. Please check environment configuration.' }]);
+      } else if (errorMsg.includes('Requested entity was not found') || errorMsg.includes('is not found')) {
          setMessages(prev => [...prev, { role: 'model', content: 'Model not found error. Please contact support.' }]);
       } else if (errorMsg.includes('PERMISSION_DENIED') || errorMsg.includes('Missing or insufficient permissions')) {
          setMessages(prev => [...prev, { role: 'model', content: 'Database permission error. Rules may be updating. Please wait a moment.' }]);

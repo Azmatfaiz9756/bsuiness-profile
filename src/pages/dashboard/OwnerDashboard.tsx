@@ -5,10 +5,29 @@ import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'fireba
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset } from 'lucide-react';
 import { motion } from 'motion/react';
-import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+// import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
 import { PaymentModal } from '../../components/PaymentModal';
+
+// Mock type/thinking level for ProxyGoogleGenAI
+const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
+const ThinkingLevel = { LOW: 'LOW', HIGH: 'HIGH' };
+
+class ProxyGoogleGenAI {
+  models = {
+    generateContent: async (args: any) => {
+      const resp = await fetch('/api/gemini/generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args)
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'AI generation failed');
+      return data;
+    }
+  };
+}
 
 function DashboardChatTester({ profile }: { profile: any }) {
   const { user } = useAppContext();
@@ -17,7 +36,7 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
 
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  const ai = new ProxyGoogleGenAI();
 
   const getGreeting = (langId: string) => {
     if (langId === 'hi') return `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`;
@@ -72,11 +91,11 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
     }
   }, [selectedLang]);
 
-  const sendMessage = async (customMessage?: string) => {
-    const textToSend = customMessage !== undefined ? customMessage : input.trim();
+  const sendMessage = async (customMessage?: string | any) => {
+    const textToSend = typeof customMessage === 'string' ? customMessage : input.trim();
     if (!textToSend || loading || !selectedLang) return;
     
-    if (customMessage === undefined) setInput('');
+    if (typeof customMessage !== 'string') setInput('');
     setMessages(prev => [...prev, { role: 'user', content: textToSend }]);
     setLoading(true);
 
@@ -86,7 +105,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-1.5-flash';
+      const modelName = 'gemini-2.5-flash';
       const systemInstruction = profile.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [
@@ -99,7 +118,6 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
         contents: chatContents as any,
         config: {
           systemInstruction: systemInstruction as any,
-          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
           tools: [{
             functionDeclarations: [
               {
@@ -157,7 +175,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
             results.push({ name: fc.name, response: { success: false, error: "DB Error" } });
             import('../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
               handleFirestoreError(e, OperationType.WRITE, col);
-            });
+            }).catch(err => console.error(err));
           }
         }
 
@@ -186,8 +204,19 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
     } catch (err: any) {
       console.error("Gemini Error:", err);
       // Detailed error for dashboard testing
-      const errorMsg = err?.message || JSON.stringify(err);
-      setMessages(prev => [...prev, { role: 'model', content: `AI Error: ${errorMsg}` }]);
+      let errorMsg = "Unknown error";
+      try {
+        errorMsg = err?.message || (err && typeof err === 'object' ? JSON.stringify(err) : String(err));
+      } catch(e) {
+        errorMsg = "Unparseable error object.";
+      }
+      let displayError = errorMsg;
+      if (errorMsg.includes('API key not valid')) {
+         displayError = 'Your Gemini API key is missing or invalid. Please check the GEMINI_API_KEY value in your .env file on the server and ensure it is a valid Google GenAI API key.';
+      } else if (errorMsg.includes('is not found')) {
+         displayError = 'The selected AI model is not supported or available. Please contact support to correct the model name in code.';
+      }
+      setMessages(prev => [...prev, { role: 'model', content: `AI Error: ${displayError}` }]);
     }
     setLoading(false);
 
@@ -231,7 +260,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
             placeholder="Test message..." 
             style={{ flex: 1, padding: '10px 14px', borderRadius: 20, border: '1px solid #cbd5e1', outline: 'none' }} 
           />
-          <button onClick={sendMessage} style={{ background: '#2563eb', color: '#fff', border: 'none', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Send size={18} /></button>
+          <button onClick={() => sendMessage()} style={{ background: '#2563eb', color: '#fff', border: 'none', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Send size={18} /></button>
         </div>
       )}
     </div>
@@ -239,7 +268,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
 }
 
 export default function OwnerDashboard() {
-  const { user, authLoading, siteSettings } = useAppContext();
+  const { user, authLoading, siteSettings, profiles } = useAppContext();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -796,9 +825,9 @@ export default function OwnerDashboard() {
                             const btn = document.getElementById("ai-bio-btn");
                             if(btn) btn.innerHTML = "Generating...";
                             try {
-                              const aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+                              const aiInstance = new ProxyGoogleGenAI();
                               const res = await aiInstance.models.generateContent({
-                                model: 'gemini-1.5-flash',
+                                model: 'gemini-2.5-flash',
                                 contents: [{ role: 'user', parts: [{ text: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.` }] }]
                               });
                               const text = res.text;
@@ -2045,11 +2074,19 @@ export default function OwnerDashboard() {
                      
                      <div className="flex flex-col sm:flex-row items-stretch gap-3">
                         <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center overflow-x-auto">
-                          <span className="text-sm font-medium text-slate-700 whitespace-nowrap">{window.location.origin}/plans?ref={profile.id}</span>
+                          <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                            {(() => {
+                              const userProfile = profiles?.find((p: any) => p.ownerId === user?.uid || p.email === user?.email);
+                              const referralCode = userProfile?.id || (user ? `DBC-${user.uid.substring(0, 8).toUpperCase()}` : profile.id);
+                              return `${window.location.origin}/plans?ref=${referralCode}`;
+                            })()}
+                          </span>
                         </div>
                         <button 
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${profile.id}`);
+                            const userProfile = profiles?.find((p: any) => p.ownerId === user?.uid || p.email === user?.email);
+                            const referralCode = userProfile?.id || (user ? `DBC-${user.uid.substring(0, 8).toUpperCase()}` : profile.id);
+                            navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${referralCode}`);
                             showToast("Link copied to clipboard!");
                           }}
                           className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition"

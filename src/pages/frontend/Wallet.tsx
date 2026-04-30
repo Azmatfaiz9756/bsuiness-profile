@@ -1,9 +1,74 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wallet, ArrowUpRight, ArrowDownRight, Plus, CreditCard, LogIn } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { useSearchParams } from 'react-router-dom';
 
 export default function FrontendWallet() {
-  const { walletBalance, siteSettings, user, setIsLoginModalOpen } = useAppContext();
+  const { walletBalance, setWalletBalance, siteSettings, user, setIsLoginModalOpen } = useAppContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [amountParam, setAmountParam] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    const paymentSuccess = searchParams.get('payment_success');
+    const paymentCanceled = searchParams.get('payment_canceled');
+    const amt = searchParams.get('amount');
+
+    if (paymentSuccess === 'true' && amt) {
+      // In a real app we'd verify the backend logic. But for now we just add to context balance.
+      const addAmount = Number(amt);
+      if (!isNaN(addAmount)) {
+        setWalletBalance((prev: number) => prev + addAmount);
+        alert(`Successfully added ${siteSettings?.currency || 'AED'} ${addAmount} to your wallet!`);
+      }
+      searchParams.delete('payment_success');
+      searchParams.delete('session_id');
+      searchParams.delete('amount');
+      setSearchParams(searchParams);
+    } else if (paymentCanceled === 'true') {
+      alert('Payment was canceled.');
+      searchParams.delete('payment_canceled');
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, setSearchParams, setWalletBalance, siteSettings]);
+
+  const handleTopUp = async (amount: number) => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      const response = await fetch(`${window.location.origin}/api/create-wallet-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amount,
+          uid: user.uid,
+        }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to create topup session');
+      }
+    } catch (err: any) {
+      console.error("Wallet topup error:", err);
+      alert(err.message || 'Operation failed');
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCustomTopUp = () => {
+    const amtNumber = Number(amountParam);
+    if (!isNaN(amtNumber) && amtNumber >= 10) {
+      handleTopUp(amtNumber);
+    } else {
+      alert(`Please enter a valid amount (minimum 10 ${siteSettings?.currency || 'AED'})`);
+    }
+  };
 
   if (!user) {
     return (
@@ -69,19 +134,24 @@ export default function FrontendWallet() {
         <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 h-fit shadow-sm mt-6 md:mt-0">
           <h3 className="text-lg md:text-xl font-extrabold mb-6">Top Up Wallet</h3>
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <button className="py-3 border border-slate-300 bg-white rounded-xl font-bold hover:bg-slate-50 transition-colors">{siteSettings?.currency || 'AED'} 50</button>
-            <button className="py-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-xl font-black">{siteSettings?.currency || 'AED'} 100</button>
-            <button className="py-3 border border-slate-300 bg-white rounded-xl font-bold hover:bg-slate-50 transition-colors">{siteSettings?.currency || 'AED'} 200</button>
-            <button className="py-3 border border-slate-300 bg-white rounded-xl font-bold hover:bg-slate-50 transition-colors">{siteSettings?.currency || 'AED'} 500</button>
+            <button onClick={() => handleTopUp(50)} disabled={isProcessing} className="py-3 border border-slate-300 bg-white rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-50">{siteSettings?.currency || 'AED'} 50</button>
+            <button onClick={() => handleTopUp(100)} disabled={isProcessing} className="py-3 border-2 border-blue-600 bg-blue-50 text-blue-700 rounded-xl font-black disabled:opacity-50">{siteSettings?.currency || 'AED'} 100</button>
+            <button onClick={() => handleTopUp(200)} disabled={isProcessing} className="py-3 border border-slate-300 bg-white rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-50">{siteSettings?.currency || 'AED'} 200</button>
+            <button onClick={() => handleTopUp(500)} disabled={isProcessing} className="py-3 border border-slate-300 bg-white rounded-xl font-bold hover:bg-slate-50 transition-colors disabled:opacity-50">{siteSettings?.currency || 'AED'} 500</button>
           </div>
           
           <div className="relative mb-6">
-            <input type="number" placeholder="Custom amount" className="w-full py-3.5 pl-4 pr-16 border border-slate-300 rounded-xl text-base font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all" />
+            <input type="number" 
+                   value={amountParam}
+                   onChange={e => setAmountParam(e.target.value)}
+                   disabled={isProcessing}
+                   placeholder="Custom amount" 
+                   className="w-full py-3.5 pl-4 pr-16 border border-slate-300 rounded-xl text-base font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all disabled:bg-slate-100" />
             <span className="absolute right-4 top-3.5 text-slate-400 font-bold">{siteSettings?.currency || 'AED'}</span>
           </div>
 
-          <button className="w-full bg-slate-900 text-white border-none py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors">
-            <CreditCard size={18} /> Pay via Card
+          <button onClick={handleCustomTopUp} disabled={isProcessing} className="w-full bg-slate-900 text-white border-none py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors disabled:opacity-50">
+            <CreditCard size={18} /> {isProcessing ? 'Processing Gateway...' : 'Pay via Card'}
           </button>
         </div>
       </div>

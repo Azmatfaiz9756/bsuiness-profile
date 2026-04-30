@@ -33,6 +33,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  overscroll-behavior-y: none;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none !important;
 }
