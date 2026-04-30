@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
 import express from "express";
+import cors from "cors";
 import path from "path";
 import Stripe from "stripe";
 
@@ -9,6 +10,19 @@ async function startServer() {
   app.set('trust proxy', true);
   const PORT = 3000;
   
+  app.use(cors());
+
+  // Redirect www to non-www
+  app.use((req, res, next) => {
+    const host = req.get('x-forwarded-host') || req.get('host') || '';
+    if (host.startsWith('www.')) {
+      const nonWwwHost = host.slice(4);
+      const protocol = req.get('x-forwarded-proto') || req.protocol;
+      return res.redirect(301, `${protocol}://${nonWwwHost}${req.url}`);
+    }
+    next();
+  });
+
   app.use(express.json());
 
   // Stripe setup
@@ -31,6 +45,45 @@ async function startServer() {
     }
     return stripeClient;
   }
+
+  // Admin ENV settings update
+  app.post("/api/admin/env", express.json(), async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const { STRIPE_SECRET_KEY, GEMINI_API_KEY } = req.body;
+      
+      let envVars: Record<string, string> = {};
+      const envPath = path.resolve(process.cwd(), '.env');
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        envContent.split('\n').forEach(line => {
+          const [key, ...val] = line.split('=');
+          if (key && val.length > 0) envVars[key.trim()] = val.join('=').trim();
+        });
+      }
+      
+      if (STRIPE_SECRET_KEY) {
+        envVars['STRIPE_SECRET_KEY'] = `"${STRIPE_SECRET_KEY}"`;
+        process.env.STRIPE_SECRET_KEY = STRIPE_SECRET_KEY;
+        stripeClient = null; // force reload stripe client
+      }
+      if (GEMINI_API_KEY) {
+        envVars['GEMINI_API_KEY'] = `"${GEMINI_API_KEY}"`;
+        process.env.GEMINI_API_KEY = GEMINI_API_KEY;
+        envVars['VITE_GEMINI_API_KEY'] = `"${GEMINI_API_KEY}"`;
+        process.env.VITE_GEMINI_API_KEY = GEMINI_API_KEY;
+      }
+
+      const newEnvContent = Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join('\n');
+      fs.writeFileSync(envPath, newEnvContent);
+      console.log("[Admin] Updated server .env context.");
+      
+      res.json({ success: true, message: "Environment updated successfully!" });
+    } catch (e: any) {
+      console.error("[Admin API] Failed to update env", e);
+      res.status(500).json({ error: e.message || "Failed to update env" });
+    }
+  });
 
   // Create Checkout Session
   app.post("/api/create-checkout-session", async (req, res) => {
@@ -188,18 +241,19 @@ async function startServer() {
       // Dynamic import because @google/genai is only used for this endpoint
       const { GoogleGenAI } = await import("@google/genai");
       let clientApiKey = req.headers.authorization?.split(' ')[1];
-      let apiKey = clientApiKey || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-      // Remove any surrounding quotes, background comments, and whitespace
-      if (apiKey) {
-        apiKey = apiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
-      }
+      if (clientApiKey) clientApiKey = clientApiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
       
-      if (!apiKey) {
+      let serverKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
+      let viteKey = process.env.VITE_GEMINI_API_KEY ? process.env.VITE_GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
+      
+      let apiKey = [clientApiKey, serverKey, viteKey].find(k => k && k.startsWith('AIza')) || clientApiKey || serverKey || viteKey;
+      
+      if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
         console.error("[Gemini] API Key is empty or missing in environment variables.");
         return res.status(500).json({ error: "Gemini API key not configured on server." });
       }
 
-      console.log(`[Gemini] Using API Key starting with: ${apiKey.substring(0, 5)}...`);
+      console.log(`[Gemini Debug] Priority Pick - Raw Auth Header: ${req.headers.authorization}`);
       const ai = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
       console.log(`[Gemini] GenerateContent called. Requested model: ${model}`);

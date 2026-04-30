@@ -11,9 +11,40 @@ export const FrontendLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isActive = (path: string) => location.pathname === path ? 'active bg-slate-100' : '';
 
+  const [currentLang, setCurrentLang] = useState(user?.language || 'en');
+
   const handleLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
+  };
+
+  const handleLanguageChange = (langCode: string) => {
+    setCurrentLang(langCode);
+    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+    if (select) {
+      select.value = langCode === 'en' ? '' : langCode; // Sometimes English is default/empty
+      if(langCode === 'en' && !select.querySelector(`option[value="${langCode}"]`)) {
+        // To clear translation
+        const iframe = document.querySelector('.goog-te-banner-frame') as HTMLIFrameElement;
+        const clearBtn = iframe?.contentWindow?.document.querySelector('.goog-te-button button') as HTMLButtonElement | null;
+        if(clearBtn) clearBtn.click();
+        
+        // Alternatively set cookie
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        window.location.reload();
+        return;
+      }
+      select.dispatchEvent(new Event('change'));
+    } else {
+      // If translate widget is not loaded yet, or to force English clear
+      if(langCode === 'en') {
+        document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        window.location.reload();
+      } else {
+        document.cookie = `googtrans=/en/${langCode}; path=/`;
+        window.location.reload();
+      }
+    }
   };
 
   const closeMenu = () => setIsMobileMenuOpen(false);
@@ -48,10 +79,8 @@ export const FrontendLayout = () => {
 
             {/* Language Selector */}
             <select 
-              value={user?.language || 'en'}
-              onChange={(e) => {
-                alert(`Language changed to ${e.target.value.toUpperCase()}. Full localization will be loaded.`);
-              }}
+              value={currentLang}
+              onChange={(e) => handleLanguageChange(e.target.value)}
               className="bg-transparent border-none outline-none text-sm font-medium text-slate-600 cursor-pointer"
             >
               <option value="en">🇺🇸 EN</option>
@@ -101,9 +130,9 @@ export const FrontendLayout = () => {
 
             <div className="flex px-3 gap-2 pb-4">
               <select 
-                value={user?.language || 'en'}
+                value={currentLang}
                 onChange={(e) => {
-                  alert(`Language changed to ${e.target.value.toUpperCase()}. Full localization will be loaded.`);
+                  handleLanguageChange(e.target.value);
                   closeMenu();
                 }}
                 className="bg-slate-100 p-2 rounded-lg flex-1 font-medium text-slate-700 outline-none"

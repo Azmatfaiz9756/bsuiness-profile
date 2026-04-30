@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp } from 'lucide-react';
+import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp, Key } from 'lucide-react';
 import { db } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -8,6 +8,10 @@ export default function AdminSettings() {
   const { siteSettings, setSiteSettings } = useAppContext();
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState({ ...siteSettings });
+  
+  // Separate state for keys because they shouldn't live in public firestore 'settings'
+  const [apiKeys, setApiKeys] = useState({ STRIPE_SECRET_KEY: '', GEMINI_API_KEY: '' });
+  const [savingKeys, setSavingKeys] = useState(false);
 
   React.useEffect(() => {
     setFormData(siteSettings);
@@ -18,6 +22,11 @@ export default function AdminSettings() {
   };
 
   const handleSave = async () => {
+    if (activeTab === 'env') {
+      handleSaveEnv();
+      return;
+    }
+    
     try {
       await setDoc(doc(db, 'settings', 'system'), formData, { merge: true });
       setSiteSettings(formData);
@@ -27,22 +36,48 @@ export default function AdminSettings() {
       alert('Failed to save settings: ' + e.message);
     }
   };
+  
+  const handleSaveEnv = async () => {
+    if (!apiKeys.STRIPE_SECRET_KEY && !apiKeys.GEMINI_API_KEY) {
+      alert("Please enter at least one key to update.");
+      return;
+    }
+    try {
+      setSavingKeys(true);
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/admin/env`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiKeys)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to update env keys');
+      alert("Global environment keys updated successfully on the server!");
+      setApiKeys({ STRIPE_SECRET_KEY: '', GEMINI_API_KEY: '' });
+    } catch (err: any) {
+      alert(err.message);
+      console.error(err);
+    } finally {
+      setSavingKeys(false);
+    }
+  };
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>System Settings</h2>
-        <button onClick={handleSave} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          <Save size={18} /> Save Changes
+        <button onClick={handleSave} disabled={savingKeys} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: savingKeys ? 'not-allowed' : 'pointer' }}>
+          <Save size={18} /> {savingKeys ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e7eb', marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e7eb', marginBottom: 24, overflowX: 'auto' }}>
         {[
           { id: 'general', label: 'General / App', icon: <Smartphone size={16} /> },
           { id: 'seo', label: 'Global SEO', icon: <Search size={16} /> },
           { id: 'ecommerce', label: 'E-commerce', icon: <CreditCard size={16} /> },
-          { id: 'plans', label: 'Plans & Referral', icon: <TrendingUp size={16} /> }
+          { id: 'plans', label: 'Plans & Referral', icon: <TrendingUp size={16} /> },
+          { id: 'env', label: 'API Keys & Env', icon: <Key size={16} /> }
         ].map(tab => (
           <button 
             key={tab.id}
@@ -51,7 +86,7 @@ export default function AdminSettings() {
               display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', border: 'none', background: 'transparent', 
               color: activeTab === tab.id ? '#2563eb' : '#6b7280', 
               borderBottom: activeTab === tab.id ? '2px solid #2563eb' : '2px solid transparent', 
-              fontWeight: 600, cursor: 'pointer', fontSize: 14 
+              fontWeight: 600, cursor: 'pointer', fontSize: 14, whiteSpace: 'nowrap'
             }}
           >
             {tab.icon} {tab.label}
@@ -277,6 +312,42 @@ export default function AdminSettings() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'env' && (
+        <div style={{ background: '#fff', padding: 32, borderRadius: 16, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ background: '#eff6ff', padding: 16, borderRadius: 12, display: 'flex', gap: 12, color: '#1e40af' }}>
+            <Key size={24} />
+            <div>
+              <h4 style={{ fontWeight: 700, margin: '0 0 4px' }}>Global Environment Variables</h4>
+              <p style={{ margin: 0, fontSize: 14 }}>These keys are saved directly to your server's .env file and active process. No restart required. For security, current keys are hidden.</p>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>VITE_STRIPE_SECRET_KEY / STRIPE_SECRET_KEY</label>
+            <input 
+              type="password" 
+              placeholder="sk_test_..." 
+              value={apiKeys.STRIPE_SECRET_KEY} 
+              onChange={e => setApiKeys(prev => ({ ...prev, STRIPE_SECRET_KEY: e.target.value }))} 
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+            />
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0' }}>Super Admin Server-side Stripe Key for checkout sessions.</p>
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>GEMINI_API_KEY / VITE_GEMINI_API_KEY</label>
+            <input 
+              type="password" 
+              placeholder="AIzaSy..." 
+              value={apiKeys.GEMINI_API_KEY} 
+              onChange={e => setApiKeys(prev => ({ ...prev, GEMINI_API_KEY: e.target.value }))} 
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+            />
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0' }}>The default fall-back AI Key if a specific profile owner has not added their own key.</p>
           </div>
         </div>
       )}

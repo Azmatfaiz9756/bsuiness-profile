@@ -56,7 +56,7 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const lsKeySession = `${lsPrefix}_session`;
   const lsKeyVisitor = `${lsPrefix}_visitor`;
 
-  const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+  const ai = new ProxyGoogleGenAI({ apiKey: profile?.aiApiKey || import.meta.env.VITE_GEMINI_API_KEY || '' });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

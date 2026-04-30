@@ -44,7 +44,7 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
 
-  const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+  const ai = new ProxyGoogleGenAI({ apiKey: profile?.aiApiKey || import.meta.env.VITE_GEMINI_API_KEY || '' });
 
   const getGreeting = (langId: string) => {
     if (langId === 'hi') return `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`;
@@ -1807,8 +1807,30 @@ export default function OwnerDashboard() {
                  </div>
                ) : (
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                    <div className="flex flex-col gap-6">
-                      <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                     <div className="flex flex-col gap-6">
+                       <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                         <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                              <Shield size={20} />
+                            </div>
+                            <div>
+                              <h4 className="text-base font-black text-slate-900 m-0">Custom AI Key</h4>
+                              <p className="text-xs text-slate-500 m-0">Use your own AI provider account key</p>
+                            </div>
+                         </div>
+                         <div className="flex flex-col gap-1.5">
+                            <input 
+                              type="password" 
+                              placeholder="Enter your Gemini/OpenAI API Key (AIzaSy...)" 
+                              value={formData.aiApiKey || ''} 
+                              onChange={e => setFormData({...formData, aiApiKey: e.target.value})} 
+                              className="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm font-medium" 
+                            />
+                            <p className="text-[10px] text-slate-500 mt-1">If blank, the platform's default API quota will be used.</p>
+                         </div>
+                       </div>
+                       
+                       <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
                         <div className="flex items-center gap-3 mb-6">
                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                              <Brain size={20} />
