@@ -3,13 +3,22 @@ import { db } from '../../firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
 import { AGENT_LANGUAGES } from '../../lib/languages';
-
 class ProxyGoogleGenAI {
+  apiKey: string;
+  constructor(options: { apiKey?: string } = {}) {
+    this.apiKey = options.apiKey || '';
+  }
   models = {
     generateContent: async (args: any) => {
-      const resp = await fetch('/api/gemini/generateContent', {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (this.apiKey) {
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+      }
+      
+      const resp = await fetch(`${apiUrl}/api/gemini/generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(args)
       });
       const data = await resp.json();
@@ -48,7 +57,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
   const [isTranslating, setIsTranslating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const ai = new ProxyGoogleGenAI();
+  const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
   // Listen to sessions
   useEffect(() => {

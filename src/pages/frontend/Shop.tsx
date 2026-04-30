@@ -92,7 +92,8 @@ export default function FrontendShop() {
   const handleCheckout = async () => {
     setIsProcessingPayment(true);
     try {
-      const response = await fetch(`${window.location.origin}/api/create-shop-checkout-session`, {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/create-shop-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

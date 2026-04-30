@@ -6,16 +6,27 @@ import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, u
 import { CHAT_LANGUAGES } from "../../../lib/languages";
 import { useAppContext } from "../../../context/AppContext";
 
+
+
 // Types corresponding to GoogleGenAI
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
-const ThinkingLevel = { LOW: 'LOW', HIGH: 'HIGH' };
 
 class ProxyGoogleGenAI {
+  apiKey: string;
+  constructor(options: { apiKey?: string } = {}) {
+    this.apiKey = options.apiKey || '';
+  }
   models = {
     generateContent: async (args: any) => {
-      const resp = await fetch('/api/gemini/generateContent', {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (this.apiKey) {
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+      }
+      
+      const resp = await fetch(`${apiUrl}/api/gemini/generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(args)
       });
       const data = await resp.json();
@@ -45,7 +56,7 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const lsKeySession = `${lsPrefix}_session`;
   const lsKeyVisitor = `${lsPrefix}_visitor`;
 
-  const ai = new ProxyGoogleGenAI();
+  const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

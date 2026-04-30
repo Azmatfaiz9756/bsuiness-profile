@@ -16,7 +16,7 @@ async function startServer() {
   const getStripe = () => {
     if (!stripeClient) {
       // Trying common variations of stripe secret key
-      const secretKey = process.env.STRIPE_SECRET_KEY || process.env.stripe_secret_key || process.env.SK || process.env.sk || process.env.STRIPE_SK;
+      const secretKey = process.env.STRIPE_SECRET_KEY || process.env.VITE_STRIPE_SECRET_KEY || process.env.stripe_secret_key || process.env.SK || process.env.sk || process.env.STRIPE_SK;
       if (secretKey) {
         stripeClient = new Stripe(secretKey, {
           apiVersion: '2025-02-24.acacia' as any, // latest API version
@@ -187,7 +187,8 @@ async function startServer() {
     try {
       // Dynamic import because @google/genai is only used for this endpoint
       const { GoogleGenAI } = await import("@google/genai");
-      let apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+      let clientApiKey = req.headers.authorization?.split(' ')[1];
+      let apiKey = clientApiKey || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
       // Remove any surrounding quotes, background comments, and whitespace
       if (apiKey) {
         apiKey = apiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();

@@ -5,21 +5,29 @@ import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'fireba
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset } from 'lucide-react';
 import { motion } from 'motion/react';
-// import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+
 import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
 import { PaymentModal } from '../../components/PaymentModal';
 
-// Mock type/thinking level for ProxyGoogleGenAI
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
-const ThinkingLevel = { LOW: 'LOW', HIGH: 'HIGH' };
 
 class ProxyGoogleGenAI {
+  apiKey: string;
+  constructor(options: { apiKey?: string } = {}) {
+    this.apiKey = options.apiKey || '';
+  }
   models = {
     generateContent: async (args: any) => {
-      const resp = await fetch('/api/gemini/generateContent', {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (this.apiKey) {
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+      }
+      
+      const resp = await fetch(`${apiUrl}/api/gemini/generateContent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(args)
       });
       const data = await resp.json();
@@ -36,7 +44,7 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
 
-  const ai = new ProxyGoogleGenAI();
+  const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
   const getGreeting = (langId: string) => {
     if (langId === 'hi') return `Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon?`;
@@ -825,7 +833,7 @@ export default function OwnerDashboard() {
                             const btn = document.getElementById("ai-bio-btn");
                             if(btn) btn.innerHTML = "Generating...";
                             try {
-                              const aiInstance = new ProxyGoogleGenAI();
+                              const aiInstance = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
                               const res = await aiInstance.models.generateContent({
                                 model: 'gemini-2.5-flash',
                                 contents: [{ role: 'user', parts: [{ text: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.` }] }]
