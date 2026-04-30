@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 export default function FrontendShop() {
   const navigate = useNavigate();
-  const { products, cart, setCart, wishlist, setWishlist, userOrders, setUserOrders, addresses, walletBalance, setWalletBalance, siteSettings, user, profiles, shopBanners } = useAppContext();
+  const { products, cart, setCart, wishlist, setWishlist, userOrders, setUserOrders, addresses, walletBalance, setWalletBalance, siteSettings, user, profiles, shopBanners, selectedCountry } = useAppContext();
   const [view, setView] = useState<'catalog' | 'product' | 'cart' | 'checkout' | 'orders' | 'wishlist'>('catalog');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
@@ -14,9 +14,14 @@ export default function FrontendShop() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<number>(5000);
+  const [priceRange, setPriceRange] = useState<number>(50000);
   const [sortBy, setSortBy] = useState<string>('featured');
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+
+  useEffect(() => {
+    const defaultMax = selectedCountry === 'India' ? 50000 : selectedCountry === 'Global' ? 500 : 2000;
+    setPriceRange(defaultMax);
+  }, [selectedCountry]);
 
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -53,18 +58,49 @@ export default function FrontendShop() {
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
+
+    if (selectedCountry !== 'UAE') {
+      result = result.filter((p: any) => p.type === 'Digital' || p.isDigital);
+    }
+
+    if (selectedCountry && selectedCountry !== 'Global') {
+      result = result.filter((p: any) => p.country === selectedCountry || p.country === 'Global' || !p.country);
+    }
+
+    const rate = selectedCountry === 'India' ? 22.5 : selectedCountry === 'Global' ? 0.27 : 1;
+    result = result.map((p: any) => ({
+      ...p,
+      price: Math.round(p.price * rate),
+      discountPrice: p.discountPrice ? Math.round(p.discountPrice * rate) : undefined
+    }));
+
     if (search) result = result.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase()) || (p.brand && p.brand.toLowerCase().includes(search.toLowerCase())));
     if (selectedCategory !== 'All') result = result.filter((p: any) => p.category === selectedCategory);
     if (selectedBrands.length > 0) result = result.filter((p: any) => selectedBrands.includes(p.brand));
-    result = result.filter((p: any) => p.price <= priceRange);
+    result = result.filter((p: any) => p.price <= priceRange * rate); // also convert priceRange filter limit? Wait it's better to just leave it or adapt priceRange slider!
     
     if (sortBy === 'price-low') result.sort((a: any, b: any) => a.price - b.price);
     if (sortBy === 'price-high') result.sort((a: any, b: any) => b.price - a.price);
     if (sortBy === 'newest') result.reverse();
     return result;
-  }, [products, search, selectedCategory, selectedBrands, priceRange, sortBy]);
+  }, [products, search, selectedCategory, selectedBrands, priceRange, sortBy, selectedCountry]);
 
-  const topSelling = useMemo(() => [...products].sort((a: any, b: any) => a.stock - b.stock).slice(0, 4), [products]);
+  const topSelling = useMemo(() => {
+    let result = [...products];
+    if (selectedCountry !== 'UAE') {
+      result = result.filter((p: any) => p.type === 'Digital' || p.isDigital);
+    }
+    if (selectedCountry && selectedCountry !== 'Global') {
+      result = result.filter((p: any) => p.country === selectedCountry || p.country === 'Global' || !p.country);
+    }
+    const rate = selectedCountry === 'India' ? 22.5 : selectedCountry === 'Global' ? 0.27 : 1;
+    result = result.map((p: any) => ({
+      ...p,
+      price: Math.round(p.price * rate),
+      discountPrice: p.discountPrice ? Math.round(p.discountPrice * rate) : undefined
+    }));
+    return result.sort((a: any, b: any) => a.stock - b.stock).slice(0, 4);
+  }, [products, selectedCountry]);
 
   const toggleBrand = (brand: string) => setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]);
 
@@ -114,6 +150,26 @@ export default function FrontendShop() {
       alert(err.message || "Payment process failed. Please contact support.");
       setIsProcessingPayment(false);
     }
+  };
+
+  const handleWalletCheckout = () => {
+    if (walletBalance < total) return;
+    setIsProcessingPayment(true);
+    setTimeout(() => {
+      setWalletBalance((prev: number) => prev - total);
+      setUserOrders((prev: any) => [{
+        id: `ORD-${Date.now().toString().slice(-6)}`,
+        date: new Date().toLocaleDateString(),
+        total,
+        status: 'Processing',
+        items: cart,
+        paymentMethod: 'Wallet'
+      }, ...prev]);
+      setCart([]);
+      setIsProcessingPayment(false);
+      setView('orders');
+      alert('Wallet Payment Successful! Thank you for your order.');
+    }, 1500);
   };
 
 
@@ -175,7 +231,7 @@ export default function FrontendShop() {
                 <div>
                   <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase">Price Range</h4>
                   <p className="text-sm font-bold text-slate-900 mb-2">Up to {siteSettings.currency} {priceRange}</p>
-                  <input type="range" min="0" max="10000" step="100" value={priceRange} onChange={e => setPriceRange(Number(e.target.value))} className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                  <input type="range" min="0" max={selectedCountry === 'India' ? 50000 : selectedCountry === 'Global' ? 500 : 2000} step={selectedCountry === 'India' ? 500 : 10} value={priceRange} onChange={e => setPriceRange(Number(e.target.value))} className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
                 </div>
                 {brands.length > 0 && (
                   <>
@@ -293,7 +349,7 @@ export default function FrontendShop() {
                   <div>
                     <h4 className="text-xs font-bold text-slate-500 mb-2 uppercase">Price Range</h4>
                     <p className="text-sm font-bold text-slate-900 mb-2">Up to {siteSettings.currency} {priceRange}</p>
-                    <input type="range" min="0" max="10000" step="100" value={priceRange} onChange={e => setPriceRange(Number(e.target.value))} className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                    <input type="range" min="0" max={selectedCountry === 'India' ? 50000 : selectedCountry === 'Global' ? 500 : 2000} step={selectedCountry === 'India' ? 500 : 10} value={priceRange} onChange={e => setPriceRange(Number(e.target.value))} className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600" />
                   </div>
                   {brands.length > 0 && (
                     <>
@@ -589,9 +645,23 @@ export default function FrontendShop() {
                       {view === 'cart' ? (
                         <button onClick={() => setView('checkout')} className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition">Proceed to Checkout</button>
                       ) : (
-                        <button onClick={handleCheckout} disabled={isProcessingPayment} className={`w-full font-black py-4 rounded-2xl transition ${isProcessingPayment ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-green-500 text-white shadow-lg shadow-green-500/30 hover:bg-green-600'}`}>
-                          {isProcessingPayment ? 'Processing...' : 'Place Order'}
-                        </button>
+                        <div className="space-y-3">
+                          <button onClick={handleCheckout} disabled={isProcessingPayment} className={`w-full font-black py-4 rounded-2xl transition flex justify-center items-center gap-2 ${isProcessingPayment ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white shadow-lg shadow-slate-900/30 hover:bg-slate-800'}`}>
+                            {isProcessingPayment ? 'Processing...' : (<><CreditCard size={18} /> Pay with Card</>)}
+                          </button>
+                          {user && (
+                            <button 
+                              onClick={handleWalletCheckout} 
+                              disabled={isProcessingPayment || walletBalance < total} 
+                              className={`w-full font-black py-4 rounded-2xl transition flex justify-center items-center gap-2 ${isProcessingPayment || walletBalance < total ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600'}`}
+                            >
+                              <Wallet size={18} /> Pay with Wallet
+                            </button>
+                          )}
+                          {user && walletBalance < total && (
+                            <div className="text-xs text-red-500 font-bold text-center">Insufficient wallet balance ({siteSettings.currency} {walletBalance})</div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

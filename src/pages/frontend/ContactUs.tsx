@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { useAppContext } from '../../context/AppContext';
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+
+  const { siteSettings } = useAppContext();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +22,7 @@ export default function ContactUs() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-16 text-slate-800">
       <Helmet>
-        <title>Contact Us - Premium Digital Business Cards</title>
+        <title>Contact Us - {siteSettings?.siteName || 'Premium Digital Business Cards'}</title>
         <meta name="description" content="Get in touch with us for support, sales, or partnerships." />
       </Helmet>
       
@@ -40,7 +43,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-500">Email us</p>
-                  <p className="text-blue-600 font-medium">support@digitalcards.ai</p>
+                  <p className="text-blue-600 font-medium">{siteSettings?.contactEmail || 'support@digitalcards.ai'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -49,7 +52,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-500">Call us</p>
-                  <p className="font-medium">+1 (555) 123-4567</p>
+                  <p className="font-medium">{siteSettings?.contactPhone || '+1 (555) 123-4567'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -58,7 +61,7 @@ export default function ContactUs() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-slate-500">Visit us</p>
-                  <p className="font-medium">123 Innovation Drive, Tech City, 10010</p>
+                  <p className="font-medium">{siteSettings?.contactAddress || '123 Innovation Drive, Tech City, 10010'}</p>
                 </div>
               </div>
             </div>

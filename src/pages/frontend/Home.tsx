@@ -54,7 +54,7 @@ function HeroSection() {
               <Sparkles size={14} /> Tap & Go Networking
             </div>
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] mb-8 tracking-tighter uppercase">
-              DBC POWER <br />
+              DIGITAL <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400">CONNECT.</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-lg mb-10 leading-relaxed font-medium">
@@ -400,7 +400,7 @@ function ChatbotShowcase() {
 }
 
 export default function FrontendHome() {
-  const { user, setIsLoginModalOpen, profiles: staticProfiles } = useAppContext();
+  const { user, setIsLoginModalOpen, profiles: staticProfiles, selectedCountry } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Business Types");
   const [activeCity, setActiveCity] = useState("All Cities");
@@ -500,20 +500,28 @@ export default function FrontendHome() {
     const matchesCity = activeCity === "All Cities" || p.city === activeCity;
 
     return matchesSearch && matchesCategory && matchesCity;
+  }).sort((a, b) => {
+    if (selectedCountry && selectedCountry !== 'Global') {
+      const aMatch = a.country === selectedCountry;
+      const bMatch = b.country === selectedCountry;
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+    }
+    return 0; // maintain default order if ties or Global
   });
 
   return (
     <div className="bg-slate-50 min-h-screen pb-16 font-sans overflow-x-hidden">
       <Helmet>
-        <title>Dubai Digital Connect | AI-Powered Digital Business Cards</title>
+        <title>Digital Connect | Haadi Global Ventures Fze LLC</title>
         <meta name="description" content="Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR. Join thousands of professionals and brands in the official directory." />
         <meta name="keywords" content="digital business card, networking, AI, NFC card, professional profile, DBC network, business cards" />
-        <meta property="og:title" content="Dubai Digital Connect | AI-Powered Digital Business Cards" />
+        <meta property="og:title" content="Digital Connect | Haadi Global Ventures Fze LLC" />
         <meta property="og:description" content="Share your contact info, social links, and portfolio with a single tap using our NFC-enabled smart cards." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://dbc.network" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Dubai Digital Connect | AI-Powered Digital Business Cards" />
+        <meta name="twitter:title" content="Digital Connect | Haadi Global Ventures Fze LLC" />
         <meta name="twitter:description" content="Direct access to thousands of verified professionals. Start your search now." />
         <link rel="canonical" href="https://dbc.network" />
       </Helmet>

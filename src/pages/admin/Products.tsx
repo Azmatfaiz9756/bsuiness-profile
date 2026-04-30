@@ -24,14 +24,15 @@ export default function AdminProducts() {
     description: '',
     specifications: '',
     weight: '',
-    isDigital: false
+    isDigital: false,
+    country: 'Global'
   });
 
 
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ name: '', category: 'Electronics', brand: '', price: '', discountPrice: '', stock: '', status: 'Active', description: '', specifications: '', weight: '', isDigital: false });
+    setFormData({ name: '', category: 'Electronics', brand: '', price: '', discountPrice: '', stock: '', status: 'Active', description: '', specifications: '', weight: '', isDigital: false, country: 'Global' });
     setShowModal(true);
   };
 
@@ -48,7 +49,8 @@ export default function AdminProducts() {
       description: product.desc || product.description || '',
       specifications: product.specifications || '',
       weight: product.weight || '',
-      isDigital: product.isDigital || false
+      isDigital: product.isDigital || false,
+      country: product.country || 'Global'
     });
     setShowModal(true);
   };
@@ -118,7 +120,10 @@ export default function AdminProducts() {
                   </div>
                 </td>
                 <td style={{ padding: '16px', fontSize: 14 }}>
-                  <div style={{ fontWeight: 500, color: '#334155' }}>{p.category}</div>
+                  <div style={{ fontWeight: 500, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {p.category}
+                    <span style={{ fontSize: 10, background: '#e2e8f0', color: '#475569', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>{p.country || 'Global'}</span>
+                  </div>
                   <div style={{ fontSize: 12, color: '#64748b' }}>{p.brand || '-'}</div>
                 </td>
                 <td style={{ padding: '16px' }}>
@@ -174,11 +179,19 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Category</label>
                     <select value={formData.category || 'Electronics'} onChange={e => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }}>
                       {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#334155', marginBottom: 6 }}>Country</label>
+                    <select value={formData.country || 'Global'} onChange={e => setFormData({...formData, country: e.target.value})} style={{ width: '100%', padding: '10px', border: '1px solid #cbd5e1', borderRadius: 8, outline: 'none' }}>
+                      <option value="Global">Global</option>
+                      <option value="India">India</option>
+                      <option value="UAE">UAE</option>
                     </select>
                   </div>
                   <div>

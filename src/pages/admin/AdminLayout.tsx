@@ -86,8 +86,8 @@ export const AdminLayout = () => {
           <div className="hidden md:flex h-16 items-center gap-3 px-6 shrink-0 border-b border-slate-800">
             <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
             <div className="flex flex-col">
-              <span className="font-bold text-white text-sm leading-tight">Dubai Digital</span>
-              <span className="text-[10px] text-blue-400 font-bold tracking-wider">ADMIN PANEL</span>
+              <span className="font-bold text-white text-sm leading-tight">Digital Connect</span>
+              <span className="text-[10px] text-blue-400 font-bold tracking-wider">HAADI GLOBAL VENTURES FZE LLC</span>
             </div>
           </div>
 

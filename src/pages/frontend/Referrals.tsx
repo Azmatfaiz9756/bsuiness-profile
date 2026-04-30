@@ -3,7 +3,7 @@ import { Share2, Users, Gift, TrendingUp, Copy, LogIn } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 
 export default function FrontendReferrals() {
-  const { siteSettings, user, setIsLoginModalOpen, profiles } = useAppContext();
+  const { siteSettings, user, setIsLoginModalOpen, profiles, selectedCountry } = useAppContext();
   
   const referralCode = useMemo(() => {
     if (!user) return 'LOGIN-TO-VIEW';
@@ -16,10 +16,12 @@ export default function FrontendReferrals() {
   
   const trialPeriod = siteSettings?.trialPeriod || '1 Month';
   const purchaseWindow = siteSettings?.referralPurchaseWindow || 35;
-  const referralNormalUserReward = siteSettings?.referralNormalUserReward || 1;
-  const referralProfileOwnerReward = siteSettings?.referralProfileOwnerReward || 5;
-  const referralDirectCommission = siteSettings?.referralDirectCommission || 20;
-  const currency = siteSettings?.currency || 'AED';
+  
+  const countryRefSettings = siteSettings?.countryReferrals?.[selectedCountry] || siteSettings?.countryReferrals?.['Global'] || { currency: 'USD', normalUserReward: 1, profileOwnerReward: 5, directCommission: 20 };
+  const referralNormalUserReward = countryRefSettings.normalUserReward;
+  const referralProfileOwnerReward = countryRefSettings.profileOwnerReward;
+  const referralDirectCommission = countryRefSettings.directCommission;
+  const currency = countryRefSettings.currency;
 
   const copyRef = () => {
     if (!user) return;

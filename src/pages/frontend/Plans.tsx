@@ -3,17 +3,21 @@ import { useAppContext } from '../../context/AppContext';
 import { PaymentModal } from '../../components/PaymentModal';
 
 export default function FrontendPlans() {
-  const { siteSettings, user, setIsLoginModalOpen } = useAppContext();
+  const { siteSettings, user, setIsLoginModalOpen, selectedCountry } = useAppContext();
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const trialPeriod = siteSettings.trialPeriod || '1 Month';
-  const plans = [
+  
+  // Use country specific plans if available, else fallback to Global or default
+  const defaultPlans = [
     { name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
     { name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
     { name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
     { name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
   ];
+  
+  const plans = siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || defaultPlans;
 
   const handleStartTrial = async (plan: any) => {
     if (!user) {

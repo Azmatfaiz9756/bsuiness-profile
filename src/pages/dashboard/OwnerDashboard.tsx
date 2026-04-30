@@ -276,7 +276,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
 }
 
 export default function OwnerDashboard() {
-  const { user, authLoading, siteSettings, profiles } = useAppContext();
+  const { user, authLoading, siteSettings, profiles, selectedCountry } = useAppContext();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -404,7 +404,7 @@ export default function OwnerDashboard() {
             phone: '+971 50 123 4567',
             address: 'Dubai Internet City, Building 1, Dubai, UAE',
             ownerId: user.uid,
-            plan: 'Pro',
+            plan: 'Free',
             status: 'Active',
             views: 0,
             referralCount: 0,
@@ -559,6 +559,8 @@ export default function OwnerDashboard() {
     }
   };
 
+  const isFreePlan = profile?.plan === 'Free';
+
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 w-full overflow-x-hidden relative">
       <PaymentModal 
@@ -636,8 +638,8 @@ export default function OwnerDashboard() {
         {/* Desktop Sidebar */}
         <div className="hidden md:flex md:relative z-50 flex-col w-[280px] h-full bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out">
           <div className="flex flex-col px-6 py-8 border-b border-slate-800">
-            <h2 className="m-0 text-xl font-black text-white tracking-tight">Business Portal</h2>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Dubai Digital Connect</span>
+            <h2 className="m-0 text-xl font-black text-white tracking-tight">Digital Connect</h2>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">HAADI GLOBAL VENTURES FZE LLC</span>
           </div>
 
           <div className="flex flex-col flex-1 py-6 overflow-y-auto px-3 gap-1">
@@ -687,7 +689,7 @@ export default function OwnerDashboard() {
           <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full pb-24 md:pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-0">
               <h1 className="m-0 text-xl md:text-2xl font-extrabold text-slate-900">Manage Your Digital Card</h1>
-              <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-1 shrink-0">
+              <div className="flex flex-wrap gap-2 w-full md:w-auto shrink-0">
                 <button onClick={() => {
                   setFormData({
                     ...formData,
@@ -734,16 +736,16 @@ export default function OwnerDashboard() {
                     ]
                   });
                   alert('Demo content loaded! Click "Save Changes" to publish.');
-                }} className="px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-200 transition-colors shrink-0">Load Demo Content</button>
-                <Link to={`/profile/${profile?.slug || profile?.id}`} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 font-semibold hover:bg-slate-50 transition-colors shrink-0">Preview Live</Link>
-                <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white border-none rounded-lg font-semibold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm shrink-0">Save Changes</button>
+                }} className="flex-1 md:flex-none px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-200 transition-colors shrink-0 text-center">Load Demo Content</button>
+                <Link to={`/profile/${profile?.slug || profile?.id}`} className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-50 transition-colors shrink-0 text-center">Preview Live</Link>
+                <button onClick={handleSave} className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white border-none rounded-lg text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm shrink-0 text-center">Save Changes</button>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-full">
           {sidebarTab === 'profile' && (
             <>
-              <div className="flex bg-slate-100/80 p-1.5 overflow-x-auto scrollbar-hide whitespace-nowrap gap-1.5 no-scrollbar border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="flex flex-wrap bg-slate-100/80 p-1.5 gap-1.5 border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md">
                  <button onClick={() => setActiveTab('basic')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'basic' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Basic Info</button>
                  <button onClick={() => setActiveTab('contact')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'contact' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Contact & Map</button>
                  <button onClick={() => setActiveTab('social')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'social' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Social Links</button>
@@ -758,7 +760,19 @@ export default function OwnerDashboard() {
                  <button onClick={() => setActiveTab('bank')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'bank' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Payments</button>
                  <button onClick={() => setActiveTab('widgets')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Custom</button>
               </div>
-              <div className="p-4 md:p-6 lg:p-8 overflow-y-auto">
+              <div className="p-4 md:p-6 lg:p-8 overflow-y-auto relative">
+                {isFreePlan && !['basic', 'contact'].includes(activeTab) && (
+                  <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to unlock this section and enhance your digital business card.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+                )}
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-1.5">
@@ -766,28 +780,29 @@ export default function OwnerDashboard() {
                       <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo URL</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo URL {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                       <div className="flex gap-3">
-                        <input type="text" placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                        <input type="text" disabled={isFreePlan} placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
                         <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
                            {formData.photoUrl ? <img src={formData.photoUrl} className="w-full h-full object-cover" /> : <div className="text-[10px] text-slate-400">No Img</div>}
                         </div>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image URL</label>
-                      <input type="text" placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image URL {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <input type="text" disabled={isFreePlan} placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Title</label>
-                      <input type="text" value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Title {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <input type="text" disabled={isFreePlan} value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Business Category</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Business Category {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                       <select 
+                        disabled={isFreePlan}
                         value={formData.category || 'Technology'} 
                         onChange={e => setFormData({...formData, category: e.target.value})} 
-                        className="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        className="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60"
                       >
                         {['Technology', 'Real Estate', 'Finance', 'Consulting', 'Design', 'Medical', 'Retail', 'Education'].map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -795,11 +810,12 @@ export default function OwnerDashboard() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">City (UAE)</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">City (UAE) {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                       <select 
+                        disabled={isFreePlan}
                         value={formData.city || 'Dubai'} 
                         onChange={e => setFormData({...formData, city: e.target.value})} 
-                        className="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                        className="w-full p-3 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60"
                       >
                         {['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Fujairah', 'Ras Al Khaimah', 'Umm Al Quwain'].map(city => (
                           <option key={city} value={city}>{city}</option>
@@ -811,8 +827,8 @@ export default function OwnerDashboard() {
                       <input type="text" value={formData.company || ''} onChange={e => setFormData({...formData, company: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-normal break-words">Promotional Banner / Announcement</label>
-                      <input type="text" value={formData.announcement || ''} placeholder="e.g. 50% Off Winter Sale!" onChange={e => setFormData({...formData, announcement: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-normal break-words">Promotional Banner / Announcement {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <input type="text" disabled={isFreePlan} value={formData.announcement || ''} placeholder="e.g. 50% Off Winter Sale!" onChange={e => setFormData({...formData, announcement: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email</label>
@@ -829,8 +845,9 @@ export default function OwnerDashboard() {
                     </div>
                     <div className="flex flex-col gap-1.5 md:col-span-2">
                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bio</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bio {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                         <button 
+                          disabled={isFreePlan}
                           onClick={async () => {
                             if (!formData.name && !formData.title) {
                               alert("Please enter Name and Job Title first.");
@@ -855,10 +872,10 @@ export default function OwnerDashboard() {
                             if(btn) btn.innerHTML = "✨ AI Magic Writer";
                           }}
                           id="ai-bio-btn"
-                          className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer flex items-center gap-1.5 shadow-sm hover:opacity-90 transition-opacity"
+                          className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white border-none px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer flex items-center gap-1.5 shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                         >✨ AI Magic Writer</button>
                       </div>
-                      <textarea value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none" />
+                      <textarea disabled={isFreePlan} value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none disabled:bg-slate-100 disabled:opacity-60" />
                     </div>
                   </div>
                 )}
@@ -871,17 +888,18 @@ export default function OwnerDashboard() {
                         <input type="text" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971 50 123 4567" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number</label>
-                        <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Include country code without +" />
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                        <input type="text" disabled={isFreePlan} value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="Include country code without +" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Personal/Business Website</label>
-                        <input type="url" value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://..." />
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Personal/Business Website {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                        <input type="url" disabled={isFreePlan} value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="https://..." />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center mb-1">
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Building / Office Address</label>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Building / Office Address {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                           <button 
+                            disabled={isFreePlan}
                             onClick={async () => {
                               if (!navigator.geolocation) {
                                 alert("Geolocation is not supported by your browser");
@@ -919,14 +937,14 @@ export default function OwnerDashboard() {
                               });
                             }}
                             id="gps-btn"
-                            className="text-[10px] bg-slate-100 border border-slate-300 px-2 py-0.5 rounded font-bold text-slate-600 hover:bg-slate-200 transition-colors"
+                            className="text-[10px] bg-slate-100 border border-slate-300 px-2 py-0.5 rounded font-bold text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50"
                           >📍 Use My GPS</button>
                         </div>
-                        <input type="text" value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Office 123, Tower..." />
+                        <input type="text" disabled={isFreePlan} value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="Office 123, Tower..." />
                       </div>
                       <div className="flex flex-col gap-1.5 md:col-span-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions)</label>
-                        <input type="url" value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://maps.google.com/..." />
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions) {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                        <input type="url" disabled={isFreePlan} value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="https://maps.google.com/..." />
                       </div>
                     </div>
                   </div>
@@ -1442,7 +1460,19 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'analytics' && (
-            <div className="p-4 md:p-8">
+            <div className="p-4 md:p-8 relative">
+               {isFreePlan && (
+                 <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to view analytics and stats.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+               )}
                <div className="mb-8">
                  <h2 className="text-2xl font-black text-slate-900 m-0">Profile Performance</h2>
                  <p className="text-slate-500 m-0 mt-1 text-sm">Real-time engagement insights for your profile</p>
@@ -1525,7 +1555,19 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'agent' && (
-             <div className="p-4 md:p-8 h-full flex flex-col">
+             <div className="p-4 md:p-8 h-full flex flex-col relative">
+               {isFreePlan && (
+                 <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to use the Live Agent Panel.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+               )}
                <div className="mb-6 shrink-0">
                  <h2 className="text-2xl font-black text-slate-900 m-0">Live Agent Panel</h2>
                  <p className="text-slate-500 m-0 mt-1 text-sm">Support your customers in real-time. Handed over from AI assistant.</p>
@@ -1537,7 +1579,19 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'appointments' && (
-            <div className="p-4 md:p-8">
+            <div className="p-4 md:p-8 relative">
+               {isFreePlan && (
+                 <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to manage Appointments & Leads.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+               )}
                <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                  <div>
                    <h2 className="text-2xl font-black text-slate-900 m-0">Appointments & Leads</h2>
@@ -1661,7 +1715,19 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'marketing' && (
-            <div className="p-4 md:p-8">
+            <div className="p-4 md:p-8 relative">
+               {isFreePlan && (
+                 <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to unlock Broadcast Marketing.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+               )}
                <div className="mb-8">
                  <h2 className="text-2xl font-black text-slate-900 m-0">Bulk Broadcast Marketing</h2>
                  <p className="text-slate-500 m-0 mt-1 text-sm">Send updates and offers to all your followers at once</p>
@@ -1777,7 +1843,19 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'applications' && (
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-4 md:p-8">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-4 md:p-8 relative">
+               {isFreePlan && (
+                 <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to manage Job Applications.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+               )}
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                  <div>
                    <h2 className="m-0 text-xl font-bold text-slate-800">Job Applications</h2>
@@ -1794,7 +1872,19 @@ export default function OwnerDashboard() {
           )}
 
           {sidebarTab === 'chatbot' && (
-            <div className="p-4 md:p-8">
+            <div className="p-4 md:p-8 relative">
+               {isFreePlan && (
+                 <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-3xl">🔒</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to unlock the AI Chatbot Agent.</p>
+                      <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
+                    </div>
+                  </div>
+               )}
                <div className="mb-8">
                  <h2 className="text-2xl font-black text-slate-900 m-0">AI Chatbot Agent</h2>
                  <p className="text-slate-500 m-0 mt-1 text-sm">Configure your automated 24/7 client assistant</p>
@@ -1906,19 +1996,17 @@ export default function OwnerDashboard() {
                   <div className="relative z-10 text-center md:text-right bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl min-w-[200px]">
                      <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">MEMBERSHIP COST</div>
                      <div className="text-4xl font-black tabular-nums">
-                        {profile.plan === 'Enterprise' ? '$199' : profile.plan === 'Premium' ? '$49' : profile.plan === 'Pro' ? '$19' : '$0'}
-                        <span className="text-sm font-bold text-slate-500 ml-1">/mo</span>
+                        {(() => {
+                           const currentPlanData = (siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || []).find((p: any) => p.name === (profile.plan || 'Basic'));
+                           return currentPlanData ? currentPlanData.price : 'Free';
+                        })()}
+                        {(profile.plan !== 'Basic' && profile.plan !== 'Free') && <span className="text-sm font-bold text-slate-500 ml-1">/mo</span>}
                      </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                   {[
-                     { name: 'Basic', price: 'Free', features: ['5 Services', 'Basic Profile', 'QR Code'], color: 'slate' },
-                     { name: 'Pro', price: '$19', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'], color: 'blue', popular: true },
-                     { name: 'Premium', price: '$49', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'], color: 'indigo' },
-                     { name: 'Enterprise', price: '$199', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'], color: 'slate' }
-                   ].map((plan) => (
+                   {(siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || []).map((plan: any) => (
                      <div key={plan.name} className={`relative p-8 rounded-[2rem] border-2 transition-all group ${profile.plan === plan.name ? 'border-blue-600 bg-blue-50/20 ring-4 ring-blue-500/5' : 'border-slate-100 bg-white hover:border-slate-300 shadow-sm hover:shadow-xl'}`}>
                        {plan.popular && (
                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg shadow-blue-600/30">MOST POPULAR</div>

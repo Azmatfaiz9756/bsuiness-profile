@@ -10,14 +10,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [authLoading, setAuthLoading] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setAuthLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
   const [profiles, setProfiles] = useState([
     { 
       id: 'DBC000000042', 
@@ -39,6 +31,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       photoUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80',
       bannerUrl: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1200&q=80',
       expiry: '2027-04-06', 
+      country: 'UAE',
       bio: 'Award-winning real estate broker specializing in luxury properties in Dubai. Helping investors find their perfect home or high-yield investment properties.', 
       socials: { linkedin: 'azmat-realestate', twitter: 'azmat_dxb', instagram: 'azmat_properties' }, 
       services: [
@@ -84,6 +77,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       photoUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80',
       bannerUrl: 'https://images.unsplash.com/photo-1551076805-e1869045e55b?auto=format&fit=crop&w=1200&q=80',
       expiry: '2027-04-06', 
+      country: 'UAE',
       bio: 'Board-certified cardiologist with over 15 years of experience in diagnosing and treating cardiovascular diseases. Dedicated to patient-centered care and advanced heart health research.', 
       socials: { linkedin: 'drsarahahmed', twitter: 'drsarah_heart', youtube: 'HeartHealthDXB' }, 
       services: [
@@ -122,6 +116,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       photoUrl: 'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&w=400&q=80',
       bannerUrl: 'https://images.unsplash.com/photo-1607472586893-edb57cb5b2b2?auto=format&fit=crop&w=1200&q=80',
       expiry: '2026-06-12', 
+      country: 'UAE',
       bio: '24/7 reliable plumbing services across Abu Dhabi. From emergency leak repairs to complete bathroom pipe installations, we get the job done right the first time.', 
       socials: { facebook: 'quickfixplumbing', whatsapp: '971559998888' }, 
       services: [
@@ -158,6 +153,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       photoUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80',
       bannerUrl: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=1200&q=80',
       expiry: '2028-01-01', 
+      country: 'UAE',
       bio: 'Corporate lawyer with a focus on mergers, acquisitions, and commercial litigation in the UAE region. Protecting your business interests with unyielding precision.', 
       socials: { linkedin: 'omar-alfayed', twitter: 'alfayedlaw' }, 
       services: [
@@ -191,6 +187,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
       bannerUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80',
       expiry: '2026-01-01', 
+      country: 'India',
       bio: 'Leading digital transformation agency specializing in AI and cloud solutions.', 
       socials: { linkedin: 'elena-rostova', github: 'elenar_dev' }, 
       services: [
@@ -212,11 +209,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   ]);
 
   const [products, setProducts] = useState([
-    { id: 'SKU-001', name: 'NFC Business Card — Gold', category: 'NFC Cards', price: 200, stock: 82, status: 'Active', icon: '💳', desc: 'Premium gold finish NFC business card. Tap to share your profile.' },
-    { id: 'SKU-002', name: 'NFC Sticker Pack (5pcs)', category: 'Stickers', price: 100, stock: 8, status: 'Active', icon: '📌', desc: 'Versatile NFC stickers. Stick them on phones, laptops, or desks.' },
-    { id: 'SKU-003', name: 'Premium Metal Card', category: 'NFC Cards', price: 450, stock: 0, status: 'Out of Stock', icon: '🎩', desc: 'Ultra-durable metal NFC card for executives.' },
-    { id: 'SKU-004', name: 'Leather Card Holder', category: 'Accessories', price: 150, stock: 30, status: 'Active', icon: '👜', desc: 'Genuine leather card holder that blocks RFID but allows NFC.' },
-    { id: 'SKU-005', name: 'Starter Bundle — Card + Holder', category: 'Bundles', price: 320, stock: 15, status: 'Active', icon: '🎁', desc: 'Get started with our premium card and leather holder.' }
+    { id: 'SKU-001', name: 'NFC Business Card — Gold', category: 'NFC Cards', type: 'Physical', price: 200, stock: 82, status: 'Active', icon: '💳', desc: 'Premium gold finish NFC business card. Tap to share your profile.', country: 'Global' },
+    { id: 'SKU-002', name: 'NFC Sticker Pack (5pcs)', category: 'Stickers', type: 'Physical', price: 100, stock: 8, status: 'Active', icon: '📌', desc: 'Versatile NFC stickers. Stick them on phones, laptops, or desks.', country: 'Global' },
+    { id: 'SKU-003', name: 'Premium Metal Card', category: 'NFC Cards', type: 'Physical', price: 450, stock: 0, status: 'Out of Stock', icon: '🎩', desc: 'Ultra-durable metal NFC card for executives.', country: 'Global' },
+    { id: 'SKU-004', name: 'Leather Card Holder', category: 'Accessories', type: 'Physical', price: 150, stock: 30, status: 'Active', icon: '👜', desc: 'Genuine leather card holder that blocks RFID but allows NFC.', country: 'Global' },
+    { id: 'SKU-005', name: 'Starter Bundle — Card + Holder', category: 'Bundles', type: 'Physical', price: 320, stock: 15, status: 'Active', icon: '🎁', desc: 'Get started with our premium card and leather holder.', country: 'Global' },
+    { id: 'SKU-IND-1', name: 'India Exclusive NFC Wood Card', category: 'NFC Cards', type: 'Physical', price: 999, stock: 50, status: 'Active', icon: '🌲', desc: 'Handcrafted wooden NFC card exclusive to India.', country: 'India' },
+    { id: 'SKU-UAE-1', name: 'UAE VIP Platinum Card', category: 'NFC Cards', type: 'Physical', price: 800, stock: 20, status: 'Active', icon: '👑', desc: 'Exclusive Platinum NFC card for UAE residents.', country: 'UAE' },
+    { id: 'SKU-DIG-1', name: 'Digital Profile Pro - Annual', category: 'Digital Subscription', type: 'Digital', price: 199, stock: 9999, status: 'Active', icon: '🌐', desc: '1 year premium digital profile subscription with custom domain routing.', country: 'Global' },
   ]);
 
   const [cart, setCart] = useState<any[]>([]);
@@ -238,6 +238,31 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     referralNormalUserReward: 1,
     referralProfileOwnerReward: 5,
     referralDirectCommission: 20,
+    countryReferrals: {
+      'Global': { currency: 'USD', normalUserReward: 1, profileOwnerReward: 5, directCommission: 20, welcomeBonus: 10 },
+      'India': { currency: 'INR', normalUserReward: 50, profileOwnerReward: 250, directCommission: 1000, welcomeBonus: 500 },
+      'UAE': { currency: 'AED', normalUserReward: 5, profileOwnerReward: 25, directCommission: 100, welcomeBonus: 50 }
+    },
+    countryPlans: {
+      'Global': [
+        { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
+        { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
+        { id: 'premium', name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
+        { id: 'enterprise', name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
+      ],
+      'India': [
+        { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
+        { id: 'pro', name: 'Pro', price: '₹999', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
+        { id: 'premium', name: 'Premium', price: '₹2499', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
+        { id: 'enterprise', name: 'Enterprise', price: '₹9999', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
+      ],
+      'UAE': [
+        { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
+        { id: 'pro', name: 'Pro', price: 'AED 69', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
+        { id: 'premium', name: 'Premium', price: 'AED 179', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
+        { id: 'enterprise', name: 'Enterprise', price: 'AED 699', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
+      ]
+    },
     plans: [
       { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC' },
       { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR' },
@@ -263,12 +288,49 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     { id: 3, title: 'Buy 1 Get 1 Free', desc: 'On all NFC Sticker Packs this week', background: 'gradient', colorStart: '#f59e0b', colorEnd: '#b45309', imageUrl: '', imageType: 'icon', icon: '📌', font: 'mono', animation: 'bounce' }
   ]);
 
-  const [walletBalance, setWalletBalance] = useState(340);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [stats, setStats] = useState({ totalViews: 98450, shopRevenue: 42800 });
+
+  const [selectedCountry, setSelectedCountry] = useState(localStorage.getItem('dbc_country') || 'UAE');
+
+  useEffect(() => {
+    const map: Record<string, string> = {
+      'India': 'INR',
+      'UAE': 'AED',
+      'Global': 'USD'
+    };
+    setSiteSettings(prev => ({
+      ...prev,
+      currency: map[selectedCountry] || 'USD'
+    }));
+  }, [selectedCountry]);
 
   const [jobOpenings, setJobOpenings] = useState<any[]>([
     { id: 1, profileId: 'DBC000000042', title: 'Senior IT Consultant', description: 'Looking for a senior consultant with 5+ years experience.', requirements: 'B.Tech/MCA, 5+ yrs exp.', salary: 'AED 15,000 - 20,000/mo', type: 'Full-time', status: 'Open' }
   ]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setAuthLoading(false);
+      
+      if (u) {
+        const hasGottenBonus = localStorage.getItem(`dbc_bonus_${u.uid}`);
+        if (!hasGottenBonus) {
+           const region = localStorage.getItem('dbc_country') || 'Global';
+           const config = siteSettings?.countryReferrals?.[region] || siteSettings?.countryReferrals?.['Global'];
+           if (config && config.welcomeBonus) {
+             setWalletBalance(prev => prev + Number(config.welcomeBonus));
+             localStorage.setItem(`dbc_bonus_${u.uid}`, 'true');
+             setTimeout(() => {
+               alert(`Welcome! You've received a joining bonus of ${config.currency} ${config.welcomeBonus} in your wallet!`);
+             }, 1000);
+           }
+        }
+      }
+    });
+    return () => unsub();
+  }, [siteSettings]);
 
   return (
     <AppContext.Provider value={{
@@ -279,7 +341,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       cart, setCart, wishlist, setWishlist, userOrders, setUserOrders,
       addresses, setAddresses, siteSettings, setSiteSettings,
       shopBanners, setShopBanners,
-      jobOpenings, setJobOpenings
+      jobOpenings, setJobOpenings,
+      selectedCountry, setSelectedCountry
     }}>
       {children}
     </AppContext.Provider>

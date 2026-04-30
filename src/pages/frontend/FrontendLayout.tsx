@@ -7,7 +7,7 @@ import { LoginModal } from '../../components/LoginModal';
 
 export const FrontendLayout = () => {
   const location = useLocation();
-  const { user, authLoading, isLoginModalOpen, setIsLoginModalOpen } = useAppContext();
+  const { user, authLoading, isLoginModalOpen, setIsLoginModalOpen, siteSettings, selectedCountry, setSelectedCountry } = useAppContext();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isActive = (path: string) => location.pathname === path ? 'active bg-slate-100' : '';
 
@@ -67,9 +67,18 @@ export const FrontendLayout = () => {
       {/* Desktop & Mobile Header */}
       {!isShop && (
         <div className="nav flex h-[64px] items-center justify-between px-4 md:px-6 bg-white border-b border-slate-200 sticky top-0 z-50">
-          <Link to="/" className="nav-logo flex items-center gap-2">
+          <Link to="/" className="nav-logo flex items-center gap-2 z-10">
             <div className="nav-logo-icon w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
-            <div className="nav-logo-text font-bold text-slate-900 hidden sm:block whitespace-nowrap">Dubai Digital Connect</div>
+            <div className="hidden md:flex flex-col">
+              <span className="nav-logo-text font-bold text-slate-900 whitespace-nowrap leading-tight text-base">Digital Connect</span>
+              <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
+            </div>
+          </Link>
+
+          {/* Centered Mobile Title */}
+          <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[60%]">
+            <span className="font-bold text-slate-900 whitespace-nowrap leading-tight text-base w-full overflow-hidden text-ellipsis">Digital Connect</span>
+            <span className="text-[8px] text-slate-500 font-bold tracking-wide w-full overflow-hidden text-ellipsis uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
           </Link>
           
           {/* Desktop Links */}
@@ -84,6 +93,21 @@ export const FrontendLayout = () => {
             <Link to="/leaderboard" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/leaderboard')}`}>Rank</Link>
             <Link to="/plans" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/plans')}`}>Plans</Link>
             
+            <div className="h-4 w-px bg-slate-200"></div>
+
+            <select
+              value={selectedCountry}
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                localStorage.setItem('dbc_country', e.target.value);
+              }}
+              className="bg-transparent border-none outline-none text-sm font-bold text-slate-700 cursor-pointer"
+            >
+              <option value="Global">🌎 Global</option>
+              <option value="India">🇮🇳 India</option>
+              <option value="UAE">🇦🇪 UAE</option>
+            </select>
+
             <div className="h-4 w-px bg-slate-200"></div>
 
             {/* Language Selector */}
@@ -180,15 +204,31 @@ export const FrontendLayout = () => {
               <div>
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
-                  <div className="font-bold text-white text-lg tracking-tight">Dubai Digital Connect</div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-white text-lg tracking-tight leading-tight">{siteSettings?.siteName || 'Digital Connect'}</span>
+                    <span className="text-[10px] text-blue-400 font-bold tracking-wider">HAADI GLOBAL VENTURES FZE LLC</span>
+                  </div>
                 </div>
                 <p className="text-sm leading-relaxed mb-6">
-                  The ultimate platform for premium professional networking. AI-powered digital business cards designed for the modern executive.
+                  {siteSettings?.seoDesc || 'The ultimate platform for premium professional networking. AI-powered digital business cards designed for the modern executive.'}
                 </p>
                 <div className="flex gap-4">
-                  <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">𝕏</a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">in</a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">f</a>
+                  {siteSettings.socialTwitter && (
+                    <a href={siteSettings.socialTwitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">𝕏</a>
+                  )}
+                  {siteSettings.socialLinkedin && (
+                    <a href={siteSettings.socialLinkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">in</a>
+                  )}
+                  {siteSettings.socialFacebook && (
+                    <a href={siteSettings.socialFacebook} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">f</a>
+                  )}
+                  {!siteSettings.socialTwitter && !siteSettings.socialLinkedin && !siteSettings.socialFacebook && (
+                    <>
+                      <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">𝕏</a>
+                      <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">in</a>
+                      <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">f</a>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -222,7 +262,7 @@ export const FrontendLayout = () => {
             </div>
 
             <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-slate-900 text-xs">
-              <p>© {new Date().getFullYear()} Dubai Digital Connect. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} Digital Connect by Haadi Global Ventures Fze LLC. All rights reserved.</p>
               <div className="flex items-center gap-2 mt-4 md:mt-0">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 Systems Operational
