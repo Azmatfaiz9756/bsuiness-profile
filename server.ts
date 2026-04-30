@@ -85,6 +85,56 @@ async function startServer() {
     }
   });
 
+  // Create Shop Checkout Session
+  app.post("/api/create-shop-checkout-session", async (req, res) => {
+    try {
+      const stripe = getStripe();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe is not configured on the server." });
+      }
+
+      const { items, profileId, uid } = req.body;
+      
+      const lineItems = items.map((item: any) => {
+        let unitAmount = 0;
+        if (item.product.price) {
+          const matches = item.product.price.toString().match(/\d+/g);
+          if (matches) {
+            unitAmount = parseInt(matches.join('')) * 100;
+          }
+        }
+        return {
+          price_data: {
+            currency: 'aed',
+            product_data: {
+              name: item.product.name,
+              description: item.product.description || undefined,
+            },
+            unit_amount: unitAmount > 0 ? unitAmount : 100, // fallback 1 AED
+          },
+          quantity: item.qty || 1,
+        };
+      });
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/shop?shop_payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/shop?shop_payment_canceled=true`,
+        metadata: {
+          uid: uid || 'guest',
+          profileId: profileId
+        }
+      });
+
+      res.json({ id: session.id, url: session.url });
+    } catch (error: any) {
+      console.error("Stripe Shop Error:", error);
+      res.status(500).json({ error: error.message || "Failed to create shop payment session" });
+    }
+  });
+
   // Email API setup
   app.post("/api/send-email", async (req, res) => {
     const { to, subject, type, data } = req.body;

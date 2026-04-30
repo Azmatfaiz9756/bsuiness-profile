@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, ArrowUpRight, CheckCircle, Clock } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 export default function AdminDirectory() {

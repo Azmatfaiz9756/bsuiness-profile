@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
 import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
+import { PaymentModal } from '../../components/PaymentModal';
 
 function DashboardChatTester({ profile }: { profile: any }) {
   const { user } = useAppContext();
@@ -256,6 +257,10 @@ export default function OwnerDashboard() {
 
   const [toastMessage, setToastMessage] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Payment Modal state
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<any>(null);
 
   // Handle Stripe Success Callback
   useEffect(() => {
@@ -513,6 +518,11 @@ export default function OwnerDashboard() {
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 w-full overflow-x-hidden relative">
+      <PaymentModal 
+        isOpen={isPaymentModalOpen} 
+        onClose={() => setIsPaymentModalOpen(false)} 
+        plan={selectedPlanForPayment} 
+      />
       {toastMessage && (
         <div style={{ position: 'fixed', top: 20, right: 20, background: '#10b981', color: '#fff', padding: '12px 24px', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 9999, fontWeight: 600 }}>
           {toastMessage}
@@ -1870,7 +1880,15 @@ export default function OwnerDashboard() {
                          </button>
                        ) : (
                          <button 
-                           onClick={() => { setFormData({...formData, plan: plan.name}); setTimeout(handleSave, 100); }} 
+                           onClick={() => { 
+                             if(plan.price === 'Free') {
+                               setFormData({...formData, plan: plan.name}); 
+                               setTimeout(handleSave, 100); 
+                             } else {
+                               setSelectedPlanForPayment(plan);
+                               setIsPaymentModalOpen(true);
+                             }
+                           }} 
                            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${plan.popular ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10'}`}
                          >
                            Choose {plan.name}

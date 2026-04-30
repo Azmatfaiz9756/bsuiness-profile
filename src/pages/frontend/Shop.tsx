@@ -36,6 +36,17 @@ export default function FrontendShop() {
 
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shopPaymentSuccess = params.get('shop_payment_success');
+    if (shopPaymentSuccess === 'true') {
+      alert('Payment Successful! Thank you for your order.');
+      setCart([]);
+      setView('orders');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Extract unique categories and brands
   const categories = useMemo(() => ['All', ...Array.from(new Set(products.map((p: any) => p.category).filter(Boolean)))], [products]);
   const brands = useMemo(() => Array.from(new Set(products.map((p: any) => p.brand).filter(Boolean))), [products]);
@@ -78,15 +89,33 @@ export default function FrontendShop() {
   const subtotal = cart.reduce((acc: number, item: any) => acc + (item.product.price * item.qty), 0);
   const total = subtotal - discount;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (paymentMethod === 'wallet' && walletBalance < total) { alert('Insufficient wallet balance'); return; }
     
     if (paymentMethod === 'card') {
       setIsProcessingPayment(true);
-      setTimeout(() => {
+      try {
+        const response = await fetch(`${window.location.origin}/api/create-shop-checkout-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cart,
+            uid: user?.uid || 'guest',
+            profileId: 'shop'
+          }),
+        });
+        const data = await response.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        } else {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+      } catch (err: any) {
+        console.error("Shop payment error:", err);
+        alert(err.message || "Payment process failed. Please contact support.");
         setIsProcessingPayment(false);
-        completeOrder();
-      }, 2500); // Simulate network request for payment gateway
+      }
     } else {
       completeOrder();
     }

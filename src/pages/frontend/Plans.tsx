@@ -8,10 +8,11 @@ export default function FrontendPlans() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const trialPeriod = siteSettings.trialPeriod || '1 Month';
-  const plans = siteSettings.plans || [
-    { name: 'Standard', price: 'AED 299', popular: false, badge: 'STANDARD' },
-    { name: 'Premium', price: 'AED 599', popular: true, badge: 'MOST POPULAR' },
-    { name: 'Business Pro', price: 'AED 1,199', popular: false, badge: 'BUSINESS PRO' }
+  const plans = siteSettings?.plans?.length > 0 ? siteSettings.plans : [
+    { name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
+    { name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
+    { name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
+    { name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
   ];
 
   const handleStartTrial = (plan: any) => {
