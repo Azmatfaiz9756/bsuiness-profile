@@ -27,7 +27,12 @@ export default function FrontendPlans() {
         const { db } = await import('../../firebase');
         // If the user has a profile, update their plan to Free. If not, they'll create it later.
         const userRef = doc(db, 'profiles', user.uid);
-        await updateDoc(userRef, { plan: plan.name, updatedAt: new Date().toISOString() });
+        const refCode = localStorage.getItem('dbc_referred_by');
+        const updateData: any = { plan: plan.name, updatedAt: new Date().toISOString() };
+        if (refCode) {
+          updateData.referredBy = refCode;
+        }
+        await updateDoc(userRef, updateData);
         alert(`Successfully subscribed to ${plan.name} plan!`);
       } catch (err) {
         console.error("Trial start error:", err);

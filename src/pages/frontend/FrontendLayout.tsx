@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { logout } from '../../firebase';
@@ -12,6 +12,15 @@ export const FrontendLayout = () => {
   const isActive = (path: string) => location.pathname === path ? 'active bg-slate-100' : '';
 
   const [currentLang, setCurrentLang] = useState(user?.language || 'en');
+
+  useEffect(() => {
+    // Capture referral code if present
+    const searchParams = new URLSearchParams(window.location.search);
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      localStorage.setItem('dbc_referred_by', refCode);
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -159,9 +168,69 @@ export const FrontendLayout = () => {
         </div>
       )}
 
-      <div className="w-full">
+      <div className="w-full flex-1">
         <Outlet />
       </div>
+
+      {/* Global Footer */}
+      {!isShop && (
+        <footer className="bg-slate-950 border-t border-slate-900 pt-16 pb-8 text-slate-400 font-sans mt-auto">
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
+              <div>
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
+                  <div className="font-bold text-white text-lg tracking-tight">Dubai Digital Connect</div>
+                </div>
+                <p className="text-sm leading-relaxed mb-6">
+                  The ultimate platform for premium professional networking. AI-powered digital business cards designed for the modern executive.
+                </p>
+                <div className="flex gap-4">
+                  <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">𝕏</a>
+                  <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">in</a>
+                  <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">f</a>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Platform</h4>
+                <ul className="space-y-4 text-sm font-medium">
+                  <li><Link to="/" className="hover:text-blue-400 transition-colors">Directory Listing</Link></li>
+                  <li><Link to="/templates" className="hover:text-blue-400 transition-colors">Premium Templates</Link></li>
+                  <li><Link to="/shop" className="hover:text-blue-400 transition-colors">NFC Hardware</Link></li>
+                  <li><Link to="/plans" className="hover:text-blue-400 transition-colors">Pricing & Plans</Link></li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Resources</h4>
+                <ul className="space-y-4 text-sm font-medium">
+                  <li><Link to="/referrals" className="hover:text-blue-400 transition-colors">Affiliate Program</Link></li>
+                  <li><Link to="/leaderboard" className="hover:text-blue-400 transition-colors">Leaderboard</Link></li>
+                  <li><Link to="/contact" className="hover:text-blue-400 transition-colors">Help & Support</Link></li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Legal & Company</h4>
+                <ul className="space-y-4 text-sm font-medium">
+                  <li><Link to="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
+                  <li><Link to="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</Link></li>
+                  <li><Link to="/contact" className="hover:text-blue-400 transition-colors">Contact Us</Link></li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-slate-900 text-xs">
+              <p>© {new Date().getFullYear()} Dubai Digital Connect. All rights reserved.</p>
+              <div className="flex items-center gap-2 mt-4 md:mt-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Systems Operational
+              </div>
+            </div>
+          </div>
+        </footer>
+      )}
     </div>
   );
 };

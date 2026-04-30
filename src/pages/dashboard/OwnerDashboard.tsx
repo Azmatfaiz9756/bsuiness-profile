@@ -311,10 +311,16 @@ export default function OwnerDashboard() {
         try {
           const { updateDoc } = await import('firebase/firestore');
           const userRef = doc(db, 'profiles', profile.id);
-          await updateDoc(userRef, {
+          const updateData: any = {
             plan: decodeURIComponent(planName),
             updatedAt: new Date().toISOString()
-          });
+          };
+          const refCode = localStorage.getItem('dbc_referred_by');
+          if (refCode) {
+            updateData.referredBy = refCode;
+            localStorage.removeItem('dbc_referred_by');
+          }
+          await updateDoc(userRef, updateData);
           showToast(`Succesfully subscribed to ${decodeURIComponent(planName)}!`);
           
           // Clear URL params

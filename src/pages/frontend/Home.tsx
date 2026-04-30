@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from 'react-helmet-async';
 import { useAppContext } from "../../context/AppContext";
 import {
   LayoutGrid,
@@ -503,6 +504,20 @@ export default function FrontendHome() {
 
   return (
     <div className="bg-slate-50 min-h-screen pb-16 font-sans overflow-x-hidden">
+      <Helmet>
+        <title>Dubai Digital Connect | AI-Powered Digital Business Cards</title>
+        <meta name="description" content="Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR. Join thousands of professionals and brands in the official directory." />
+        <meta name="keywords" content="digital business card, networking, AI, NFC card, professional profile, DBC network, business cards" />
+        <meta property="og:title" content="Dubai Digital Connect | AI-Powered Digital Business Cards" />
+        <meta property="og:description" content="Share your contact info, social links, and portfolio with a single tap using our NFC-enabled smart cards." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://dbc.network" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Dubai Digital Connect | AI-Powered Digital Business Cards" />
+        <meta name="twitter:description" content="Direct access to thousands of verified professionals. Start your search now." />
+        <link rel="canonical" href="https://dbc.network" />
+      </Helmet>
+
       {/* Animated Hero */}
       <HeroSection />
 
