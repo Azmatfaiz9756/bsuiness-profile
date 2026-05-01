@@ -289,6 +289,26 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   ]);
 
   const [walletBalance, setWalletBalance] = useState(0);
+  
+  // Sync wallet balance with firestore
+  useEffect(() => {
+    if (user) {
+      const unsubWallet = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+        if (docSnap.exists() && typeof docSnap.data().walletBalance === 'number') {
+          setWalletBalance(docSnap.data().walletBalance);
+        } else if (!docSnap.exists() && walletBalance > 0) {
+           // write context balance
+           import('firebase/firestore').then(({ setDoc }) => {
+              setDoc(doc(db, 'users', user.uid), { walletBalance }, { merge: true });
+           });
+        }
+      });
+      return () => unsubWallet();
+    } else {
+      setWalletBalance(0);
+    }
+  }, [user]);
+
   const [stats, setStats] = useState({ totalViews: 98450, shopRevenue: 42800 });
 
   const [selectedCountry, setSelectedCountry] = useState(localStorage.getItem('dbc_country') || 'UAE');

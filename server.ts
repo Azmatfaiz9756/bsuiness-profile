@@ -85,6 +85,63 @@ async function startServer() {
     }
   });
 
+  // CRM Proxy and Key Management
+  const CRM_KEYS_FILE = path.resolve(process.cwd(), 'crm-keys.json');
+
+  app.post("/api/crm/save", express.json(), async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const { profileId, crmProvider, zohoToken, zohoOrgId, crmEndpoint, crmSecret } = req.body;
+      let keys: any = {};
+      if (fs.existsSync(CRM_KEYS_FILE)) {
+        keys = JSON.parse(fs.readFileSync(CRM_KEYS_FILE, 'utf8'));
+      }
+      keys[profileId] = { crmProvider, zohoToken, zohoOrgId, crmEndpoint, crmSecret };
+      fs.writeFileSync(CRM_KEYS_FILE, JSON.stringify(keys, null, 2));
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Failed to save CRM keys", e);
+      res.status(500).json({ error: "Failed to save CRM keys" });
+    }
+  });
+
+  app.get("/api/crm/stock/:profileId", async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const { profileId } = req.params;
+      if (!fs.existsSync(CRM_KEYS_FILE)) return res.json({ stock: "" });
+      
+      const keys = JSON.parse(fs.readFileSync(CRM_KEYS_FILE, 'utf8'));
+      const profileKeys = keys[profileId];
+      if (!profileKeys || !profileKeys.crmProvider) return res.json({ stock: "" });
+
+      const { crmProvider, zohoToken, zohoOrgId, crmEndpoint, crmSecret } = profileKeys;
+      let stockData = "";
+
+      if (crmProvider === 'Zoho' && zohoToken && zohoOrgId) {
+        const resp = await fetch(`https://inventory.zoho.com/api/v1/items?organization_id=${zohoOrgId}`, {
+          headers: { 'Authorization': `Zoho-oauthtoken ${zohoToken}` }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const items = data.items?.map((it: any) => `${it.name}: ${it.available_stock} in stock - ${it.rate}`).join('\n');
+          stockData = items || 'No items found in Zoho.';
+        }
+      } else if ((crmProvider === 'Vyapar' || crmProvider === 'Tally') && crmEndpoint) {
+        const resp = await fetch(crmEndpoint, {
+          headers: { 'Authorization': `Bearer ${crmSecret || ''}` }
+        });
+        if (resp.ok) {
+          stockData = await resp.text();
+        }
+      }
+      res.json({ stock: stockData });
+    } catch (e: any) {
+      console.error("CRM proxy error", e);
+      res.status(500).json({ error: "Failed to fetch stock from CRM" });
+    }
+  });
+
   // Create Checkout Session
   app.post("/api/create-checkout-session", async (req, res) => {
     try {
@@ -232,6 +289,30 @@ async function startServer() {
     } catch (error: any) {
       console.error("Stripe Shop Error:", error);
       res.status(500).json({ error: error.message || "Failed to create shop payment session" });
+    }
+  });
+
+  // Verify Checkout Session
+  app.post("/api/verify-checkout-session", async (req, res) => {
+    try {
+      const stripe = getStripe();
+      if (!stripe) {
+        return res.status(500).json({ error: "Stripe configuration missing" });
+      }
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID required" });
+      }
+      
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status === 'paid') {
+        res.json({ verified: true, session });
+      } else {
+        res.json({ verified: false, status: session.payment_status });
+      }
+    } catch (e: any) {
+      console.error("Stripe verification failed", e);
+      res.status(500).json({ error: "Verification failed" });
     }
   });
 

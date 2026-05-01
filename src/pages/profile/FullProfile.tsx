@@ -6,6 +6,8 @@ import ExecutiveDark from './templates/ExecutiveDark';
 import MinimalClean from './templates/MinimalClean';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { QRCodeSVG } from 'qrcode.react';
+import { QrCode, X, Share2, Download } from 'lucide-react';
 
 export default function FullProfile() {
   const { id } = useParams();
@@ -20,6 +22,7 @@ export default function FullProfile() {
   const [profile, setProfile] = useState<any>(initialProfile || null);
   const [template, setTemplate] = useState(initialProfile?.template || 'classic');
   const [loading, setLoading] = useState(!initialProfile);
+  const [showQR, setShowQR] = useState(false);
 
   // Fetch from Firebase
   useEffect(() => {
@@ -54,6 +57,21 @@ export default function FullProfile() {
           if (foundProfile.template) {
             setTemplate(foundProfile.template);
           }
+          
+          // Increment views
+          if (!isPreview) {
+            try {
+               const pId = foundProfile.id || id;
+               if (pId) {
+                 const { increment, updateDoc } = await import('firebase/firestore');
+                 const updateRef = doc(db, 'profiles', pId);
+                 await updateDoc(updateRef, { views: increment(1) });
+               }
+            } catch (err) {
+               console.error("Failed to update profile views:", err);
+            }
+          }
+
         } else if (!profile) {
           // Only fallback to first profile if we have absolutely nothing
           setProfile(profiles[0]);
@@ -155,6 +173,86 @@ export default function FullProfile() {
       {template === 'classic' && <ClassicModern profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
       {template === 'executive' && <ExecutiveDark profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
       {template === 'minimal' && <MinimalClean profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+
+      {!isPreview && (
+        <>
+          <button 
+            onClick={() => setShowQR(true)}
+            className="fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all z-40"
+            style={{ boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)' }}
+          >
+            <QrCode size={24} />
+          </button>
+
+          {showQR && (
+            <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowQR(false)}>
+              <div 
+                className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative flex flex-col items-center"
+                onClick={e => e.stopPropagation()}
+              >
+                <button 
+                  onClick={() => setShowQR(false)}
+                  className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full p-1.5 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+                
+                <h3 className="text-xl font-black text-slate-800 mb-2">Scan to Connect</h3>
+                <p className="text-sm font-medium text-slate-500 mb-8 text-center leading-relaxed">
+                  Point your camera at this QR code to view and save {profile?.name}'s profile.
+                </p>
+
+                <div className="bg-white p-4 rounded-3xl shadow-sm border-2 border-slate-100 mb-8">
+                  <QRCodeSVG 
+                    value={window.location.href} 
+                    size={200}
+                    bgColor={"#ffffff"}
+                    fgColor={"#0f172a"}
+                    level={"Q"}
+                    includeMargin={false}
+                  />
+                </div>
+
+                <div className="flex w-full gap-3">
+                  <button 
+                    onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: `${profile?.name}'s Profile`,
+                            url: window.location.href
+                          }).catch(console.error);
+                        } else {
+                          navigator.clipboard.writeText(window.location.href);
+                          alert("Link copied to clipboard!");
+                        }
+                    }}
+                    className="flex-1 bg-blue-50 text-blue-600 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                  >
+                    <Share2 size={18} />
+                    <span>Share</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile?.name || ''}\nTITLE:${profile?.title || ''}\nORG:${profile?.company || ''}\nTEL:${profile?.phone || ''}\nEMAIL:${profile?.email || ''}\nURL:${window.location.href}\nEND:VCARD`;
+                      const blob = new Blob([vcard], { type: "text/vcard" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `${(profile?.name || 'profile').replace(/\s+/g, '_')}.vcf`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex-1 bg-slate-900 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                  >
+                    <Download size={18} />
+                    <span>Save</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </>
   );
 }

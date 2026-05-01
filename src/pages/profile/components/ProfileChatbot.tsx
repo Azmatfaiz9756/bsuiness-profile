@@ -167,26 +167,12 @@ Assist visitors with inquiries about the business, services, and contact informa
               const text = await resp.text();
               setStockData(text);
             }
-          } else if (profile.stockSourceType === 'CRM' && profile.crmProvider) {
-            if (profile.crmProvider === 'Zoho' && profile.zohoToken && profile.zohoOrgId) {
-              // Zoho Inventory API Integration
-              const resp = await fetch(`https://inventory.zoho.com/api/v1/items?organization_id=${profile.zohoOrgId}`, {
-                headers: { 'Authorization': `Zoho-oauthtoken ${profile.zohoToken}` }
-              });
-              if (resp.ok) {
-                const data = await resp.json();
-                const items = data.items?.map((it: any) => `${it.name}: ${it.available_stock} in stock - ${it.rate}`).join('\n');
-                setStockData(items || 'No items found in Zoho.');
-              }
-            } else if ((profile.crmProvider === 'Vyapar' || profile.crmProvider === 'Tally') && profile.crmEndpoint) {
-              // Generic API Integration for Tally/Vyapar connectors
-              const resp = await fetch(profile.crmEndpoint, {
-                headers: { 'Authorization': `Bearer ${profile.crmSecret || ''}` }
-              });
-              if (resp.ok) {
-                const text = await resp.text();
-                setStockData(text);
-              }
+          } else if (profile.stockSourceType === 'CRM') {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const resp = await fetch(`${apiUrl}/api/crm/stock/${profile.id}`);
+            if (resp.ok) {
+               const data = await resp.json();
+               if (data.stock) setStockData(data.stock);
             }
           }
         } catch (e) {
@@ -195,7 +181,7 @@ Assist visitors with inquiries about the business, services, and contact informa
       };
       fetchStock();
     }
-  }, [profile?.stockSyncEnabled, profile?.stockSourceType, profile?.stockSourceUrl, profile?.stockManualData, profile?.crmProvider, profile?.zohoToken, profile?.zohoOrgId, profile?.crmEndpoint, profile?.crmSecret]);
+  }, [profile?.stockSyncEnabled, profile?.stockSourceType, profile?.stockSourceUrl, profile?.stockManualData, profile?.crmProvider, profile?.id]);
 
   // Persist language, history and session ID
   useEffect(() => {

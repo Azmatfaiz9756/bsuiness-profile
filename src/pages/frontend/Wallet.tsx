@@ -14,17 +14,47 @@ export default function FrontendWallet() {
     const paymentCanceled = searchParams.get('payment_canceled');
     const amt = searchParams.get('amount');
 
-    if (paymentSuccess === 'true' && amt) {
-      // In a real app we'd verify the backend logic. But for now we just add to context balance.
+    if (paymentSuccess === 'true' && amt && searchParams.get('session_id')) {
+      const sessionId = searchParams.get('session_id');
       const addAmount = Number(amt);
-      if (!isNaN(addAmount)) {
-        setWalletBalance((prev: number) => prev + addAmount);
-        alert(`Successfully added ${siteSettings?.currency || 'AED'} ${addAmount} to your wallet!`);
+      
+      if (!isNaN(addAmount) && sessionId) {
+        const verifyPayment = async () => {
+          try {
+            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const verifyRes = await fetch(`${apiUrl}/api/verify-checkout-session`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId })
+            });
+
+            if (!verifyRes.ok) throw new Error('Verification failed.');
+            const verifyData = await verifyRes.json();
+            
+            if (verifyData.verified) {
+              const { doc, setDoc } = await import('firebase/firestore');
+              const { db } = await import('../../firebase');
+              const newBalance = walletBalance + addAmount;
+              setWalletBalance(newBalance);
+              if (user) {
+                await setDoc(doc(db, 'users', user.uid), { walletBalance: newBalance }, { merge: true });
+              }
+              alert(`Successfully added ${siteSettings?.currency || 'AED'} ${addAmount} to your wallet!`);
+            } else {
+              alert('Payment verification failed.');
+            }
+          } catch (e) {
+            console.error("Payment verification error:", e);
+            alert('Payment verification error.');
+          } finally {
+            searchParams.delete('payment_success');
+            searchParams.delete('session_id');
+            searchParams.delete('amount');
+            setSearchParams(searchParams);
+          }
+        };
+        verifyPayment();
       }
-      searchParams.delete('payment_success');
-      searchParams.delete('session_id');
-      searchParams.delete('amount');
-      setSearchParams(searchParams);
     } else if (paymentCanceled === 'true') {
       alert('Payment was canceled.');
       searchParams.delete('payment_canceled');

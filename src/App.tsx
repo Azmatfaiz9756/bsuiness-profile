@@ -43,6 +43,7 @@ import FullProfile from './pages/profile/FullProfile';
 
 import AdminDNSHelp from './pages/admin/DNSHelp';
 import OwnerDashboard from './pages/dashboard/OwnerDashboard';
+import SeedDemo from './pages/SeedDemo';
 
 export default function App() {
   useEffect(() => {
@@ -102,6 +103,9 @@ export default function App() {
 
             {/* Independent Profile View Route */}
             <Route path="/profile/:id" element={<FullProfile />} />
+
+            {/* Hidden Demo Seeder */}
+            <Route path="/seed-demo" element={<SeedDemo />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -370,6 +370,23 @@ export default function OwnerDashboard() {
       console.log('Payment success detected');
       const completePayment = async () => {
         try {
+          // Verify with server
+          const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
+          const verifyRes = await fetch(`${apiUrl}/api/verify-checkout-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+          
+          if (!verifyRes.ok) throw new Error('Verification failed.');
+          const verifyData = await verifyRes.json();
+          
+          if (!verifyData.verified) {
+             showToast('Payment not verified. Please contact support if you were charged.');
+             setSearchParams({});
+             return;
+          }
+
           const { updateDoc } = await import('firebase/firestore');
           const userRef = doc(db, 'profiles', profile.id);
           const updateData: any = {
@@ -611,8 +628,28 @@ export default function OwnerDashboard() {
     setEmailError('');
 
     try {
-      await setDoc(doc(db, 'profiles', user.uid), formData, { merge: true });
-      setProfile(formData);
+      // Extract sensitive CRM keys
+      const { zohoToken, zohoOrgId, crmEndpoint, crmSecret, ...publicData } = formData;
+      
+      // Save sensitive CRM keys via proxy server
+      if (formData.crmProvider) {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        await fetch(`${apiUrl}/api/crm/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            profileId: user.uid,
+            crmProvider: formData.crmProvider,
+            zohoToken,
+            zohoOrgId,
+            crmEndpoint,
+            crmSecret
+          })
+        });
+      }
+
+      await setDoc(doc(db, 'profiles', user.uid), publicData, { merge: true });
+      setProfile(formData); // keep in state to populate forms
       showToast('Profile updated and published securely!');
     } catch (err) {
       console.error(err);
@@ -738,10 +775,13 @@ export default function OwnerDashboard() {
             )}
           </div>
           
-          <div className="p-6 border-t border-slate-800 shrink-0">
+          <div className="p-6 border-t border-slate-800 shrink-0 flex flex-col gap-3">
             <Link to="/" className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider">
                Back to Home
             </Link>
+            <button onClick={() => auth.signOut()} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-red-900/40 hover:bg-red-800/60 text-red-200 text-xs font-bold rounded-xl transition-colors uppercase tracking-wider border border-red-800/50">
+               Log Out
+            </button>
           </div>
         </div>
 

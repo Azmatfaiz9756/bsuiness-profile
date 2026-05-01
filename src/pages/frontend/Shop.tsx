@@ -44,11 +44,39 @@ export default function FrontendShop() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shopPaymentSuccess = params.get('shop_payment_success');
-    if (shopPaymentSuccess === 'true') {
-      alert('Payment Successful! Thank you for your order.');
-      setCart([]);
-      setView('orders');
-      window.history.replaceState({}, document.title, window.location.pathname);
+    const sessionId = params.get('session_id');
+
+    if (shopPaymentSuccess === 'true' && sessionId) {
+      const verifyPayment = async () => {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const verifyRes = await fetch(`${apiUrl}/api/verify-checkout-session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+
+          if (!verifyRes.ok) throw new Error('Verification failed.');
+          const verifyData = await verifyRes.json();
+          
+          if (verifyData.verified) {
+            alert('Payment Successful! Thank you for your order.');
+            setCart([]);
+            setView('orders');
+          } else {
+            alert('Payment verification failed. If you were charged, contact support.');
+          }
+        } catch (e) {
+          console.error("Shop payment verification error:", e);
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      // Only run once if multiple effects trigger
+      if (!(window as any).__shopPaymentVerified) {
+        (window as any).__shopPaymentVerified = true;
+        verifyPayment();
+      }
     }
   }, []);
 
@@ -155,8 +183,15 @@ export default function FrontendShop() {
   const handleWalletCheckout = () => {
     if (walletBalance < total) return;
     setIsProcessingPayment(true);
-    setTimeout(() => {
-      setWalletBalance((prev: number) => prev - total);
+    setTimeout(async () => {
+      const newBalance = walletBalance - total;
+      setWalletBalance(newBalance);
+      if (user) {
+        const { doc, setDoc } = await import('firebase/firestore');
+        const { db } = await import('../../firebase');
+        await setDoc(doc(db, 'users', user.uid), { walletBalance: newBalance }, { merge: true });
+      }
+
       setUserOrders((prev: any) => [{
         id: `ORD-${Date.now().toString().slice(-6)}`,
         date: new Date().toLocaleDateString(),
