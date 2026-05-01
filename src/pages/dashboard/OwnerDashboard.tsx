@@ -841,6 +841,18 @@ export default function OwnerDashboard() {
                       <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                     </div>
                     <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Country</label>
+                      <select value={formData.country || 'Global'} onChange={e => setFormData({...formData, country: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white">
+                        <option value="Global">Global</option>
+                        <option value="UAE">UAE</option>
+                        <option value="India">India</option>
+                        <option value="USA">USA</option>
+                        <option value="UK">UK</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo URL {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                       <div className="flex gap-3">
                         <input type="text" disabled={isFreePlan} placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
@@ -2086,6 +2098,7 @@ export default function OwnerDashboard() {
                                        {['Zoho', 'Vyapar', 'Tally'].map(crm => (
                                          <button 
                                            key={crm}
+                                           type="button"
                                            onClick={() => setFormData({...formData, crmProvider: crm})}
                                            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${formData.crmProvider === crm ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
                                          >

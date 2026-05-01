@@ -498,7 +498,7 @@ export default function FrontendHome() {
     const matchesCategory =
       activeCategory === "All Business Types" || p.category === activeCategory;
     const matchesCity = activeCity === "All Cities" || p.city === activeCity;
-    const matchesCountry = selectedCountry === 'Global' || p.country === selectedCountry;
+    const matchesCountry = selectedCountry === 'Global' || p.country === selectedCountry || (!p.country && selectedCountry === 'UAE');
 
     return matchesSearch && matchesCategory && matchesCity && matchesCountry;
   });
