@@ -317,7 +317,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       if (u) {
         const hasGottenBonus = localStorage.getItem(`dbc_bonus_${u.uid}`);
         if (!hasGottenBonus) {
-           const region = localStorage.getItem('dbc_country') || 'Global';
+           const region = localStorage.getItem('dbc_country') || 'UAE';
            const config = siteSettings?.countryReferrals?.[region] || siteSettings?.countryReferrals?.['Global'];
            if (config && config.welcomeBonus) {
              setWalletBalance(prev => prev + Number(config.welcomeBonus));

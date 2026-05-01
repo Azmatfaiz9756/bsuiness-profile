@@ -498,16 +498,9 @@ export default function FrontendHome() {
     const matchesCategory =
       activeCategory === "All Business Types" || p.category === activeCategory;
     const matchesCity = activeCity === "All Cities" || p.city === activeCity;
+    const matchesCountry = selectedCountry === 'Global' || p.country === selectedCountry;
 
-    return matchesSearch && matchesCategory && matchesCity;
-  }).sort((a, b) => {
-    if (selectedCountry && selectedCountry !== 'Global') {
-      const aMatch = a.country === selectedCountry;
-      const bMatch = b.country === selectedCountry;
-      if (aMatch && !bMatch) return -1;
-      if (!aMatch && bMatch) return 1;
-    }
-    return 0; // maintain default order if ties or Global
+    return matchesSearch && matchesCategory && matchesCity && matchesCountry;
   });
 
   return (
