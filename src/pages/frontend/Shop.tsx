@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 export default function FrontendShop() {
   const navigate = useNavigate();
-  const { products, cart, setCart, wishlist, setWishlist, userOrders, setUserOrders, addresses, walletBalance, setWalletBalance, siteSettings, user, profiles, shopBanners, selectedCountry } = useAppContext();
+  const { products, cart, setCart, wishlist, setWishlist, userOrders, setUserOrders, addresses, walletBalance, setWalletBalance, siteSettings, user, profiles, shopBanners, selectedCountry, setIsLoginModalOpen } = useAppContext();
   const [view, setView] = useState<'catalog' | 'product' | 'cart' | 'checkout' | 'orders' | 'wishlist'>('catalog');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   
@@ -286,7 +286,7 @@ export default function FrontendShop() {
                  </div>
                </div>
             ) : (
-               <Link to="/profile/placeholder" className="hidden lg:flex items-center gap-2 text-sm font-semibold hover:text-blue-400 transition"><User size={18}/> Login</Link>
+               <button onClick={() => setIsLoginModalOpen(true)} className="hidden md:flex items-center gap-2 text-sm font-semibold hover:text-blue-400 transition cursor-pointer"><User size={18}/> Login</button>
             )}
 
             <button onClick={() => setView('orders')} className="flex flex-col items-center gap-0.5 md:gap-1 hover:text-blue-400 transition text-slate-400">

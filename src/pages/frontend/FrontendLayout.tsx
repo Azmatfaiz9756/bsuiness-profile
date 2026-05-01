@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import { logout } from '../../firebase';
 import { Menu, X } from 'lucide-react';
 import { LoginModal } from '../../components/LoginModal';
+import toast from 'react-hot-toast';
 
 export const FrontendLayout = () => {
   const location = useLocation();

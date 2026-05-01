@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 
 export default function AdminPromoCodes() {
   const [promos, setPromos] = useState([
@@ -55,10 +56,13 @@ export default function AdminPromoCodes() {
     <>
       <div className="page-header">
         <div>
-          <h2 style={{fontSize: 20, fontWeight: 800}}>Promo Codes</h2>
+          <h2 style={{fontSize: 24, fontWeight: 800, color: '#0f172a'}}>Marketing & Promotions</h2>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>Flash sales, Push Notifications, and Influencer Codes.</p>
         </div>
         <div style={{display: 'flex', gap: 10}}>
-          <button className="topbar-btn btn-gold" onClick={handleOpenAdd}>+ Create Promo</button>
+          <button className="topbar-btn" style={{ background: '#f8fafc', color: '#1e40af', border: '1px solid #bfdbfe', padding: '10px 20px', borderRadius: 8, fontWeight: 600 }} onClick={() => toast.success("Push notification sent to all Mobile App Users for 'New Arrivals'.")}>📱 Send Push Notification</button>
+          <button className="topbar-btn" style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600 }} onClick={() => toast.success("Flash Sale Active! 1 AED prices are now live for 60 minutes.")}>⚡ Start '1 AED' Flash Sale</button>
+          <button className="topbar-btn btn-gold" style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600 }} onClick={handleOpenAdd}>+ Create Promo / Influencer Code</button>
         </div>
       </div>
 

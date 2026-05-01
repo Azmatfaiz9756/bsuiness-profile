@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { doc, getDocFromServer } from 'firebase/firestore';
 import { db } from './firebase';
 import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from 'react-hot-toast';
 
 // Layouts
 import { AdminLayout } from './pages/admin/AdminLayout';
@@ -60,6 +61,7 @@ export default function App() {
   return (
     <HelmetProvider>
       <AppProvider>
+        <Toaster position="top-center" />
         <BrowserRouter>
           <Routes>
             {/* Frontend Website Routes */}

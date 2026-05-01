@@ -1,12 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Package, Plus, Search, Edit2, Trash2, Filter } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
   const { products, setProducts } = useAppContext();
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csv = event.target?.result as string;
+      const lines = csv.split('\n').filter(line => line.trim() !== '');
+      if (lines.length <= 1) {
+        toast.error('CSV appears to be empty or missing headers.');
+        return;
+      }
+      const newProducts = [];
+      for (let i = 1; i < lines.length; i++) {
+         const cols = lines[i].split(',').map(c => c.trim());
+         if (cols.length >= 3) {
+           newProducts.push({
+             id: Date.now().toString() + i,
+             name: cols[0],
+             price: parseFloat(cols[1]) || 0,
+             category: cols[2] || 'Uncategorized',
+             stock: parseInt(cols[3]) || 0,
+             sales: 0,
+             image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=400',
+             isDigital: cols[4] === 'true'
+           });
+         }
+      }
+      setProducts([...products, ...newProducts]);
+      toast.success(`Successfully uploaded ${newProducts.length} products!`);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDownloadSample = () => {
+    const sampleCSV = "name,price,category,stock,isDigital\nWireless Earbuds,199.99,Electronics,50,false\nUltimate Guide PDF,9.99,Digital,1000,true\nSmart Watch Pro,299.99,Electronics,10,false";
+    const blob = new Blob([sampleCSV], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "products_sample.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success("Sample CSV downloaded!");
+  };
+
   const categories = [
     'Clothing & Garments', 'Toys & Games', 'Mobile Phones', 'Accessories', 'Gadgets',
     'Laptops & Computers', 'Tablets & iPads', 'Electronics', 'Antique Items', 
@@ -73,14 +121,29 @@ export default function AdminProducts() {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0 }}>Advanced Product Catalog</h2>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>Manage global e-commerce inventory across all categories.</p>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', margin: 0 }}>Inventory & Catalog Management</h2>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>Manage global e-commerce inventory, variants, and IMEI tracking.</p>
         </div>
-        <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-          <Plus size={18} /> Add New Product
-        </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <input 
+            type="file" 
+            accept=".csv" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            style={{ display: 'none' }} 
+          />
+          <button style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '10px 14px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }} onClick={handleDownloadSample}>
+            📄 Download Sample
+          </button>
+          <button style={{ background: '#f8fafc', color: '#334155', border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => fileInputRef.current?.click()}>
+            📥 Bulk Upload (CSV)
+          </button>
+          <button onClick={handleOpenAdd} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+            <Plus size={18} /> Add New Product
+          </button>
+        </div>
       </div>
 
       <div style={{ background: '#fff', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24, display: 'flex', gap: 16, alignItems: 'center' }}>
@@ -132,11 +195,18 @@ export default function AdminProducts() {
                 </td>
                 <td style={{ padding: '16px' }}>
                   {p.isDigital ? (
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#8b5cf6', background: '#ede9fe', padding: '4px 8px', borderRadius: 4 }}>Digital</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#8b5cf6', background: '#ede9fe', padding: '4px 8px', borderRadius: 4 }}>Digital Item</span>
                   ) : (
-                    <span style={{ fontSize: 13, fontWeight: 600, color: p.stock > 10 ? '#10b981' : p.stock > 0 ? '#f59e0b' : '#ef4444' }}>
-                      {p.stock} Units
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: p.stock > 10 ? '#166534' : p.stock > 0 ? '#b45309' : '#991b1b', background: p.stock > 10 ? '#dcfce7' : p.stock > 0 ? '#fef3c7' : '#fee2e2', padding: '4px 8px', borderRadius: 4 }}>
+                        {p.stock} Units left
+                      </span>
+                      {p.stock > 0 && p.stock <= 5 && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 4 }}>
+                          🚨 LOW STOCK ALERT
+                        </span>
+                      )}
+                    </div>
                   )}
                 </td>
                 <td style={{ padding: '16px' }}>
@@ -205,6 +275,28 @@ export default function AdminProducts() {
                     </label>
                   </div>
                 </div>
+
+                {!formData.isDigital && (
+                  <div style={{ padding: 16, background: '#eff6ff', borderRadius: 12, border: '1px solid #bfdbfe' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <h4 style={{ margin: 0, fontSize: 14, color: '#1e3a8a', fontWeight: 700 }}>📱 Device Tracking & Variants</h4>
+                      <span style={{ fontSize: 11, background: '#dbeafe', color: '#1e40af', padding: '2px 8px', borderRadius: 12, fontWeight: 700 }}>Pro Feature</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#1e40af', marginBottom: 6 }}>Track IMEIs / Serial Numbers</label>
+                        <textarea placeholder="Enter 1 IMEI per line. Scanner friendly." rows={3} style={{ width: '100%', padding: '10px', border: '1px solid #bfdbfe', borderRadius: 8, outline: 'none', background: '#fff' }} />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#1e40af', marginBottom: 6 }}>Variant Configurator</label>
+                        <button type="button" onClick={() => toast.success('Variant builder coming soon!')} style={{ width: '100%', padding: '10px', border: '1px dashed #3b82f6', background: '#eff6ff', color: '#2563eb', borderRadius: 8, fontWeight: 600, cursor: 'pointer', height: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <span style={{ fontSize: 14 }}>+ Add Colors / Capacity / Grade</span>
+                          <span style={{ fontSize: 11, color: '#60a5fa' }}>e.g., iPhone Black 256GB Refurbished</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Pricing & Inventory */}
                 <div style={{ padding: 16, background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
