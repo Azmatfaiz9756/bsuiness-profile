@@ -45,6 +45,7 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
   const [liveChatSessionId, setLiveChatSessionId] = useState<string | null>(null);
   const [isLiveAgentRequesting, setIsLiveAgentRequesting] = useState(false);
+  const [stockData, setStockData] = useState<string>('');
 
   const [showIdentityForm, setShowIdentityForm] = useState(false);
   const [identityForm, setIdentityForm] = useState({ name: '', phone: '' });
@@ -69,8 +70,22 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   };
 
   const getPrompt = (langId: string) => {
+    let stockContext = "";
+    if (profile?.stockSyncEnabled && stockData) {
+      stockContext = `
+IMPORTANT - REAL-TIME STOCK/INVENTORY DATA:
+The following is current warehouse stock and pricing information. Use this to answer queries about availability and pricing:
+${stockData}
+
+If a user asks about a product not listed here, say you don't have information about its current stock but can take an inquiry.
+${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above." : "Do NOT share numerical prices unless explicitly permitted by the user, just confirm availability."}
+`;
+    }
+
     if (langId === 'hi') {
       return `Aap ${profile?.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+
+${stockContext}
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
 - No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
@@ -104,6 +119,8 @@ Business Details:
       return `أنت مساعد ذكي محترف لـ ${profile?.name}.
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة بيضاء مهذبة).
 
+${stockContext}
+
 معلومات العمل:
 - الاسم: ${profile?.name}
 - المسمى الوظيفي: ${profile?.title}
@@ -120,6 +137,8 @@ Business Details:
 Your tone should be helpful, clear, and professional.
 You MUST communicate primarily in ${lang?.label || langId}.
 
+${stockContext}
+
 Full Profile Context:
 - Name: ${profile?.name}
 - Title: ${profile?.title}
@@ -134,6 +153,49 @@ Full Profile Context:
 
 Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.`;
   };
+
+  // Fetch Stock Data if enabled
+  useEffect(() => {
+    if (profile?.stockSyncEnabled) {
+      const fetchStock = async () => {
+        try {
+          if (profile.stockSourceType === 'Manual' && profile.stockManualData) {
+            setStockData(profile.stockManualData);
+          } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
+            const resp = await fetch(profile.stockSourceUrl);
+            if (resp.ok) {
+              const text = await resp.text();
+              setStockData(text);
+            }
+          } else if (profile.stockSourceType === 'CRM' && profile.crmProvider) {
+            if (profile.crmProvider === 'Zoho' && profile.zohoToken && profile.zohoOrgId) {
+              // Zoho Inventory API Integration
+              const resp = await fetch(`https://inventory.zoho.com/api/v1/items?organization_id=${profile.zohoOrgId}`, {
+                headers: { 'Authorization': `Zoho-oauthtoken ${profile.zohoToken}` }
+              });
+              if (resp.ok) {
+                const data = await resp.json();
+                const items = data.items?.map((it: any) => `${it.name}: ${it.available_stock} in stock - ${it.rate}`).join('\n');
+                setStockData(items || 'No items found in Zoho.');
+              }
+            } else if ((profile.crmProvider === 'Vyapar' || profile.crmProvider === 'Tally') && profile.crmEndpoint) {
+              // Generic API Integration for Tally/Vyapar connectors
+              const resp = await fetch(profile.crmEndpoint, {
+                headers: { 'Authorization': `Bearer ${profile.crmSecret || ''}` }
+              });
+              if (resp.ok) {
+                const text = await resp.text();
+                setStockData(text);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Stock sync error:", e);
+        }
+      };
+      fetchStock();
+    }
+  }, [profile?.stockSyncEnabled, profile?.stockSourceType, profile?.stockSourceUrl, profile?.stockManualData, profile?.crmProvider, profile?.zohoToken, profile?.zohoOrgId, profile?.crmEndpoint, profile?.crmSecret]);
 
   // Persist language, history and session ID
   useEffect(() => {

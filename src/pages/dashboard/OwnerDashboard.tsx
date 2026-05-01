@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase } from 'lucide-react';
 import { motion } from 'motion/react';
 
 import LiveAgentPanel from './LiveAgentPanel';
@@ -43,6 +43,7 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
+  const [stockData, setStockData] = useState<string>('');
 
   const ai = new ProxyGoogleGenAI({ apiKey: profile?.aiApiKey || import.meta.env.VITE_GEMINI_API_KEY || '' });
 
@@ -55,8 +56,22 @@ function DashboardChatTester({ profile }: { profile: any }) {
   };
 
   const getPrompt = (langId: string) => {
+    let stockContext = "";
+    if (profile?.stockSyncEnabled && stockData) {
+      stockContext = `
+IMPORTANT - REAL-TIME STOCK/INVENTORY DATA:
+The following is current warehouse stock and pricing information. Use this to answer queries about availability and pricing:
+${stockData}
+
+If a user asks about a product not listed here, say you don't have information about its current stock but can take an inquiry.
+${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above." : "Do NOT share numerical prices unless explicitly permitted by the user, just confirm availability."}
+`;
+    }
+
     if (langId === 'hi') {
       return `Aap ${profile.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+
+${stockContext}
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
 - No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
@@ -84,14 +99,60 @@ Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`;
     if (langId === 'ar') {
       return `أنت مساعد ذكي محترف لـ ${profile?.name} (المسمى الوظيفي: ${profile?.title} في ${profile?.company}).
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة خليجية بيضاء أو فصحى مهذبة).
+
+${stockContext}
+
 السياق: ${profile?.bio}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`;
     }
     const lang = CHAT_LANGUAGES.find(l => l.id === langId);
     return `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
 Your tone should be helpful, clear, and professional. 
 You MUST communicate primarily in ${lang?.label || langId}.
+
+${stockContext}
+
 Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.phone}.`;
   };
+
+  useEffect(() => {
+    if (profile?.stockSyncEnabled) {
+      const fetchStock = async () => {
+        try {
+          if (profile.stockSourceType === 'Manual' && profile.stockManualData) {
+            setStockData(profile.stockManualData);
+          } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
+            const resp = await fetch(profile.stockSourceUrl);
+            if (resp.ok) {
+              const text = await resp.text();
+              setStockData(text);
+            }
+          } else if (profile.stockSourceType === 'CRM' && profile.crmProvider) {
+            if (profile.crmProvider === 'Zoho' && profile.zohoToken && profile.zohoOrgId) {
+              const resp = await fetch(`https://inventory.zoho.com/api/v1/items?organization_id=${profile.zohoOrgId}`, {
+                headers: { 'Authorization': `Zoho-oauthtoken ${profile.zohoToken}` }
+              });
+              if (resp.ok) {
+                const data = await resp.json();
+                const items = data.items?.map((it: any) => `${it.name}: ${it.available_stock} in stock - ${it.rate}`).join('\n');
+                setStockData(items || 'No items found in Zoho.');
+              }
+            } else if ((profile.crmProvider === 'Vyapar' || profile.crmProvider === 'Tally') && profile.crmEndpoint) {
+              const resp = await fetch(profile.crmEndpoint, {
+                headers: { 'Authorization': `Bearer ${profile.crmSecret || ''}` }
+              });
+              if (resp.ok) {
+                const text = await resp.text();
+                setStockData(text);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Stock sync error in tester:", e);
+        }
+      };
+      fetchStock();
+    }
+  }, [profile?.stockSyncEnabled, profile?.stockSourceType, profile?.stockSourceUrl, profile?.stockManualData, profile?.crmProvider, profile?.zohoToken, profile?.zohoOrgId, profile?.crmEndpoint, profile?.crmSecret]);
 
   useEffect(() => {
     if (selectedLang) {
@@ -1948,6 +2009,128 @@ export default function OwnerDashboard() {
                                <Sparkles size={10} /> AUTO-SAVING ACTIVE
                             </div>
                          </div>
+                         
+                         {/* Inventory & CRM Sync Section */}
+                         <div className="mt-8 pt-8 border-t border-slate-100">
+                           <div className="flex items-center justify-between mb-6">
+                             <div className="flex items-center gap-3">
+                               <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                                 <Briefcase size={20} />
+                               </div>
+                               <div>
+                                 <h4 className="text-base font-black text-slate-900 m-0">Inventory & Stock Sync</h4>
+                                 <p className="text-xs text-slate-500 m-0">Connect your CRM, Spreadsheet or Stock data</p>
+                               </div>
+                             </div>
+                             <label className="relative inline-flex items-center cursor-pointer">
+                               <input type="checkbox" checked={formData.stockSyncEnabled || false} onChange={e => setFormData({...formData, stockSyncEnabled: e.target.checked})} className="sr-only peer" />
+                               <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                             </label>
+                           </div>
+
+                           {formData.stockSyncEnabled && (
+                             <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Sync Source</label>
+                                   <select 
+                                     value={formData.stockSourceType || 'Manual'} 
+                                     onChange={e => setFormData({...formData, stockSourceType: e.target.value})}
+                                     className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                                   >
+                                     <option value="Manual">Manual Entry (JSON/Text)</option>
+                                     <option value="GoogleSheet">Google Sheets (Public CSV Link)</option>
+                                     <option value="CSV_URL">Direct CSV URL</option>
+                                     <option value="CRM">CRM API (Zoho/Tally - Beta)</option>
+                                   </select>
+                                 </div>
+                                 <div className="flex items-center gap-4 pt-6">
+                                   <label className="flex items-center gap-2 cursor-pointer">
+                                     <input type="checkbox" checked={formData.showStockPrice || false} onChange={e => setFormData({...formData, showStockPrice: e.target.checked})} className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500" />
+                                     <span className="text-sm font-bold text-slate-700">Tell customer the Price?</span>
+                                   </label>
+                                 </div>
+                               </div>
+
+                               {(formData.stockSourceType === 'GoogleSheet' || formData.stockSourceType === 'CSV_URL') && (
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Source URL</label>
+                                   <input 
+                                     type="url" 
+                                     placeholder={formData.stockSourceType === 'GoogleSheet' ? "Enter Google Sheet 'Publish to Web' CSV URL" : "Enter public CSV link"}
+                                     value={formData.stockSourceUrl || ''} 
+                                     onChange={e => setFormData({...formData, stockSourceUrl: e.target.value})} 
+                                     className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium" 
+                                   />
+                                   <p className="text-[10px] text-slate-400">Ensure the CSV has columns like: Product, Stock, Price, Status.</p>
+                                 </div>
+                               )}
+
+                               {formData.stockSourceType === 'Manual' && (
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Stock Data (One per line or JSON)</label>
+                                   <textarea 
+                                     placeholder="Example:&#10;iPhone 15 Pro - 5 in stock - AED 4500&#10;Galaxy S24 - Out of stock&#10;Airpods - 12 in stock - AED 899"
+                                     value={formData.stockManualData || ''} 
+                                     onChange={e => setFormData({...formData, stockManualData: e.target.value})} 
+                                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl min-h-[150px] outline-none text-sm font-medium"
+                                   />
+                                 </div>
+                               )}
+
+                               {formData.stockSourceType === 'CRM' && (
+                                 <div className="space-y-4 p-5 bg-blue-50/50 border border-blue-100 rounded-2xl">
+                                   <div className="flex flex-col gap-1.5">
+                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Select CRM Provider</label>
+                                     <div className="grid grid-cols-3 gap-2">
+                                       {['Zoho', 'Vyapar', 'Tally'].map(crm => (
+                                         <button 
+                                           key={crm}
+                                           onClick={() => setFormData({...formData, crmProvider: crm})}
+                                           className={`py-2 px-3 rounded-lg text-xs font-bold transition-all ${formData.crmProvider === crm ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200'}`}
+                                         >
+                                           {crm}
+                                         </button>
+                                       ))}
+                                     </div>
+                                   </div>
+
+                                   {formData.crmProvider === 'Zoho' && (
+                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                       <div className="flex flex-col gap-1.5">
+                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Zoho API Key/Token</label>
+                                         <input type="password" value={formData.zohoToken || ''} onChange={e => setFormData({...formData, zohoToken: e.target.value})} className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Authtoken..." />
+                                       </div>
+                                       <div className="flex flex-col gap-1.5">
+                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Organization ID</label>
+                                         <input type="text" value={formData.zohoOrgId || ''} onChange={e => setFormData({...formData, zohoOrgId: e.target.value})} className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Org ID..." />
+                                       </div>
+                                     </div>
+                                   )}
+
+                                   {(formData.crmProvider === 'Vyapar' || formData.crmProvider === 'Tally') && (
+                                     <div className="space-y-4">
+                                       <div className="flex flex-col gap-1.5">
+                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{formData.crmProvider} Gateway URL / API Endpoint</label>
+                                         <input type="url" value={formData.crmEndpoint || ''} onChange={e => setFormData({...formData, crmEndpoint: e.target.value})} className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="https://your-local-ip:port/api..." />
+                                         <p className="text-[10px] text-slate-400">Note: Tally/Vyapar often need a public IP or tunnel (like Ngrok) to connect from the cloud.</p>
+                                       </div>
+                                       <div className="flex flex-col gap-1.5">
+                                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Secret API Key</label>
+                                         <input type="password" value={formData.crmSecret || ''} onChange={e => setFormData({...formData, crmSecret: e.target.value})} className="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Token..." />
+                                       </div>
+                                     </div>
+                                   )}
+                                   
+                                   <div className="p-3 bg-white/50 rounded-xl border border-blue-100">
+                                     <p className="text-[10px] text-blue-700 font-medium m-0">💡 AI will automatically map your CRM data to items, quantity, and prices to answer customer questions.</p>
+                                   </div>
+                                 </div>
+                               )}
+                             </div>
+                           )}
+                         </div>
+
                          <div className="mt-6">
                            <button onClick={handleSave} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]">
                              Update Knowledge Base
