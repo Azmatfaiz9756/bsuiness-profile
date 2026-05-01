@@ -161,7 +161,21 @@ export const FrontendLayout = () => {
             
             <div className="h-px bg-slate-200 my-4"></div>
 
-            <div className="flex px-3 gap-2 pb-4">
+            <div className="flex flex-col px-3 gap-2 pb-4">
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  localStorage.setItem('dbc_country', e.target.value);
+                  closeMenu();
+                }}
+                className="bg-slate-100 p-2 rounded-lg flex-1 font-medium text-slate-700 outline-none"
+              >
+                <option value="Global">🌎 Global</option>
+                <option value="India">🇮🇳 India</option>
+                <option value="UAE">🇦🇪 UAE</option>
+              </select>
+
               <select 
                 value={currentLang}
                 onChange={(e) => {

@@ -745,7 +745,7 @@ export default function OwnerDashboard() {
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-full">
           {sidebarTab === 'profile' && (
             <>
-              <div className="flex flex-wrap bg-slate-100/80 p-1.5 gap-1.5 border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md">
+              <div className="flex bg-slate-100/80 p-1.5 overflow-x-auto scrollbar-hide whitespace-nowrap gap-1.5 border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md no-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
                  <button onClick={() => setActiveTab('basic')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'basic' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Basic Info</button>
                  <button onClick={() => setActiveTab('contact')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'contact' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Contact & Map</button>
                  <button onClick={() => setActiveTab('social')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'social' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Social Links</button>
