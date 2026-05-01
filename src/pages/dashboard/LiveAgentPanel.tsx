@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { db } from '../../firebase';
+import { db, auth } from '../../firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
 import { AGENT_LANGUAGES } from '../../lib/languages';
@@ -66,6 +66,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
       ? query(collection(db, 'chat_sessions'), orderBy('updatedAt', 'desc'))
       : query(
           collection(db, 'chat_sessions'),
+          where('ownerId', '==', auth.currentUser?.uid || ''),
           where('profileId', '==', profileId),
           orderBy('updatedAt', 'desc')
         );

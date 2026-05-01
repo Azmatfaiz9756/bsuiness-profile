@@ -492,8 +492,8 @@ export default function OwnerDashboard() {
       import('firebase/firestore').then(({ collection, query, where, getDocs, orderBy }) => {
         const fetchAll = async () => {
           try {
-            const aptsQ = query(collection(db, 'appointments'), where('profileId', '==', profile.id));
-            const leadsQ = query(collection(db, 'leads'), where('profileId', '==', profile.id));
+            const aptsQ = query(collection(db, 'appointments'), where('ownerId', '==', user.uid), where('profileId', '==', profile.id));
+            const leadsQ = query(collection(db, 'leads'), where('ownerId', '==', user.uid), where('profileId', '==', profile.id));
             
             const [aptsSnap, leadsSnap] = await Promise.all([getDocs(aptsQ), getDocs(leadsQ)]);
             

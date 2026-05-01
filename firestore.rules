@@ -11,6 +11,11 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    function isAdmin() {
+      // Allow specific email as an admin to read all data in the dashboard
+      return isSignedIn() && request.auth.token.email == 'azmatfaiz9756@gmail.com';
+    }
+    
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
@@ -28,28 +33,17 @@ service cloud.firestore {
     // Appointments & Leads: Visitors can create, owner can manage
     match /appointments/{appId} {
       allow create: if true;
-      allow read, update, delete: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid || 
-        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
-      );
+      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
     match /leads/{leadId} {
       allow create: if true;
-      allow read, update, delete: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid || 
-        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
-      );
+      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     // Followers & Campaigns
     match /followers/{folId} {
       allow create: if true;
-      allow read, update, delete: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid || 
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
-      );
+      allow read, update, delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
     }
     match /campaigns/{cmpId} {
       allow read: if true;
@@ -61,18 +55,10 @@ service cloud.firestore {
       allow create: if true;
       allow get: if true; // Guest needs this if they have the ID
       // Only list if the profile belongs to the signed-in user OR it's the platform and user is a super admin
-      allow list: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid || 
-        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
-      );
+      allow list: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
       
       allow update: if true;
-      allow delete: if isSignedIn() && (
-        resource.data.ownerId == request.auth.uid || 
-        (resource.data.profileId == 'platform' && request.auth.token.email == 'azmatfaiz9756@gmail.com') ||
-        get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.id == resource.data.profileId
-      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.ownerId == request.auth.uid);
       
       match /messages/{messageId} {
         allow create: if true;
