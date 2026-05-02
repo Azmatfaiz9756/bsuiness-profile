@@ -674,7 +674,8 @@ export default function OwnerDashboard() {
       {/* Mobile Top Header */}
       <div className="md:hidden flex h-14 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-[40]">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-[10px] uppercase">DBC</div>
+          <img src="/logo.png" alt="DBC" className="w-6 h-6 rounded object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
+          <div className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-[10px] uppercase" style={{ display: 'none' }}>DBC</div>
           <span className="font-bold text-white text-sm">Business Portal</span>
         </div>
         <Link to="/" className="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg">Exit</Link>

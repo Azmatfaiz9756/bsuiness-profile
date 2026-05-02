@@ -69,7 +69,8 @@ export const FrontendLayout = () => {
       {!isShop && (
         <div className="nav flex h-[64px] items-center justify-between px-4 md:px-6 bg-white border-b border-slate-200 sticky top-0 z-50">
           <Link to="/" className="nav-logo flex items-center gap-2 z-10">
-            <div className="nav-logo-icon w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
+            <img src="/logo.png" alt="Digital Connect" className="w-8 h-8 rounded shrink-0 object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
+            <div className="nav-logo-icon w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0" style={{ display: 'none' }}>DBC</div>
             <div className="hidden md:flex flex-col">
               <span className="nav-logo-text font-bold text-slate-900 whitespace-nowrap leading-tight text-base">Digital Connect</span>
               <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
@@ -218,7 +219,8 @@ export const FrontendLayout = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
               <div>
                 <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0">DBC</div>
+                  <img src="/logo.png" alt="Digital Connect" className="w-8 h-8 rounded shrink-0 object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
+                  <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0" style={{ display: 'none' }}>DBC</div>
                   <div className="flex flex-col">
                     <span className="font-bold text-white text-lg tracking-tight leading-tight">{siteSettings?.siteName || 'Digital Connect'}</span>
                     <span className="text-[10px] text-blue-400 font-bold tracking-wider">HAADI GLOBAL VENTURES FZE LLC</span>
