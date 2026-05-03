@@ -61,11 +61,12 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
     }
 
     const translationInfo = `
-TRANSLATION FEATURES:
-- You are a polyglot AI assistant. You can understand and translate between any languages.
-- You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
-- If the user sends a message in a different language, translate it internally, then respond in the target language.
-- If asked specifically to translate something, perform the translation accurately.
+TRANSLATION & LEAD GENERATION RULES:
+- You are a polyglot AI assistant. You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+- BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}.
+- PRICE POLICY: Do NOT provide specific prices or numerical cost estimates. If the user asks for price/cost, tell them you don't have the exact pricing but can take their details for a custom quote.
+- LEAD CAPTURE: Whenever a user asks about services, prices, or working with the business, you MUST ask for their Name and Mobile Number.
+- TOOL USAGE: Once you have the user's name and phone number (mobile), call the 'send_inquiry' tool to save it as a lead.
 `;
 
     if (langId === 'hi') {
@@ -75,23 +76,17 @@ ${translationInfo}
 ${stockContext}
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
-- No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
-- No formal Hindi/Sanskrit: 'vistar', 'mukhya', 'adhik', 'yogdaan', 'parinaam' - Yeh sab bhi use na karein.
+- No formal Urdu/Hindi: 'janab', 'khidmat', 'vistar', 'yogdaan' etc - Yeh sab mat use karein.
+- Simple words use karein: 'baat-cheet', 'madad', 'kaam', 'khass', 'zyada'.
 
-INKI JAGAH YE EK DUM SIMPLE WORDS USE KAREIN:
-- 'baat-cheet' (guftagu ki jagah)
-- 'help / madad' (khidmat ki jagah)
-- 'details / info' (vistar ki jagah)
-- 'kaam' (silsile ki jagah)
-- 'khass' (mukhya ki jagah)
-- 'zyada' (adhik ki jagah)
-- 'aaj kal ka' (naye daur ki jagah)
-- 'talent / hunar' (maharat ki jagah)
-
-Aapka andaaz bilkul friendly aur normal insaan jaisa hona chahiye, koi shayarana ya bohot formal baat nahi karni.
+KHASS HIDAYAT (IMPORTANT):
+1. SERVICES: User ko business ki services ke baare mein acche se samjhayein.
+2. NO PRICES: Kisi bhi cheez ka price mat batana. Bas ye kaho ki "Main accurate price nahi bata sakta, lekin aap apni details de dijiye humari team aapko call karke quotation de degi."
+3. LEAD CAPTURE: User se unka Name aur Mobile Number zaroor mangein agar wo kaam ke baare mein puche.
+4. TOOL: 'send_inquiry' tool ka use karke details save karein.
 
 Greeting Style:
-"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? Kya aap ${profile?.name} sir se kisi khass topic pe baat-cheet karna chahte hain, ya humari company ${profile?.company} ki services ke baare mein kuch jaanna chahte hain?"
+"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? ${profile?.name} sir ki services ya kisi inquiry ke liye main aapki help kar sakta hoon."
 
 Business Details:
 - Name: ${profile?.name}
@@ -498,15 +493,15 @@ Assist visitors with inquiries about the business, services, and contact informa
               },
               {
                 name: "send_inquiry",
-                description: "Send a contact inquiry. Requires name, email, and message.",
+                description: "Send a contact inquiry or capture a lead. Requires name, phone (mobile number), and inquiry message.",
                 parameters: {
                   type: Type.OBJECT,
                   properties: {
-                    name: { type: Type.STRING },
-                    email: { type: Type.STRING },
-                    message: { type: Type.STRING }
+                    name: { type: Type.STRING, description: "Lead's full name" },
+                    phone: { type: Type.STRING, description: "Lead's mobile/phone number" },
+                    message: { type: Type.STRING, description: "Information about what they want to know/buy" }
                   },
-                  required: ["name", "email", "message"]
+                  required: ["name", "phone", "message"]
                 }
               },
               {

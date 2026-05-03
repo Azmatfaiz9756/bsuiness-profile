@@ -147,7 +147,7 @@ export default function MinimalClean({
       style={{
         background: "#fafafa",
         minHeight: "100vh",
-        paddingBottom: 100,
+        paddingBottom: 40,
         fontFamily: "Inter, sans-serif",
       }}
     >
@@ -1811,7 +1811,7 @@ export default function MinimalClean({
 
         <div
           style={{
-            marginTop: 40,
+            marginTop: 20,
             padding: 24,
             textAlign: "center",
             background: "#f4f4f5",
@@ -1847,7 +1847,6 @@ export default function MinimalClean({
           >
             Get My Free Card
           </Link>
-          <div style={{ height: 100 }}></div>
         </div>
 
         <ProfileChatbot profile={profile} />

@@ -68,9 +68,20 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
             try {
                const pId = foundProfile.id || id;
                if (pId) {
-                 const { increment, updateDoc } = await import('firebase/firestore');
-                 const updateRef = doc(db, 'profiles', pId);
-                 await updateDoc(updateRef, { views: increment(1) });
+                 const now = Date.now();
+                 const storageKey = `last_view_${pId}`;
+                 const lastView = localStorage.getItem(storageKey);
+                 const FIFTEEN_MINUTES = 15 * 60 * 1000;
+
+                 if (!lastView || (now - parseInt(lastView)) > FIFTEEN_MINUTES) {
+                   const { increment, updateDoc } = await import('firebase/firestore');
+                   const updateRef = doc(db, 'profiles', pId);
+                   await updateDoc(updateRef, { views: increment(1) });
+                   localStorage.setItem(storageKey, now.toString());
+                   console.log("View recorded for", pId);
+                 } else {
+                   console.log("View throttled for", pId);
+                 }
                }
             } catch (err) {
                console.error("Failed to update profile views:", err);

@@ -139,7 +139,7 @@ export default function ExecutiveDark({
       style={{
         background: "#000000",
         minHeight: "100vh",
-        paddingBottom: 100,
+        paddingBottom: 40,
         fontFamily: "Inter, sans-serif",
       }}
     >
@@ -1751,7 +1751,7 @@ export default function ExecutiveDark({
 
         <div
           style={{
-            marginTop: 40,
+            marginTop: 20,
             padding: "24px 20px",
             textAlign: "center",
             background: "#0a0a0a",
@@ -1788,7 +1788,6 @@ export default function ExecutiveDark({
           >
             Get My Free Card
           </Link>
-          <div style={{ height: 100 }}></div>
         </div>
 
         <ProfileChatbot profile={profile} />

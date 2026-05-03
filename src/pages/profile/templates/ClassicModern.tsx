@@ -242,7 +242,7 @@ export default function ClassicModern({
       style={{
         background: "#f0f2f5",
         minHeight: "100vh",
-        paddingBottom: 100,
+        paddingBottom: 40,
         fontFamily: "Inter, sans-serif",
       }}
     >
@@ -2753,7 +2753,7 @@ export default function ClassicModern({
 
         <div
           style={{
-            marginTop: 40,
+            marginTop: 20,
             padding: 24,
             textAlign: "center",
             background: "#f8fafc",
@@ -2791,7 +2791,6 @@ export default function ClassicModern({
           >
             Get My Free Card
           </Link>
-          <div style={{ height: 100 }}></div>
         </div>
 
         <ProfileChatbot profile={profile} />

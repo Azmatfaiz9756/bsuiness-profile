@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { storage } from '../firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Camera, X, Check, Loader2, UploadCloud } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -29,6 +29,7 @@ export const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [showCropper, setShowCropper] = useState(false);
 
   const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
@@ -65,7 +66,7 @@ export const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
     if (!ctx) return null;
 
     // Set canvas size to the cropped size or a max size to save bandwidth
-    const MAX_SIZE = 512;
+    const MAX_SIZE = 320; // 320px is perfect for profile/avatars and very fast to upload
     let targetWidth = pixelCrop.width;
     let targetHeight = pixelCrop.height;
 
@@ -90,10 +91,14 @@ export const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
       targetHeight
     );
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'));
+          return;
+        }
         resolve(blob);
-      }, 'image/jpeg', 0.8); // 0.8 quality to save space
+      }, 'image/jpeg', 0.7); // 0.7 quality is sufficient for small screens and much faster
     });
   };
 
@@ -101,34 +106,36 @@ export const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
     if (!image || !croppedAreaPixels) return;
 
     setUploading(true);
+    setUploadProgress(0);
     try {
       const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
       if (!croppedBlob) throw new Error('Failed to crop image');
 
       const fileName = `${id}_${Date.now()}.jpg`;
       const storageRef = ref(storage, `${folder}/${fileName}`);
-      const uploadTask = uploadBytesResumable(storageRef, croppedBlob);
-
-      uploadTask.on(
-        'state_changed',
-        null,
-        (error) => {
-          console.error("Upload error:", error);
-          setUploading(false);
-          alert("Upload failed. Please try again.");
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          onChange(downloadURL);
-          setUploading(false);
-          setShowCropper(false);
-          setImage(null);
-        }
-      );
-    } catch (error) {
-      console.error("Processing error:", error);
+      
+      console.log(`Starting upload to ${folder}/${fileName}...`);
+      
+      // Use uploadBytes for a simpler promise-based approach
+      const uploadResult = await uploadBytes(storageRef, croppedBlob);
+      console.log("Upload successful, getting download URL...");
+      
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+      
+      onChange(downloadURL);
       setUploading(false);
-      alert("Error processing image.");
+      setShowCropper(false);
+      setImage(null);
+    } catch (error: any) {
+      console.error("Upload/Processing error:", error);
+      setUploading(false);
+      let msg = "Upload failed.";
+      if (error.code === 'storage/unauthorized') {
+        msg = "Permission denied. Please ensure Firebase Storage is enabled in your console and rules allow writes.";
+      } else if (error.message.includes('network')) {
+        msg = "Network error. Please check your connection.";
+      }
+      alert(msg + " (" + (error.code || error.message) + ")");
     }
   };
 
@@ -228,10 +235,10 @@ export const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
                     className="flex-1 py-3 px-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors uppercase text-[11px] tracking-widest flex items-center justify-center gap-2"
                   >
                     {uploading ? (
-                      <>
+                      <div className="flex items-center gap-2">
                         <Loader2 size={16} className="animate-spin" />
-                        Uploading...
-                      </>
+                        <span>Uploading...</span>
+                      </div>
                     ) : (
                       <>
                         <Check size={16} />
