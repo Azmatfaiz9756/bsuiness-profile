@@ -66,13 +66,13 @@ function HeroSection() {
                 href="#directory"
                 className="w-full sm:w-auto bg-sky-500 hover:bg-sky-400 text-white font-black py-4 px-10 rounded-2xl transition-all shadow-xl shadow-sky-500/25 flex justify-center items-center text-base uppercase tracking-wider"
               >
-                Get Started
+                Get Started Free
               </a>
               <Link
                 to="/plans"
                 className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-black py-4 px-10 rounded-2xl transition-all flex justify-center items-center text-base uppercase tracking-wider"
               >
-                View Plans
+                Start 1-Month Trial
               </Link>
             </div>
 
@@ -272,6 +272,22 @@ function PromotionalShowcase() {
                 </div>
               </motion.div>
             ))}
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              viewport={{ once: true }}
+              className="md:col-span-2 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 p-8 rounded-3xl mt-4"
+            >
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Try it risk-free today</h3>
+                <p className="text-slate-300 font-medium">Join 500+ professionals this month and get full access to all Pro features with our 1-month free trial. No credit card required to start.</p>
+              </div>
+              <Link to="/plans" className="bg-white text-blue-600 font-black py-4 px-10 rounded-2xl transition-all hover:bg-blue-50 whitespace-nowrap uppercase tracking-widest text-sm shrink-0">
+                Start My Free Month
+              </Link>
+            </motion.div>
           </div>
 
           <motion.div

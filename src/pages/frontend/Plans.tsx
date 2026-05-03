@@ -29,7 +29,6 @@ export default function FrontendPlans() {
       try {
         const { doc, updateDoc } = await import('firebase/firestore');
         const { db } = await import('../../firebase');
-        // If the user has a profile, update their plan to Free. If not, they'll create it later.
         const userRef = doc(db, 'profiles', user.uid);
         const refCode = localStorage.getItem('dbc_referred_by');
         const updateData: any = { plan: plan.name, updatedAt: new Date().toISOString() };
@@ -43,8 +42,37 @@ export default function FrontendPlans() {
         alert('Could not start trial. Please try again or create a profile first.');
       }
     } else {
-        setSelectedPlan(plan);
-        setIsPaymentModalOpen(true);
+        // Simplified Trial Activation: 
+        // For this demo, we'll allow "activating" a trial directly 
+        // if they click "Start Free Trial" on Pro/Premium
+        const confirmTrial = window.confirm(`Start your 1-month FREE trial of the ${plan.name} plan? No credit card required.`);
+        if (confirmTrial) {
+          try {
+            const { doc, updateDoc } = await import('firebase/firestore');
+            const { db } = await import('../../firebase');
+            const userRef = doc(db, 'profiles', user.uid);
+            
+            // Calculate expiry (30 days from now)
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30);
+            
+            const updateData: any = { 
+              plan: plan.name, 
+              isTrial: true,
+              expiry: expiryDate.toISOString().split('T')[0],
+              updatedAt: new Date().toISOString() 
+            };
+            
+            await updateDoc(userRef, updateData);
+            alert(`Your 1-month free trial of ${plan.name} is now active! Expires on ${updateData.expiry}`);
+            window.location.href = '/dashboard';
+          } catch (err) {
+            console.error("Trial activation error:", err);
+            // Fallback to payment modal if profile doesn't exist
+            setSelectedPlan(plan);
+            setIsPaymentModalOpen(true);
+          }
+        }
     }
   };
 

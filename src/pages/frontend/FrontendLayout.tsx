@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { logout } from '../../firebase';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sparkles } from 'lucide-react';
 import { LoginModal } from '../../components/LoginModal';
 import toast from 'react-hot-toast';
 
@@ -64,6 +64,14 @@ export const FrontendLayout = () => {
   return (
     <div className="frontend-root w-full overflow-x-hidden relative">
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      
+      {/* Promotion Banner */}
+      {!isShop && (
+        <div className="bg-blue-600 text-white py-2 px-4 text-center text-[10px] md:text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap">
+          <span className="flex items-center gap-1"><Sparkles size={14} className="text-yellow-300 shrink-0" /> Limited Offer: Get 1-Month FREE Trial on all Premium Plans!</span>
+          <Link to="/plans" className="underline hover:text-blue-100 transition-colors shrink-0">Claim Now →</Link>
+        </div>
+      )}
       
       {/* Desktop & Mobile Header */}
       {!isShop && (
