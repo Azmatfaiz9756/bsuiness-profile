@@ -39,6 +39,7 @@ import FrontendLeaderboard from './pages/frontend/Leaderboard';
 import PrivacyPolicy from './pages/frontend/PrivacyPolicy';
 import TermsConditions from './pages/frontend/TermsConditions';
 import ContactUs from './pages/frontend/ContactUs';
+import FeaturesDetail from './pages/frontend/FeaturesDetail';
 import FullProfile from './pages/profile/FullProfile';
 
 import AdminDNSHelp from './pages/admin/DNSHelp';
@@ -125,6 +126,7 @@ export default function App() {
               <Route path="privacy" element={<PrivacyPolicy />} />
               <Route path="terms" element={<TermsConditions />} />
               <Route path="contact" element={<ContactUs />} />
+              <Route path="features" element={<FeaturesDetail />} />
             </Route>
 
             {/* Business Owner Dashboard */}

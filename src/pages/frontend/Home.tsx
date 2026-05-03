@@ -16,7 +16,8 @@ import {
   Filter,
   Loader2,
   MessageSquare,
-  Bot
+  Bot,
+  DollarSign
 } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -34,6 +35,87 @@ import { db } from "../../firebase";
 
 import ProfileChatbot from "../profile/components/ProfileChatbot";
 import { maskProfileForDirectory } from "../../lib/privacy";
+
+function ROISummary() {
+  return (
+    <div className="py-24 bg-white border-b border-slate-100">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+           <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 font-bold text-[10px] tracking-widest uppercase mb-6 border border-emerald-100">
+                <DollarSign size={14} /> High ROI Networking
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">Save Money. <br/> <span className="text-blue-600">Save the Planet.</span></h2>
+              <p className="text-lg text-slate-500 mb-8 leading-relaxed font-medium">
+                Traditional paper cards cost thousands and destroy forests. Our digital cards are a one-time 
+                setup that pays for itself in just 90 days.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-8 mb-10">
+                 <div className="space-y-2">
+                    <div className="text-3xl font-black text-slate-900">2,000 AED+</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-tight">Yearly Savings <br/> (Per 10 Users)</div>
+                 </div>
+                 <div className="space-y-2">
+                    <div className="text-3xl font-black text-emerald-500">100%</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-tight">Eco-Friendly <br/> (Zero Waste)</div>
+                 </div>
+              </div>
+
+              <Link to="/features" className="group inline-flex items-center gap-4 text-blue-600 font-black uppercase tracking-widest text-sm">
+                View Full ROI Calculator <span className="p-2 bg-blue-50 rounded-full group-hover:translate-x-2 transition-transform">→</span>
+              </Link>
+           </div>
+
+           <div className="bg-slate-50 rounded-[3rem] p-8 md:p-12 border border-slate-100 relative shadow-2xl">
+              <div className="absolute top-8 right-8 flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                 <BarChart3 size={12} /> Live Dashboard Preview
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-8 border-b border-slate-200 pb-4">Efficiency Impact</h3>
+              
+              <div className="space-y-8">
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-500 shrink-0 border border-slate-200">
+                       <Smartphone size={24} />
+                    </div>
+                    <div>
+                       <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Connect Rate</div>
+                       <div className="text-lg font-black text-slate-900">4.5x Higher than Paper</div>
+                    </div>
+                 </div>
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-500 shrink-0 border border-slate-200">
+                       <Zap size={24} />
+                    </div>
+                    <div>
+                       <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Lead Sync Time</div>
+                       <div className="text-lg font-black text-slate-900">Instant (Real-time CRM)</div>
+                    </div>
+                 </div>
+                 <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-amber-500 shrink-0 border border-slate-200">
+                       <Bot size={24} />
+                    </div>
+                    <div>
+                       <div className="text-xs font-black text-slate-400 uppercase tracking-widest">Staffing Costs</div>
+                       <div className="text-lg font-black text-slate-900">AI Replaces Human Admin</div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="mt-12 bg-white rounded-3xl p-6 border border-slate-200 flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 bg-emerald-500 rounded-full animate-ping"></div>
+                    <span className="text-xs font-bold text-slate-600">Active Campaign ROI: 420%</span>
+                 </div>
+                 <div className="text-xs font-black text-blue-600 uppercase tracking-widest">Verified</div>
+              </div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HeroSection() {
   const titleWords = ["DIGITAL", "CONNECT."];
@@ -297,95 +379,99 @@ function HeroSection() {
 function PromotionalShowcase() {
   const benefits = [
     {
-      title: "Interactive Digital Identity",
-      desc: "Share your contact info, social links, and portfolio with a single tap using our NFC-enabled smart cards.",
-      icon: <Share2 className="text-amber-500" size={24} />,
+      title: "Smart Lead Capture",
+      desc: "Stop losing clients. Every time someone 'Connects', their details are automatically saved to your Private CRM dashboard for instant follow-up.",
+      icon: <Zap className="text-blue-500" size={24} />,
     },
     {
-      title: "AI-Powered Chat Assistant",
-      desc: "Let your own AI virtual assistant answer client inquiries, capture leads, and book appointments 24/7 directly from your profile.",
-      icon: <Bot className="text-amber-500" size={24} />,
+      title: "AI Virtual Assistant",
+      desc: "Turn your profile into a 24/7 store. Your AI chatbot answers FAQs, shares pricing, and collects requirements while you focus on work.",
+      icon: <Bot className="text-blue-500" size={24} />,
     },
     {
-      title: "Real-time Analytics",
-      desc: "Track profile views, tap engagement, and measure the exact ROI of your networking efforts.",
-      icon: <BarChart3 className="text-amber-500" size={24} />,
+      title: "One-Tap Connectivity",
+      desc: "Forget manual typing. Share your contact, social media, and portfolio via NFC or QR code. It's the fastest way to save a lead—period.",
+      icon: <Smartphone className="text-blue-500" size={24} />,
     },
     {
-      title: "Customizable Premium Branding",
-      desc: "Choose from multiple professional templates like 'Executive Dark' and personalize them to match your unique brand identity.",
-      icon: <Sparkles className="text-amber-500" size={24} />,
+      title: "Full Business Suite",
+      desc: "Integrate Appointment Booking, E-commerce Shops, and Multi-language support to serve customers globally without any technical friction.",
+      icon: <LayoutGrid className="text-blue-500" size={24} />,
     },
   ];
 
   return (
     <div className="py-24 bg-slate-950 border-b border-slate-900 overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -z-10 -translate-x-1/2 translate-y-1/2"></div>
-      
+      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-amber-500 font-bold text-sm tracking-wide uppercase mb-4 border border-slate-800">
-            <Sparkles size={16} /> Premium Business Profiles
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 text-blue-400 font-bold text-[10px] tracking-widest uppercase mb-4 border border-slate-800">
+            <Sparkles size={16} className="animate-pulse" /> The Future of Networking
           </div>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
-            More than just a business card. <br className="hidden md:block"/>
-            <span className="text-amber-500">It's your AI-powered business toolkit.</span>
+          <h2 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight leading-[1.05]">
+            It's not a card. <br className="hidden md:block"/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">It's a lead magnet.</span>
           </h2>
           <p className="text-lg text-slate-400 leading-relaxed font-medium">
-            See why leading luxury professionals and executives trust DBC to manage their digital presence, automate lead capture, and stand out from the crowd.
+            Conventional paper cards go to the bin. DBC profiles live on the phone, capture lead data, and use AI to convert visitors into customers.
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 text-center lg:text-left">
-          {/* Benefits List */}
-          <div className="w-full flex flex-col gap-8 md:grid md:grid-cols-2">
-            {benefits.map((benefit, index) => (
-              <motion.div 
-                key={index}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                viewport={{ once: true }}
-                className="flex gap-4 group items-start text-left bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:bg-slate-800 transition-colors"
-              >
-                <div className="shrink-0 mt-1">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center group-hover:scale-110 group-hover:bg-amber-500/20 group-hover:shadow-lg transition-all duration-300">
-                    {benefit.icon}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-amber-500 transition-colors">{benefit.title}</h3>
-                  <p className="text-slate-400 leading-relaxed font-medium text-sm">{benefit.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+          {benefits.map((benefit, index) => (
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="md:col-span-2 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 p-8 rounded-3xl mt-4"
+              className="bg-slate-900/50 border border-slate-800 p-8 rounded-[2rem] hover:border-blue-500/30 hover:bg-slate-800/80 transition-all group"
             >
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Try it risk-free today</h3>
-                <p className="text-slate-300 font-medium">Join 500+ professionals this month and get full access to all Pro features with our 1-month free trial. No credit card required to start.</p>
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 text-blue-400 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                {benefit.icon}
               </div>
-              <Link to="/plans" className="bg-white text-blue-600 font-black py-4 px-10 rounded-2xl transition-all hover:bg-blue-50 whitespace-nowrap uppercase tracking-widest text-sm shrink-0">
-                Start My Free Month
-              </Link>
+              <h3 className="text-xl font-black text-white mb-3 tracking-tight">{benefit.title}</h3>
+              <p className="text-slate-400 text-sm font-medium leading-relaxed">{benefit.desc}</p>
             </motion.div>
-          </div>
+          ))}
+        </div>
 
-          <motion.div
-             initial={{ opacity: 0 }}
-             whileInView={{ opacity: 1 }}
-             transition={{ delay: 0.6 }}
-             viewport={{ once: true }}
-             className="mt-8 pt-8 border-t border-slate-800 w-full flex justify-center lg:justify-end col-span-2 hidden"
-          >
-          </motion.div>
+        <BusinessComparison />
+      </div>
+    </div>
+  );
+}
+
+function BusinessComparison() {
+  const comparison = [
+    { label: "Updates", paper: "Impossible (Need Reprint)", dbc: "Instant (Live Changes)" },
+    { label: "Data Quality", paper: "Zero Tracking", dbc: "Real-time Analytics" },
+    { label: "Lead Capture", paper: "Manual / Forgotten", dbc: "Auto-Saved to CRM" },
+    { label: "Assistant", paper: "None", dbc: "AI 24/7 Chatbot" },
+    { label: "Environment", paper: "Trees Destroyed", dbc: "100% Eco-Friendly" },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto rounded-[2.5rem] overflow-hidden bg-slate-900/80 border border-slate-800 shadow-3xl">
+      <div className="bg-slate-800/50 p-8 border-b border-slate-700/50 text-center">
+        <h3 className="text-2xl font-black text-white uppercase tracking-tight">The Modern Standard</h3>
+        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-1">Comparing Traditional Cards vs. Smart Profiles</p>
+      </div>
+      <div className="p-4 sm:p-8">
+        <div className="space-y-4">
+          {comparison.map((item, idx) => (
+            <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center py-4 border-b border-slate-800 last:border-0">
+               <div className="text-slate-200 font-bold text-sm uppercase tracking-wide">{item.label}</div>
+               <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
+                  <div className="w-4 h-4 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-[8px] font-black italic">!</div>
+                  {item.paper}
+               </div>
+               <div className="flex items-center gap-2 text-blue-400 text-xs font-black uppercase tracking-tight">
+                  <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">✓</div>
+                  {item.dbc}
+               </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -497,6 +583,55 @@ function ChatbotShowcase() {
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-400/20 rounded-full blur-[40px] z-0"></div>
               <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-400/20 rounded-full blur-[40px] z-0"></div>
            </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WorkflowSection() {
+  const steps = [
+    {
+      title: "Build Your Profile",
+      desc: "Customize your professional look, add services, link socials, and train your AI assistant in minutes.",
+      icon: <LayoutGrid size={32} />,
+      color: "bg-blue-500"
+    },
+    {
+      title: "Share with a Tap",
+      desc: "Use your NFC card or unique QR code to instantly share your profile. No apps required by the recipient.",
+      icon: <Smartphone size={32} />,
+      color: "bg-indigo-500"
+    },
+    {
+      title: "Grow Your Network",
+      desc: "Manage leads, view analytics, and let your AI staff book meetings while you scale your business.",
+      icon: <BarChart3 size={32} />,
+      color: "bg-emerald-500"
+    }
+  ];
+
+  return (
+    <div className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Three steps to smart networking.</h2>
+          <p className="text-slate-500 font-medium">Getting started is faster than printing a single paper card.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+          <div className="hidden md:block absolute top-12 left-0 right-0 h-0.5 bg-slate-100 -z-10"></div>
+          {steps.map((step, idx) => (
+            <div key={idx} className="flex flex-col items-center text-center">
+               <div className={`w-24 h-24 rounded-3xl ${step.color} text-white flex items-center justify-center mb-8 shadow-2xl shadow-${step.color.split('-')[1]}-200 relative`}>
+                  <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-900 border-4 border-white flex items-center justify-center text-xs font-black">
+                    {idx + 1}
+                  </div>
+                  {step.icon}
+               </div>
+               <h3 className="text-xl font-black text-slate-900 mb-4 uppercase tracking-tight">{step.title}</h3>
+               <p className="text-slate-500 text-sm font-medium leading-relaxed max-w-xs">{step.desc}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -628,11 +763,32 @@ export default function FrontendHome() {
         <link rel="canonical" href="https://dbc.network" />
       </Helmet>
 
+      {/* Limited Offer Banner */}
+      <div className="bg-blue-600 text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden">
+        <motion.div 
+          animate={{ scale: [1, 1.05, 1] }} 
+          transition={{ duration: 1, repeat: Infinity }}
+          className="bg-white text-blue-600 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+        >
+          Limited Offer
+        </motion.div>
+        <p className="text-sm font-black uppercase tracking-tight m-0">Hurry Up! Get 1 Month FREE Trial on PRO Version</p>
+        <Link to="/plans" className="text-white border border-white/40 hover:bg-white hover:text-blue-600 px-4 py-1 rounded-full text-[10px] font-black transition-all uppercase tracking-widest">
+          Claim Now
+        </Link>
+      </div>
+
       {/* Animated Hero */}
       <HeroSection />
 
+      {/* ROI Calculator Overview Section */}
+      <ROISummary />
+
       {/* Promotional Showcase */}
       <PromotionalShowcase />
+      
+      {/* How it Works */}
+      <WorkflowSection />
       
       {/* AI Chatbot Section */}
       <ChatbotShowcase />

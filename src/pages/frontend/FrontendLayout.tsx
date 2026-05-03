@@ -128,6 +128,7 @@ export const FrontendLayout = () => {
           <div className="nav-links hidden md:flex items-center gap-6">
             <Link to="/" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/')}`}>Directory</Link>
             <Link to="/templates" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/templates')}`}>Templates</Link>
+            <Link to="/features" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/features')}`}>Features</Link>
             <Link to="/shop" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/shop')}`}>Shop</Link>
             {user && (
               <Link to="/wallet" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/wallet')}`}>Wallet</Link>
@@ -190,10 +191,11 @@ export const FrontendLayout = () => {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && !isShop && (
-        <div className="md:hidden fixed inset-0 top-[64px] bg-white z-40 overflow-y-auto border-t border-slate-100 shadow-xl flex flex-col">
+        <div className="md:hidden fixed inset-0 top-[64px] bg-white z-[60] overflow-y-auto border-t border-slate-100 shadow-xl flex flex-col">
           <div className="flex flex-col p-4 gap-2">
             <Link onClick={closeMenu} to="/" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/')}`}>Directory</Link>
             <Link onClick={closeMenu} to="/templates" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/templates')}`}>Templates</Link>
+            <Link onClick={closeMenu} to="/features" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/features')}`}>Features</Link>
             <Link onClick={closeMenu} to="/shop" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/shop')}`}>Shop</Link>
             {user && (
               <Link onClick={closeMenu} to="/wallet" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/wallet')}`}>Wallet</Link>

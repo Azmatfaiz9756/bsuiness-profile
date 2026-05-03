@@ -42,10 +42,7 @@ export default function FrontendPlans() {
         console.error("Trial start error:", err);
         alert('Could not start trial. Please try again or create a profile first.');
       }
-    } else {
-        // Simplified Trial Activation: 
-        // For this demo, we'll allow "activating" a trial directly 
-        // if they click "Start Free Trial" on Pro/Premium
+    } else if (plan.name === 'Pro') {
         const confirmTrial = window.confirm(`Start your 1-month FREE trial of the ${plan.name} plan? No credit card required.`);
         if (confirmTrial) {
           try {
@@ -53,7 +50,6 @@ export default function FrontendPlans() {
             const { db } = await import('../../firebase');
             const userRef = doc(db, 'profiles', user.uid);
             
-            // Calculate expiry (30 days from now)
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + 30);
             
@@ -69,11 +65,14 @@ export default function FrontendPlans() {
             window.location.href = '/dashboard';
           } catch (err) {
             console.error("Trial activation error:", err);
-            // Fallback to payment modal if profile doesn't exist
             setSelectedPlan(plan);
             setIsPaymentModalOpen(true);
           }
         }
+    } else {
+        // For Premium and Enterprise, go straight to payment
+        setSelectedPlan(plan);
+        setIsPaymentModalOpen(true);
     }
   };
 
@@ -86,11 +85,11 @@ export default function FrontendPlans() {
       />
       
       <div className="text-center mb-10">
-        <div className="inline-block bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5 text-xs font-bold text-emerald-700 mb-4 tracking-wide uppercase">
-          {trialPeriod} FREE TRIAL
+        <div className="inline-block bg-blue-50 border border-blue-200 rounded-full px-4 py-1.5 text-xs font-bold text-blue-700 mb-4 tracking-wide uppercase">
+          LIMITED OFFER: 1 MONTH {trialPeriod} TRIAL ON PRO
         </div>
         <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">Simple, transparent pricing</h2>
-        <p className="text-sm md:text-base text-slate-500 max-w-2xl mx-auto">No hidden fees. Cancel anytime. All plans include {trialPeriod.toLowerCase()} free trial to explore all features.</p>
+        <p className="text-sm md:text-base text-slate-500 max-w-2xl mx-auto">Choose the plan that fits your growth. Get started with our Pro plan trial today.</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-8">
@@ -123,7 +122,7 @@ export default function FrontendPlans() {
             </div>
             
             <button onClick={() => handleStartTrial(plan)} className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>
-              Start Free Trial
+              {plan.price === 'Free' ? 'Choose Basic' : (plan.name === 'Pro' ? 'Start Free Trial' : 'Buy Now')}
             </button>
           </div>
         ))}
