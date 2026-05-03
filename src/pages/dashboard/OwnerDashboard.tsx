@@ -10,6 +10,7 @@ import { ProxyGoogleGenAI } from '../../lib/gemini';
 import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
 import { PaymentModal } from '../../components/PaymentModal';
+import { ImageUploadCrop } from '../../components/ImageUploadCrop';
 
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
 
@@ -1106,17 +1107,26 @@ export default function OwnerDashboard() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo URL {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
-                      <div className="flex gap-3">
-                        <input type="text" disabled={isFreePlan} placeholder="https://..." value={formData.photoUrl || ''} onChange={e => setFormData({...formData, photoUrl: e.target.value})} className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
-                        <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                           {formData.photoUrl ? <img src={formData.photoUrl} className="w-full h-full object-cover" /> : <div className="text-[10px] text-slate-400">No Img</div>}
-                        </div>
-                      </div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <ImageUploadCrop 
+                        value={formData.photoUrl || ''} 
+                        onChange={(url) => setFormData({...formData, photoUrl: url})}
+                        id={formData.id || user.uid}
+                        circular={true}
+                        disabled={isFreePlan}
+                      />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image URL {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
-                      <input type="text" disabled={isFreePlan} placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <ImageUploadCrop 
+                        value={formData.bannerUrl || ''} 
+                        onChange={(url) => setFormData({...formData, bannerUrl: url})}
+                        id={`banner-${formData.id || user.uid}`}
+                        folder="banners"
+                        aspectRatio={16/9}
+                        circular={false}
+                        disabled={isFreePlan}
+                      />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
@@ -1469,7 +1479,14 @@ export default function OwnerDashboard() {
                                <input type="text" placeholder="Name" value={member.name || ''} onChange={e => { const t = [...formData.team]; t[index].name = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
                                <input type="text" placeholder="Role/Title" value={member.role || ''} onChange={e => { const t = [...formData.team]; t[index].role = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
                                <div className="sm:col-span-2">
-                                <input type="text" placeholder="Photo URL" value={member.image || ''} onChange={e => { const t = [...formData.team]; t[index].image = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Team Member Photo</label>
+                                 <ImageUploadCrop 
+                                   value={member.image || ''} 
+                                   onChange={(url) => { const t = [...formData.team]; t[index].image = url; setFormData({...formData, team: t}); }}
+                                   id={`team-${index}-${formData.id || user.uid}`}
+                                   folder="team"
+                                   circular={true}
+                                 />
                                </div>
                              </div>
                              <textarea placeholder="Short Bio (Optional)" value={member.desc || ''} onChange={e => { const t = [...formData.team]; t[index].desc = e.target.value; setFormData({...formData, team: t}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
@@ -1503,7 +1520,15 @@ export default function OwnerDashboard() {
                              </div>
                              <textarea placeholder="Product Description" value={prod.description || ''} onChange={e => { const p = [...formData.products]; p[index].description = e.target.value; setFormData({...formData, products: p}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
                              <div className="grid grid-cols-1 gap-3">
-                               <input type="url" placeholder="Image URL (e.g. https://domain.com/img.jpg)" value={prod.image || ''} onChange={e => { const p = [...formData.products]; p[index].image = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Product Photo</label>
+                               <ImageUploadCrop 
+                                 value={prod.image || ''} 
+                                 onChange={(url) => { const p = [...formData.products]; p[index].image = url; setFormData({...formData, products: p}); }}
+                                 id={`product-${index}-${formData.id || user.uid}`}
+                                 folder="products"
+                                 circular={false}
+                                 aspectRatio={1}
+                               />
                                <input type="url" placeholder="External Buy Link (Optional)" value={prod.link || ''} onChange={e => { const p = [...formData.products]; p[index].link = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
                              </div>
                              <div className="flex justify-end mt-2">
