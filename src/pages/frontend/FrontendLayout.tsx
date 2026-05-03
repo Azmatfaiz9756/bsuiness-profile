@@ -114,14 +114,14 @@ export const FrontendLayout = () => {
               <span className="nav-logo-text font-black text-slate-900 whitespace-nowrap leading-tight text-lg tracking-tighter uppercase italic">
                 Digital <span className="text-blue-600">Connect</span>
               </span>
-              <span className="text-[8px] text-slate-400 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES</span>
+              <span className="text-[8px] text-slate-400 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
             </div>
           </Link>
 
           {/* Centered Mobile Title */}
           <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[50%]">
             <span className="font-black text-slate-900 whitespace-nowrap leading-tight text-sm tracking-tighter uppercase italic">Digital <span className="text-blue-600">Connect</span></span>
-            <span className="text-[7px] text-slate-400 font-bold tracking-widest uppercase truncate w-full">HAADI GLOBAL</span>
+            <span className="text-[7px] text-slate-400 font-bold tracking-widest uppercase truncate w-full">HAADI GLOBAL VENTURES FZE LLC</span>
           </Link>
           
           {/* Desktop Links */}

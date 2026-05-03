@@ -10,6 +10,41 @@ export default function PrivacyPolicy() {
       </Helmet>
       
       <h1 className="text-4xl font-black mb-8 text-slate-900">Privacy Policy</h1>
+      
+      {/* Multi-language Security Highlight */}
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-blue-600 mb-1">
+            <span className="text-lg font-bold">English</span>
+          </div>
+          <h3 className="font-bold text-slate-900 text-sm italic underline">Security and Privacy</h3>
+          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            Security and privacy are our top priorities. Your data is encrypted and stored securely. 
+            We do not share your information with third parties without your consent.
+          </p>
+        </div>
+        <div className="space-y-2 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6">
+          <div className="flex items-center gap-2 text-rose-600 mb-1">
+            <span className="text-lg font-bold">हिंदी (Hindi)</span>
+          </div>
+          <h3 className="font-bold text-slate-900 text-sm italic underline">सुरक्षा और गोपनीयता</h3>
+          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            सुरक्षा और गोपनीयता हमारी सर्वोच्च प्राथमिकताएं हैं। आपका डेटा एन्क्रिप्ट किया गया है और 
+            सुरक्षित रूप से संग्रहीत किया गया है। हम आपकी सहमति के बिना आपकी जानकारी तीसरे पक्ष के साथ साझा नहीं करते हैं।
+          </p>
+        </div>
+        <div className="space-y-2 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6" dir="rtl">
+          <div className="flex items-center gap-2 text-emerald-600 mb-1">
+            <span className="text-lg font-bold">العربية (Arabic)</span>
+          </div>
+          <h3 className="font-bold text-slate-900 text-sm italic underline">الأمن والخصوصية</h3>
+          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            الأمن والخصوصية هما على رأس أولوياتنا. بياناتك مشفرة ومخزنة بشكل آمن. 
+            نحن لا نشارك معلوماتك مع أطراف ثالثة دون موافقتك.
+          </p>
+        </div>
+      </div>
+
       <p className="text-slate-500 mb-8">Last updated: {new Date().toLocaleDateString()}</p>
       
       <div className="space-y-6 text-sm leading-relaxed">

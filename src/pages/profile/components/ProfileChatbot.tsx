@@ -5,36 +5,12 @@ import { db } from '../../../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { CHAT_LANGUAGES } from "../../../lib/languages";
 import { useAppContext } from "../../../context/AppContext";
+import { ProxyGoogleGenAI } from '../../../lib/gemini';
 
 
 
 // Types corresponding to GoogleGenAI
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
-
-class ProxyGoogleGenAI {
-  apiKey: string;
-  constructor(options: { apiKey?: string } = {}) {
-    this.apiKey = options.apiKey || '';
-  }
-  models = {
-    generateContent: async (args: any) => {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
-      
-      const resp = await fetch(`${apiUrl}/api/gemini/generateContent`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(args)
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'AI generation failed');
-      return data;
-    }
-  };
-}
 
 export default function ProfileChatbot({ profile }: { profile: any }) {
   const { user } = useAppContext();
@@ -50,6 +26,8 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const [showIdentityForm, setShowIdentityForm] = useState(false);
   const [identityForm, setIdentityForm] = useState({ name: '', phone: '' });
   const [visitorDetails, setVisitorDetails] = useState<{name: string, phone: string, id: string} | null>(null);
+  const [routingStatus, setRoutingStatus] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const lsPrefix = `chat_${profile?.id}_${user?.uid || 'guest'}`;
   const lsKeyLang = `${lsPrefix}_lang`;
@@ -82,9 +60,18 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
 `;
     }
 
+    const translationInfo = `
+TRANSLATION FEATURES:
+- You are a polyglot AI assistant. You can understand and translate between any languages.
+- You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+- If the user sends a message in a different language, translate it internally, then respond in the target language.
+- If asked specifically to translate something, perform the translation accurately.
+`;
+
     if (langId === 'hi') {
       return `Aap ${profile?.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
 
+${translationInfo}
 ${stockContext}
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
@@ -117,6 +104,7 @@ Business Details:
     
     if (langId === 'ar') {
       return `أنت مساعد ذكي محترف لـ ${profile?.name}.
+${translationInfo}
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة بيضاء مهذبة).
 
 ${stockContext}
@@ -134,6 +122,7 @@ ${stockContext}
 
     const lang = CHAT_LANGUAGES.find(l => l.id === langId);
     return `You are a professional AI business assistant for ${profile?.name}.
+${translationInfo}
 Your tone should be helpful, clear, and professional.
 You MUST communicate primarily in ${lang?.label || langId}.
 
@@ -292,6 +281,79 @@ Assist visitors with inquiries about the business, services, and contact informa
     return () => unsubscribe();
   }, [liveChatSessionId]);
 
+  // Enterprise Routing Logic
+  useEffect(() => {
+    if (!liveChatSessionId || !profile) return;
+
+    const sessionRef = doc(db, 'chat_sessions', liveChatSessionId);
+    let timer: any;
+
+    const unsubscribe = onSnapshot(sessionRef, async (snapshot) => {
+      if (!snapshot.exists()) return;
+      const data = snapshot.data();
+      
+      if (data.status === 'Queued' && data.routingLevel === 'Priority') {
+        setRoutingStatus('Trying to connect to staff member...');
+        if (countdown === null) setCountdown(20);
+
+        if (!timer) {
+          timer = setTimeout(async () => {
+             // Fallback to other available team members
+             try {
+               const { query, collection, where, getDocs } = await import('firebase/firestore');
+               // Find Enterprise owner ID
+               const enterpriseOwnerId = profile.ownerId || (profile.id !== 'platform' ? profile.id : null);
+               if (!enterpriseOwnerId) return;
+
+               const availableAgentsQuery = query(
+                 collection(db, 'profiles'),
+                 where('ownerId', '==', enterpriseOwnerId),
+                 where('availabilityStatus', '==', 'available'),
+                 where('isSubProfile', '==', true)
+               );
+               
+               const agentSnaps = await getDocs(availableAgentsQuery);
+               const availableAgentIds = agentSnaps.docs
+                 .map(d => d.id)
+                 .filter(id => id !== profile.id); // Exclude the priority agent who didn't respond
+
+               if (availableAgentIds.length > 0) {
+                 await updateDoc(sessionRef, {
+                   routingLevel: 'Fallback',
+                   fallbackAgentIds: availableAgentIds,
+                   updatedAt: serverTimestamp()
+                 });
+                 setRoutingStatus('Staff member busy, connecting to available team...');
+                 setCountdown(null);
+               } else {
+                 setRoutingStatus('All staff busy, please wait or leave a message.');
+               }
+             } catch (e) {
+               console.error("Routing Fallback Error:", e);
+             }
+          }, 20000);
+        }
+      } else if (data.status === 'Active') {
+        setRoutingStatus('Connected to Agent');
+        setCountdown(null);
+        if (timer) clearTimeout(timer);
+      }
+    });
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [liveChatSessionId, profile]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown !== null && countdown > 0) {
+      const t = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [countdown]);
+
   const startLiveChat = async (customerName: string, customerEmail?: string) => {
     setIsLiveAgentRequesting(true);
     try {
@@ -303,6 +365,9 @@ Assist visitors with inquiries about the business, services, and contact informa
         customerEmail: customerEmail || '',
         customerLang: selectedLang || 'en',
         status: 'Queued',
+        routingLevel: 'Priority',
+        priorityAgentId: profile.id,
+        assignedAgentId: null,
         lastMessage: 'Requested human agent',
         updatedAt: serverTimestamp()
       });
@@ -401,7 +466,7 @@ Assist visitors with inquiries about the business, services, and contact informa
       }));
 
       // Use recommended model
-      const modelName = 'gemini-2.5-flash';
+      const modelName = 'gemini-3-flash-preview';
       const systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [
@@ -721,6 +786,17 @@ Assist visitors with inquiries about the business, services, and contact informa
 
             {selectedLang && !showIdentityForm && (
               <>
+                {routingStatus && (
+                  <div style={{ padding: '8px 16px', background: '#eff6ff', borderTop: '1px solid #dbeafe', display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{routingStatus}</span>
+                     </div>
+                     {countdown !== null && countdown > 0 && (
+                        <div style={{ fontSize: 9, color: '#64748b', fontWeight: 500 }}>Please wait {countdown} seconds while we connect you...</div>
+                     )}
+                  </div>
+                )}
                 {messages.length <= 1 && (
                   <div style={{ padding: '0 16px 12px', background: '#f8fafc' }}>
                     <button 

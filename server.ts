@@ -319,7 +319,6 @@ async function startServer() {
   // Google Gemini AI Endpoint
   app.post("/api/gemini/generateContent", async (req, res) => {
     try {
-      // Dynamic import because @google/genai is only used for this endpoint
       const { GoogleGenAI } = await import("@google/genai");
       let clientApiKey = req.headers.authorization?.split(' ')[1];
       if (clientApiKey) clientApiKey = clientApiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
@@ -331,26 +330,43 @@ async function startServer() {
       
       if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
         console.error("[Gemini] API Key is empty or missing in environment variables.");
-        return res.status(500).json({ error: "Gemini API key not configured on server." });
+        return res.status(500).json({ error: "Gemini API key not configured on server. Please use Admin Settings to set your key." });
       }
 
-      console.log(`[Gemini Debug] Priority Pick - Raw Auth Header: ${req.headers.authorization}`);
-      const ai = new GoogleGenAI({ apiKey });
+      const genAI = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
-      console.log(`[Gemini] GenerateContent called. Requested model: ${model}`);
-      const response = await ai.models.generateContent({
-        model,
-        contents,
-        config
+      
+      console.log(`[Gemini] GenerateContent called. Model: ${model || 'gemini-1.5-flash'}`);
+      
+      const response = await genAI.models.generateContent({
+        model: model || "gemini-1.5-flash",
+        contents: contents,
+        config: config
       });
-      // Return specific fields so client code correctly sees text and functionCalls
+
+      let text = "";
+      try {
+        text = response.text || "";
+      } catch (e) {
+        // text can throw if there are only function calls or issues
+        const firstPart = response.candidates?.[0]?.content?.parts?.[0];
+        if (firstPart && 'text' in firstPart) {
+          text = (firstPart as any).text || "";
+        }
+      }
+
+      // Extract function calls if any
+      const functionCalls = response.candidates?.[0]?.content?.parts
+        ?.filter(part => !!part.functionCall)
+        ?.map(part => part.functionCall);
+
       res.json({
-        text: response.text,
-        functionCalls: response.functionCalls,
+        text: text,
+        functionCalls: functionCalls,
         candidates: response.candidates
       });
     } catch (error: any) {
-      console.error("Gemini proxy error:", error);
+      console.error("Gemini server error:", error);
       let errorMsg = error.message || "Failed to generate AI response";
       // Try to parse the JSON error from Google to make it cleaner
       try {
@@ -365,9 +381,7 @@ async function startServer() {
             }
           }
         }
-      } catch (e) {
-        // keep original if parsing fails
-      }
+      } catch (e) {}
       res.status(500).json({ error: errorMsg });
     }
   });

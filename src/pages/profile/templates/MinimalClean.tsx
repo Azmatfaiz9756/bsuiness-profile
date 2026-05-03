@@ -147,7 +147,7 @@ export default function MinimalClean({
       style={{
         background: "#fafafa",
         minHeight: "100vh",
-        paddingBottom: 60,
+        paddingBottom: 100,
         fontFamily: "Inter, sans-serif",
       }}
     >
@@ -266,7 +266,7 @@ export default function MinimalClean({
             {profile.name}
             {(profile.isVerified ||
               profile.plan === "Pro" ||
-              profile.plan === "Enterprise") && (
+              profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
                 <img 
                   src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
@@ -363,27 +363,29 @@ export default function MinimalClean({
                 <Send size={16} /> Share
               </button>
             </div>
-            <Link
-              to="/referrals"
-              style={{
-                width: "100%",
-                background: "#f4f4f5",
-                color: "#71717a",
-                padding: "12px",
-                borderRadius: 999,
-                fontWeight: 600,
-                cursor: "pointer",
-                fontSize: 14,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                textDecoration: "none",
-                border: "1px solid #e4e4e7",
-              }}
-            >
-              <Share2 size={16} /> Refer & Earn Rewards
-            </Link>
+            {!profile.plan?.includes("Enterprise") && (
+              <Link
+                to="/referrals"
+                style={{
+                  width: "100%",
+                  background: "#f4f4f5",
+                  color: "#71717a",
+                  padding: "12px",
+                  borderRadius: 999,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  textDecoration: "none",
+                  border: "1px solid #e4e4e7",
+                }}
+              >
+                <Share2 size={16} /> Refer & Earn Rewards
+              </Link>
+            )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
             {profile.address && (
@@ -1845,6 +1847,7 @@ export default function MinimalClean({
           >
             Get My Free Card
           </Link>
+          <div style={{ height: 100 }}></div>
         </div>
 
         <ProfileChatbot profile={profile} />

@@ -139,7 +139,7 @@ export default function ExecutiveDark({
       style={{
         background: "#000000",
         minHeight: "100vh",
-        paddingBottom: 60,
+        paddingBottom: 100,
         fontFamily: "Inter, sans-serif",
       }}
     >
@@ -274,7 +274,7 @@ export default function ExecutiveDark({
             {profile.name}
             {(profile.isVerified ||
               profile.plan === "Pro" ||
-              profile.plan === "Enterprise") && (
+              profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
                 <img 
                   src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
@@ -427,29 +427,31 @@ export default function ExecutiveDark({
               marginTop: 24,
             }}
           >
-            <Link
-              to="/referrals"
-              style={{
-                width: "100%",
-                background: "#b45309",
-                color: "#fff",
-                border: "none",
-                padding: "12px",
-                borderRadius: 4,
-                fontWeight: 700,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                textDecoration: "none",
-                fontSize: 14,
-                textTransform: 'uppercase',
-                letterSpacing: 1
-              }}
-            >
-              <Share2 size={16} /> Refer & Earn
-            </Link>
+            {!profile.plan?.includes("Enterprise") && (
+              <Link
+                to="/referrals"
+                style={{
+                  width: "100%",
+                  background: "#b45309",
+                  color: "#fff",
+                  border: "none",
+                  padding: "12px",
+                  borderRadius: 4,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  textDecoration: "none",
+                  fontSize: 14,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1
+                }}
+              >
+                <Share2 size={16} /> Refer & Earn
+              </Link>
+            )}
             <div style={{ display: "flex", gap: 8, width: "100%" }}>
               <button
                 onClick={handleSave}
@@ -1050,7 +1052,7 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+          {!profile.plan?.includes("Enterprise") && profile.bankAccounts && profile.bankAccounts.length > 0 && (
             <SectionContainer title="Payments" icon={<Wallet size={18} />}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
@@ -1331,10 +1333,11 @@ export default function ExecutiveDark({
               </button>
             </div>
           </SectionContainer>
-          <SectionContainer
-            title="Business Details"
-            icon={<Wallet size={18} />}
-          >
+          {!profile.plan?.includes("Enterprise") && (
+            <SectionContainer
+              title="Business Details"
+              icon={<Wallet size={18} />}
+            >
             <div>
               <div
                 style={{
@@ -1508,6 +1511,7 @@ export default function ExecutiveDark({
               </div>
             </div>
           </SectionContainer>
+          )}
         </div>
 
         {/* Share Modal */}
@@ -1784,6 +1788,7 @@ export default function ExecutiveDark({
           >
             Get My Free Card
           </Link>
+          <div style={{ height: 100 }}></div>
         </div>
 
         <ProfileChatbot profile={profile} />

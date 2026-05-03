@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
 import { db } from "../../../firebase";
@@ -71,6 +72,18 @@ export default function ClassicModern({
   const [followLoading, setFollowLoading] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
   const [applyingJob, setApplyingJob] = useState<any>(null);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectInfo, setConnectInfo] = useState({ name: '', phone: '', whatsapp: '', company: '' });
+  const [connectLoading, setConnectLoading] = useState(false);
+
+  const getYoutubeVideoId = (url: string) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const videoId = getYoutubeVideoId(profile.bannerVideoUrl);
 
   const profileJobs = jobOpenings?.filter((j: any) => j.profileId === profile.id && j.status === 'Open') || [];
 
@@ -146,7 +159,11 @@ export default function ClassicModern({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setShowConnectModal(true);
+  };
+
+  const processVcfDownload = () => {
     const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL:${profile.phone}\nEMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
     const blob = new Blob([vcard], { type: "text/vcard" });
     const url = URL.createObjectURL(blob);
@@ -155,6 +172,37 @@ export default function ClassicModern({
     a.download = `${profile.name.replace(/\s+/g, "_")}.vcf`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleConnectSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!connectInfo.name || !connectInfo.phone) return alert("Please provide your name and calling number.");
+    
+    setConnectLoading(true);
+    try {
+      // Ensure we have a valid profile ID
+      const targetProfileId = profile.id;
+      if (!targetProfileId) throw new Error("Profile ID missing");
+
+      await addDoc(collection(db, 'leads'), {
+        profileId: targetProfileId,
+        ownerId: profile.ownerId || profile.userId, // Save ownerId to help with filtering
+        ...connectInfo,
+        email: '',
+        message: 'Exchanged contact via profile "Connect" button.',
+        source: 'Contact Form',
+        createdAt: serverTimestamp()
+      });
+      
+      processVcfDownload();
+      setShowConnectModal(false);
+      alert("Success! Contact saved and your info shared with the profile owner.");
+    } catch (e: any) {
+      console.error("Lead saving error:", e);
+      alert("Error saving contact: " + (e.message || "Unknown error"));
+    } finally {
+      setConnectLoading(false);
+    }
   };
 
   const handleWhatsAppShare = () => {
@@ -194,7 +242,7 @@ export default function ClassicModern({
       style={{
         background: "#f0f2f5",
         minHeight: "100vh",
-        paddingBottom: 60,
+        paddingBottom: 100,
         fontFamily: "Inter, sans-serif",
       }}
     >
@@ -268,7 +316,21 @@ export default function ClassicModern({
                 {themeVars.icon}
              </div>
           )}
-          {profile.bannerUrl && !profile.bannerVideo && (
+          {videoId ? (
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+              <iframe
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  transform: 'scale(1.5)',
+                  pointerEvents: 'none'
+                }}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0`}
+                frameBorder="0"
+                allow="autoplay; encrypted-media"
+              ></iframe>
+            </div>
+          ) : profile.bannerUrl && !profile.bannerVideo && (
             <img 
               src={profile.bannerUrl} 
               style={{
@@ -281,7 +343,7 @@ export default function ClassicModern({
               alt="Banner"
             />
           )}
-          {profile.bannerVideo && (
+          {profile.bannerVideo && !videoId && (
             <video
               autoPlay
               loop
@@ -298,6 +360,25 @@ export default function ClassicModern({
               <source src={profile.bannerVideo} type="video/mp4" />
             </video>
           )}
+          
+          <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
+            <button
+              onClick={onExit}
+              style={{
+                background: "rgba(0,0,0,0.3)",
+                backdropFilter: "blur(4px)",
+                border: "none",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "20px",
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: "pointer"
+              }}
+            >
+              Close Profile
+            </button>
+          </div>
         </div>
 
         <div
@@ -362,7 +443,7 @@ export default function ClassicModern({
             {profile.name}
             {(profile.isVerified ||
               profile.plan === "Pro" ||
-              profile.plan === "Enterprise") && (
+              profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
                 <img 
                   src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
@@ -622,23 +703,25 @@ export default function ClassicModern({
             }}
           >
             <button
-              onClick={() => setActiveTab('inquiry')}
+              onClick={() => handleSave()}
               style={{
                 flex: 1,
                 background: "#000",
                 color: "#fff",
                 border: "none",
-                padding: "12px",
-                borderRadius: 12,
-                fontWeight: 600,
+                height: 52,
+                borderRadius: 14,
+                fontWeight: 800,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
+                gap: 10,
+                fontSize: 14,
+                boxShadow: "0 10px 20px -5px rgba(0,0,0,0.3)"
               }}
             >
-              <UserPlus size={18} /> Exchange Contact
+              <UserPlus size={20} /> Exchange Contact
             </button>
             <button
               onClick={() => setShowShareModal(true)}
@@ -646,18 +729,19 @@ export default function ClassicModern({
                 flex: 1,
                 background: "#f3f4f6",
                 color: "#1f2937",
-                border: "none",
-                padding: "12px",
-                borderRadius: 12,
-                fontWeight: 600,
+                border: "1px solid #e5e7eb",
+                height: 52,
+                borderRadius: 14,
+                fontWeight: 800,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
+                gap: 10,
+                fontSize: 14
               }}
             >
-              <Send size={16} /> Share Profile
+              <Send size={18} /> Share Profile
             </button>
           </div>
 
@@ -719,23 +803,25 @@ export default function ClassicModern({
                 <Calendar size={18} /> Book a Meeting
               </a>
             )}
-            <Link
-              to="/referrals"
-              style={{
-                background: "#1a56db",
-                color: "#fff",
-                padding: 14,
-                borderRadius: 12,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                textDecoration: "none",
-              }}
-            >
-              <Share2 size={18} /> Refer & Earn Rewards
-            </Link>
+            {!profile.plan?.includes("Enterprise") && !profile.hideReferral && (
+              <Link
+                to="/referrals"
+                style={{
+                  background: "#1a56db",
+                  color: "#fff",
+                  padding: 14,
+                  borderRadius: 12,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  textDecoration: "none",
+                }}
+              >
+                <Share2 size={18} /> Refer & Earn Rewards
+              </Link>
+            )}
             {profile.documentUrl && (
               <a
                 href={profile.documentUrl}
@@ -843,21 +929,33 @@ export default function ClassicModern({
                 <div style={{ marginBottom: 12 }}>
                   <div
                     style={{
-                      background: "#f9fafb",
-                      border: "1px solid #e5e7eb",
-                      color: "#1f2937",
-                      padding: "16px",
-                      borderRadius: 12,
+                      background: "linear-gradient(135deg, #1e293b, #0f172a)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "#fff",
+                      padding: "24px 20px",
+                      borderRadius: 24,
                       display: "flex",
                       alignItems: "flex-start",
-                      gap: 12,
+                      gap: 16,
                       marginBottom: 12,
+                      boxShadow: "0 20px 40px -10px rgba(15,23,42,0.3)",
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                   >
-                    <MapPin size={20} color="#6b7280" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
-                      <div style={{ fontSize: 14, lineHeight: 1.5, color: "#374151" }}>
+                    <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
+                    <div style={{ 
+                      background: 'rgba(255,255,255,0.1)', 
+                      backdropFilter: 'blur(4px)',
+                      padding: 12,
+                      borderRadius: 16,
+                      color: '#60a5fa'
+                    }}>
+                      <MapPin size={24} />
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: "#60a5fa", textTransform: "uppercase", letterSpacing: 2 }}>Office Location</div>
+                      <div style={{ fontSize: 16, lineHeight: 1.6, color: "#f8fafc", fontWeight: 700 }}>
                         {profile.address}
                       </div>
                     </div>
@@ -868,33 +966,35 @@ export default function ClassicModern({
                     rel="noreferrer"
                     style={{
                       width: "100%",
-                      background: "#16a34a",
+                      background: "linear-gradient(to right, #000, #1e293b)",
                       color: "#fff",
-                      padding: "14px",
-                      borderRadius: 12,
-                      fontWeight: 700,
+                      padding: "16px",
+                      borderRadius: 16,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 8,
+                      gap: 10,
                       textDecoration: "none",
-                      boxShadow: "0 4px 12px rgba(22,163,74,0.2)",
+                      boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
                       fontSize: 14,
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: 1,
                       boxSizing: "border-box",
                     }}
                   >
-                    <MapPin size={18} /> Get Directions
+                    <MapPin size={20} /> Open Navigation
                   </a>
                 </div>
               )}
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 16 }}>
                 <button
                   onClick={handleSave}
                   style={{
                     width: "100%",
                     background: "#2563eb",
                     color: "#fff",
-                    padding: "14px",
+                    padding: "12px",
                     borderRadius: 12,
                     fontWeight: 700,
                     border: "none",
@@ -903,11 +1003,11 @@ export default function ClassicModern({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 8,
-                    fontSize: 14,
+                    fontSize: 13,
                     boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
                   }}
                 >
-                  <UserPlus size={18} /> Save Contact
+                  <UserPlus size={16} /> Save Contact
                 </button>
               </div>
               <SectionContainer
@@ -997,7 +1097,7 @@ export default function ClassicModern({
               )}
               {profile.whatsapp && (
                 <a
-                  href={`https://wa.me/${profile.whatsapp}`}
+                  href={`https://wa.me/${(profile.whatsapp || profile.socials?.whatsapp || '').replace(/[^0-9]/g, "")}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -1608,7 +1708,7 @@ export default function ClassicModern({
           </SectionContainer>
           )}
 
-          {activeTab === 'wallet' && (
+          {activeTab === 'wallet' && !profile.plan?.includes("Enterprise") && (
             <SectionContainer title="Wallet" icon={<Wallet size={18} />}>
             <>
               <div
@@ -1876,7 +1976,7 @@ export default function ClassicModern({
           </SectionContainer>
           )}
 
-          {activeTab === 'wallet' && hasPayments && (
+          {activeTab === 'wallet' && hasPayments && !profile.plan?.includes("Enterprise") && (
             <SectionContainer title="Payments" icon={<Wallet size={18} />}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
@@ -2096,7 +2196,7 @@ export default function ClassicModern({
             </SectionContainer>
           )}
 
-          {activeTab === 'home' && (
+          {activeTab === 'home' && !profile.plan?.includes("Enterprise") && !profile.hideReferral && (
             <SectionContainer title="Referral Program" icon={<LinkIcon size={18} />}>
             <div
               style={{
@@ -2228,32 +2328,63 @@ export default function ClassicModern({
           transform: 'translateX(-50%)',
           width: '100%',
           maxWidth: 480,
-          background: '#fff', 
-          borderTop: '1px solid #e5e7eb', 
+          background: '#0f172a', 
+          borderTop: '1px solid rgba(255,255,255,0.1)', 
           display: 'flex', 
           justifyContent: 'space-around', 
-          padding: '12px 0 24px 0',
+          padding: '8px 10px',
+          height: 56,
           zIndex: 1000,
-          boxShadow: '0 -10px 25px rgba(0,0,0,0.08)'
+          boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
+          borderRadius: '28px 28px 0 0'
         }}>
           {navItems.map((item) => (
             <button 
               key={item.id} 
               onClick={() => setActiveTab(item.id)}
               style={{ 
-                background: 'none', 
+                background: 'transparent', 
                 border: 'none', 
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center', 
-                gap: 4, 
-                color: activeTab === item.id ? '#1a1a2e' : '#94a3b8',
+                gap: 6, 
+                color: activeTab === item.id ? '#60a5fa' : '#94a3b8',
                 cursor: 'pointer',
-                flex: 1
+                flex: 1,
+                padding: '4px 0',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative'
               }}
             >
-              <div style={{ transform: activeTab === item.id ? 'scale(1.1) translateY(-3px)' : 'none', transition: 'all 0.2s' }}>{item.icon}</div>
-              <span style={{ fontSize: 10, fontWeight: activeTab === item.id ? 800 : 500 }}>{item.label}</span>
+              {activeTab === item.id && (
+                <motion.div 
+                  layoutId="activeTabGlow"
+                  style={{
+                    position: 'absolute',
+                    top: -12,
+                    width: '35%',
+                    height: 4,
+                    background: '#60a5fa',
+                    boxShadow: '0 0 20px #60a5fa',
+                    borderRadius: '0 0 6px 6px'
+                  }}
+                />
+              )}
+              <div style={{ 
+                transform: activeTab === item.id ? 'translateY(-2px) scale(1.2)' : 'none',
+                opacity: activeTab === item.id ? 1 : 0.6,
+                transition: 'all 0.3s'
+              }}>
+                {React.cloneElement(item.icon as React.ReactElement, { size: 22 })}
+              </div>
+              <span style={{ 
+                fontSize: 10, 
+                fontWeight: activeTab === item.id ? 900 : 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                opacity: activeTab === item.id ? 1 : 0.6
+              }}>{item.label}</span>
             </button>
           ))}
         </div>
@@ -2660,9 +2791,134 @@ export default function ClassicModern({
           >
             Get My Free Card
           </Link>
+          <div style={{ height: 100 }}></div>
         </div>
 
         <ProfileChatbot profile={profile} />
+
+        {/* Connect Modal */}
+        <AnimatePresence>
+          {showConnectModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(15,23,42,0.8)",
+                backdropFilter: "blur(8px)",
+                zIndex: 2000,
+                display: "flex",
+                alignItems: "flex-end",
+                padding: 0
+              }}
+              onClick={() => setShowConnectModal(false)}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: "100%",
+                  background: "#fff",
+                  borderTopLeftRadius: 30,
+                  borderTopRightRadius: 30,
+                  padding: "32px 24px",
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  boxShadow: '0 -20px 50px rgba(0,0,0,0.1)'
+                }}
+              >
+                <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 24px' }}></div>
+                <h3 style={{ fontSize: 24, fontWeight: 900, color: "#0f172a", marginBottom: 8, padding: 0 }}>Exchange Contact</h3>
+                <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, lineHeight: 1.6, padding: 0 }}>Fill in your details to save <strong>{profile.name}</strong> to your contacts and help them reach back to you.</p>
+                
+                <form onSubmit={handleConnectSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>Full Name</label>
+                    <input 
+                      type="text" 
+                      required
+                      value={connectInfo.name}
+                      onChange={e => setConnectInfo({...connectInfo, name: e.target.value})}
+                      placeholder="Your Name" 
+                      style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>Calling No.</label>
+                      <input 
+                        type="tel" 
+                        required
+                        value={connectInfo.phone}
+                        onChange={e => setConnectInfo({...connectInfo, phone: e.target.value})}
+                        placeholder="+971..." 
+                        style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>WhatsApp</label>
+                      <input 
+                        type="tel" 
+                        value={connectInfo.whatsapp}
+                        onChange={e => setConnectInfo({...connectInfo, whatsapp: e.target.value})}
+                        placeholder="+971..." 
+                        style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>Company Name</label>
+                    <input 
+                      type="text" 
+                      value={connectInfo.company}
+                      onChange={e => setConnectInfo({...connectInfo, company: e.target.value})}
+                      placeholder="Organization Name" 
+                      style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
+                    />
+                  </div>
+                  
+                  <button 
+                    type="submit"
+                    disabled={connectLoading}
+                    style={{ 
+                      marginTop: 12,
+                      width: '100%', 
+                      padding: '20px', 
+                      background: 'linear-gradient(to right, #2563eb, #1d4ed8)', 
+                      color: '#fff', 
+                      borderRadius: 20, 
+                      border: 'none', 
+                      fontSize: 14, 
+                      fontWeight: 900, 
+                      textTransform: 'uppercase', 
+                      letterSpacing: 2,
+                      boxShadow: '0 10px 25px -5px rgba(37,99,235,0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 10
+                    }}
+                  >
+                    {connectLoading ? 'Processing...' : 'Exchange Contact'} <Contact2 size={20} />
+                  </button>
+                  
+                  <button 
+                    type="button"
+                    onClick={() => setShowConnectModal(false)}
+                    style={{ width: '100%', padding: '16px', background: 'transparent', color: '#64748b', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, border: 'none' }}
+                  >
+                    Maybe Later
+                  </button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   </div>

@@ -5,12 +5,28 @@ import { useAppContext } from '../../context/AppContext';
 export default function FrontendReferrals() {
   const { siteSettings, user, setIsLoginModalOpen, profiles, selectedCountry } = useAppContext();
   
+  const userProfile = useMemo(() => {
+    if (!user) return null;
+    return profiles.find((p: any) => p.ownerId === user.uid || p.email === user.email);
+  }, [user, profiles]);
+
+  if (userProfile?.plan === 'Enterprise') {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 md:py-16 font-sans flex flex-col items-center justify-center min-h-[50vh] text-center">
+        <Gift size={64} className="text-slate-200 mb-6" />
+        <h1 className="text-3xl font-black text-slate-900 mb-4">Referral Program Restricted</h1>
+        <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
+          The Referral Program is not available for Enterprise accounts. For team management or corporate inquiries, please contact your account manager.
+        </p>
+      </div>
+    );
+  }
+
   const referralCode = useMemo(() => {
     if (!user) return 'LOGIN-TO-VIEW';
-    const userProfile = profiles.find((p: any) => p.ownerId === user.uid || p.email === user.email);
     if (userProfile && userProfile.id) return userProfile.id;
     return `DBC-${user.uid.substring(0, 8).toUpperCase()}`;
-  }, [user, profiles]);
+  }, [user, userProfile]);
 
   const referralLink = user ? `${window.location.origin}/plans?ref=${referralCode}` : '';
   

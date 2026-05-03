@@ -3,30 +3,7 @@ import { db, auth } from '../../firebase';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
 import { AGENT_LANGUAGES } from '../../lib/languages';
-class ProxyGoogleGenAI {
-  apiKey: string;
-  constructor(options: { apiKey?: string } = {}) {
-    this.apiKey = options.apiKey || '';
-  }
-  models = {
-    generateContent: async (args: any) => {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
-      
-      const resp = await fetch(`${apiUrl}/api/gemini/generateContent`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(args)
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'AI generation failed');
-      return data;
-    }
-  };
-}
+import { ProxyGoogleGenAI } from '../../lib/gemini';
 
 interface ChatSession {
   id: string;
@@ -62,17 +39,38 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
   // Listen to sessions
   useEffect(() => {
     // If profileId is 'platform', we show ALL sessions (Super Agent mode)
-    const q = profileId === 'platform' 
-      ? query(collection(db, 'chat_sessions'), orderBy('updatedAt', 'desc'))
-      : query(
-          collection(db, 'chat_sessions'),
-          where('ownerId', '==', auth.currentUser?.uid || ''),
-          where('profileId', '==', profileId),
-          orderBy('updatedAt', 'desc')
-        );
+    // For others, we listen for chats where they are priority or fallback
+    const sessionsRef = collection(db, 'chat_sessions');
+    
+    let q;
+    if (profileId === 'platform') {
+      q = query(sessionsRef, orderBy('updatedAt', 'desc'));
+    } else {
+      // Default: show sessions for this profile or fallback
+      q = query(
+        sessionsRef,
+        where('ownerId', '==', auth.currentUser?.uid || ''),
+        orderBy('updatedAt', 'desc')
+      );
+    }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const sessData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ChatSession));
+      let sessData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      // Client-side filtering for Enterprise routing logic
+      if (profileId !== 'platform') {
+        sessData = sessData.filter((s: any) => {
+          // If I'm the priority agent
+          if (s.priorityAgentId === profileId) return true;
+          // If I'm a fallback agent and priority didn't respond (routingLevel === Fallback)
+          if (s.routingLevel === 'Fallback' && s.fallbackAgentIds?.includes(profileId)) return true;
+          // Legacy support (older sessions)
+          if (!s.priorityAgentId && s.profileId === profileId) return true;
+          
+          return false;
+        });
+      }
+
       setSessions(sessData);
     }, (error) => {
       import('../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
@@ -123,7 +121,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         try {
           const prompt = `Translate the following text to ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang}. Output ONLY the translated text, without any additional comments:\n\n${lastMsg.text}`;
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;
@@ -176,7 +174,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         
         try {
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;

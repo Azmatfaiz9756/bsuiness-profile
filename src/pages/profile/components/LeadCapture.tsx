@@ -19,7 +19,7 @@ export default function LeadCapture({ profile }: { profile: any }) {
     try {
       await addDoc(collection(db, 'leads'), {
         profileId: profile.id,
-        ownerId: profile.ownerId || null,
+        ownerId: profile.ownerId || profile.userId || null,
         name,
         email,
         phone,

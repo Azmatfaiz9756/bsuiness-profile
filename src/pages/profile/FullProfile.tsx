@@ -46,14 +46,14 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          foundProfile = docSnap.data();
+          foundProfile = { ...docSnap.data(), id: docSnap.id };
         } else {
           // If not found, try searching by slug
           const q = query(collection(db, 'profiles'), where('slug', '==', id));
           const querySnapshot = await getDocs(q);
           
           if (!querySnapshot.empty) {
-            foundProfile = querySnapshot.docs[0].data();
+            foundProfile = { ...querySnapshot.docs[0].data(), id: querySnapshot.docs[0].id };
           }
         }
 
@@ -77,9 +77,14 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
             }
           }
 
-        } else if (!profile) {
-          // Only fallback to first profile if we have absolutely nothing
-          setProfile(profiles[0]);
+        } else {
+          // If no profile found in DB, we stay at null to show 404
+          const existsInContext = profiles.find((p: any) => p.id === id || p.slug === id);
+          if (existsInContext) {
+            setProfile(existsInContext);
+          } else {
+            setProfile(null);
+          }
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
@@ -133,23 +138,24 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         background: '#0f172a', 
         color: '#fff' 
       }}>
-        <div style={{
-          width: 50,
-          height: 50,
-          border: '3px solid rgba(255,255,255,0.1)',
-          borderTop: '3px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }} />
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full border-4 border-slate-800 border-b-blue-400 animate-spin-reverse opacity-50"></div>
+          </div>
+        </div>
+        <div style={{ marginTop: 32, fontSize: 13, fontWeight: 800, letterSpacing: '0.2em', color: '#64748b', textTransform: 'uppercase' }}>
+          Initializing Profile
+        </div>
         <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+          .animate-spin-reverse {
+            animation: spin-reverse 1.5s linear infinite;
+          }
+          @keyframes spin-reverse {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
           }
         `}</style>
-        <div style={{ marginTop: 24, fontSize: 14, fontWeight: 500, letterSpacing: '0.05em', color: '#94a3b8' }}>
-          LOADING PROFILE
-        </div>
       </div>
     );
   }
@@ -183,10 +189,10 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         <>
           <button 
             onClick={() => setShowQR(true)}
-            className="fixed bottom-6 right-6 w-14 h-14 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all z-40"
+            className="fixed bottom-24 left-4 w-12 h-12 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all z-40 md:left-8 md:bottom-28"
             style={{ boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)' }}
           >
-            <QrCode size={24} />
+            <QrCode size={20} />
           </button>
 
           {showQR && (

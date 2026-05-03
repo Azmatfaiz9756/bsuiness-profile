@@ -11,10 +11,10 @@ export default function FrontendPlans() {
   
   // Use country specific plans if available, else fallback to Global or default
   const defaultPlans = [
-    { name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['5 Services', 'Basic Profile', 'QR Code'] },
-    { name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot', 'Lead Management'] },
-    { name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain'] },
-    { name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate Branding', 'Admin Dashboard'] }
+    { name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
+    { name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
+    { name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
+    { name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
   ];
   
   const plans = siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || defaultPlans;
@@ -37,6 +37,7 @@ export default function FrontendPlans() {
         }
         await updateDoc(userRef, updateData);
         alert(`Successfully subscribed to ${plan.name} plan!`);
+        window.location.reload();
       } catch (err) {
         console.error("Trial start error:", err);
         alert('Could not start trial. Please try again or create a profile first.');
@@ -89,10 +90,10 @@ export default function FrontendPlans() {
           {trialPeriod} FREE TRIAL
         </div>
         <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">Simple, transparent pricing</h2>
-        <p className="text-sm md:text-base text-slate-500">No hidden fees. Cancel anytime. All plans include {trialPeriod.toLowerCase()} free trial.</p>
+        <p className="text-sm md:text-base text-slate-500 max-w-2xl mx-auto">No hidden fees. Cancel anytime. All plans include {trialPeriod.toLowerCase()} free trial to explore all features.</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-8">
         {plans.map((plan: any) => (
           <div key={plan.name} className={`rounded-2xl p-6 text-center shadow-sm border ${plan.popular ? 'bg-blue-50/50 border-blue-500 shadow-blue-100' : 'bg-white border-slate-200'}`}>
             <div className={`text-[10px] font-bold rounded-full px-3 py-1 inline-block mb-4 tracking-wide ${plan.popular ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>

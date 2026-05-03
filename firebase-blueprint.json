@@ -11,6 +11,8 @@
         "email": { "type": "string" },
         "phone": { "type": "string" },
         "customDomain": { "type": "string" },
+        "directoryVisibility": { "type": "string", "enum": ["full", "partial", "hidden"] },
+        "directoryHiddenFields": { "type": "array", "items": { "type": "string" } },
         "ownerId": { "type": "string" },
         "isSubProfile": { "type": "boolean" },
         "parentProfileId": { "type": "string" }

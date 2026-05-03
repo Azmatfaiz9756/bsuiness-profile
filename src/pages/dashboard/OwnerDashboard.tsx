@@ -3,39 +3,15 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ProxyGoogleGenAI } from '../../lib/gemini';
 
 import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
 import { PaymentModal } from '../../components/PaymentModal';
 
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
-
-class ProxyGoogleGenAI {
-  apiKey: string;
-  constructor(options: { apiKey?: string } = {}) {
-    this.apiKey = options.apiKey || '';
-  }
-  models = {
-    generateContent: async (args: any) => {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (this.apiKey) {
-        headers['Authorization'] = `Bearer ${this.apiKey}`;
-      }
-      
-      const resp = await fetch(`${apiUrl}/api/gemini/generateContent`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(args)
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'AI generation failed');
-      return data;
-    }
-  };
-}
 
 function DashboardChatTester({ profile }: { profile: any }) {
   const { user } = useAppContext();
@@ -68,9 +44,18 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
 `;
     }
 
+    const translationInfo = `
+TRANSLATION FEATURES:
+- You are a polyglot AI assistant. You can understand and translate between any languages.
+- You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+- If the user sends a message in a different language, translate it internally, then respond in the target language.
+- If asked specifically to translate something, perform the translation accurately.
+`;
+
     if (langId === 'hi') {
       return `Aap ${profile.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
 
+${translationInfo}
 ${stockContext}
 
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
@@ -98,6 +83,7 @@ Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`;
 
     if (langId === 'ar') {
       return `أنت مساعد ذكي محترف لـ ${profile?.name} (المسمى الوظيفي: ${profile?.title} في ${profile?.company}).
+${translationInfo}
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة خليجية بيضاء أو فصحى مهذبة).
 
 ${stockContext}
@@ -106,6 +92,7 @@ ${stockContext}
     }
     const lang = CHAT_LANGUAGES.find(l => l.id === langId);
     return `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
+${translationInfo}
 Your tone should be helpful, clear, and professional. 
 You MUST communicate primarily in ${lang?.label || langId}.
 
@@ -174,7 +161,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-2.5-flash';
+      const modelName = 'gemini-3-flash-preview';
       const systemInstruction = profile.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [
@@ -345,6 +332,8 @@ export default function OwnerDashboard() {
   const [activeTab, setActiveTab] = useState('basic');
   const [sidebarTab, setSidebarTab] = useState('profile');
   const [teamProfiles, setTeamProfiles] = useState<any[]>([]);
+  const [editingSubProfileId, setEditingSubProfileId] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<'chat' | 'card'>('chat');
   const [isEditingTeamProfile, setIsEditingTeamProfile] = useState<any>(null);
   const [domainStatus, setDomainStatus] = useState<'Checking' | 'Connected' | 'Error' | 'Not Configured'>('Not Configured');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -421,7 +410,7 @@ export default function OwnerDashboard() {
 
   // Fetch team profiles for Enterprise users
   useEffect(() => {
-    if (sidebarTab === 'team' && profile?.id && profile?.plan === 'Enterprise') {
+    if (sidebarTab === 'team' && profile?.id && (profile?.plan === 'Enterprise' || profile?.plan === 'Enterprise Lifetime' || user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com')) {
       import('firebase/firestore').then(({ collection, query, where, getDocs }) => {
         const fetchTeam = async () => {
           try {
@@ -447,7 +436,7 @@ export default function OwnerDashboard() {
       showToast("No leads to export");
       return;
     }
-    const headers = ["Date", "Name", "Type", "Email", "Phone", "Message"];
+    const headers = ["Date", "Name", "Type", "Email", "Phone", "Company", "Message"];
     const csvContent = [
       headers.join(","),
       ...appointments.map(l => {
@@ -456,10 +445,11 @@ export default function OwnerDashboard() {
           : new Date().toLocaleDateString();
         return [
           date,
-          `"${l.name || 'Anonymous'}"`,
+          `"${l.name || l.customerName || 'Anonymous'}"`,
           l.source || 'Lead',
-          l.email || '',
+          l.email || l.customerEmail || '',
           l.phone || '',
+          `"${l.company || ''}"`,
           `"${(l.message || '').replace(/"/g, '""')}"`
         ].join(",");
       })
@@ -477,6 +467,35 @@ export default function OwnerDashboard() {
     showToast("Leads exported to CSV");
   };
 
+  const handleExportVCF = () => {
+    if (appointments.length === 0) {
+      showToast("No leads to export");
+      return;
+    }
+    
+    let vcfContent = '';
+    appointments.forEach(l => {
+        vcfContent += `BEGIN:VCARD\nVERSION:3.0\n`;
+        vcfContent += `FN:${l.name || l.customerName || 'Anonymous'}\n`;
+        vcfContent += `EMAIL:${l.email || l.customerEmail || ''}\n`;
+        vcfContent += `TEL:${l.phone || ''}\n`;
+        vcfContent += `ORG:${l.company || ''}\n`;
+        vcfContent += `NOTE:Lead from NFC Business Profile\n`;
+        vcfContent += `END:VCARD\n`;
+    });
+    
+    const blob = new Blob([vcfContent], { type: "text/vcard;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `leads_contacts_${new Date().toLocaleDateString()}.vcf`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Leads exported to VCF");
+  };
+
   useEffect(() => {
     if (!user) {
       if (!authLoading) setLoading(false);
@@ -487,10 +506,30 @@ export default function OwnerDashboard() {
       try {
         const docRef = doc(db, 'profiles', user.uid);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setProfile(docSnap.data());
-          setFormData(docSnap.data());
-        } else {
+          if (docSnap.exists()) {
+          const data = docSnap.data();
+          // Auto-upgrade admin email to Enterprise Lifetime if needed
+          if (user.email?.toLowerCase() === 'azmatfaiz9756@gmail.com' && data.plan !== 'Enterprise' && data.plan !== 'Enterprise Lifetime') {
+            const upgradedData = { ...data, plan: 'Enterprise Lifetime', updatedAt: new Date().toISOString() };
+            await setDoc(doc(db, 'profiles', user.uid), upgradedData, { merge: true });
+            setProfile(upgradedData);
+            setFormData(upgradedData);
+          } else {
+            setProfile(data);
+            setFormData(data);
+          }
+          return; // Exit if found
+        } else if (user.email) {
+          const { collection, query, where, getDocs } = await import('firebase/firestore');
+          const q = query(collection(db, 'profiles'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            const pData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+            setProfile(pData);
+            setFormData(pData);
+            return; // Exit if found by email
+          }
+        }
           // Initialize empty profile
           const emptyProfile = {
             id: `DBC${Date.now().toString().slice(-9)}`,
@@ -503,7 +542,7 @@ export default function OwnerDashboard() {
             phone: '+971 50 123 4567',
             address: 'Dubai Internet City, Building 1, Dubai, UAE',
             ownerId: user.uid,
-            plan: 'Free',
+            plan: user.email?.toLowerCase() === 'azmatfaiz9756@gmail.com' ? 'Enterprise Lifetime' : 'Free',
             status: 'Active',
             views: 0,
             referralCount: 0,
@@ -575,7 +614,6 @@ export default function OwnerDashboard() {
           } catch (emailErr) {
             console.error("Welcome email failed:", emailErr);
           }
-        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -636,7 +674,20 @@ export default function OwnerDashboard() {
     }
   }, [sidebarTab, profile]);
 
-  if (authLoading || loading) return <div className="p-10 flex items-center justify-center min-h-screen font-black text-slate-400 uppercase tracking-widest animate-pulse">Loading Dashboard...</div>;
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8">
+        <div className="relative mb-6">
+          <div className="w-16 h-16 rounded-2xl border-2 border-slate-200 border-t-blue-600 animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center text-blue-600 font-black text-xs">DBC</div>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+           <h3 className="text-slate-900 font-black text-lg m-0 animate-pulse uppercase tracking-tight">Syncing Dashboard</h3>
+           <p className="text-slate-500 font-bold text-[10px] m-0 tracking-[0.2em] uppercase">Connecting to Cloud Data</p>
+        </div>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/" />;
   if (!profile && !loading) return <div style={{padding: 40}}>Error: Profile could not be loaded. Please check your permissions or try again.</div>;
 
@@ -652,6 +703,8 @@ export default function OwnerDashboard() {
       // Extract sensitive CRM keys
       const { zohoToken, zohoOrgId, crmEndpoint, crmSecret, ...publicData } = formData;
       
+      const targetId = editingSubProfileId || user.uid;
+      
       // Save sensitive CRM keys via proxy server
       if (formData.crmProvider) {
         const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -659,7 +712,7 @@ export default function OwnerDashboard() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            profileId: user.uid,
+            profileId: targetId,
             crmProvider: formData.crmProvider,
             zohoToken,
             zohoOrgId,
@@ -669,8 +722,23 @@ export default function OwnerDashboard() {
         });
       }
 
-      await setDoc(doc(db, 'profiles', user.uid), publicData, { merge: true });
-      setProfile(formData); // keep in state to populate forms
+      const savePayload = {
+        ...publicData,
+        updatedAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'profiles', targetId), savePayload, { merge: true });
+      
+      if (!editingSubProfileId) {
+        setProfile(formData); // keep main profile in sync if editing main
+      } else {
+        // Refresh team profiles if editing sub
+        const { query, collection, where, getDocs } = await import('firebase/firestore');
+        const q = query(collection(db, 'profiles'), where('ownerId', '==', user.uid), where('isSubProfile', '==', true));
+        const snap = await getDocs(q);
+        setTeamProfiles(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+      
       showToast('Profile updated and published securely!');
     } catch (err) {
       console.error(err);
@@ -678,7 +746,37 @@ export default function OwnerDashboard() {
     }
   };
 
-  const isFreePlan = profile?.plan === 'Free';
+  const isAdminEmail = user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com' || 
+                       profile?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com' ||
+                       formData?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com';
+  const isFreePlan = (profile?.plan === 'Free' || !profile?.plan) && !isAdminEmail;
+  const isSubUser = profile?.isSubProfile;
+  const isEnterpriseOwner = (profile?.plan === 'Enterprise' || profile?.plan === 'Enterprise Lifetime' || isAdminEmail) && !isSubUser;
+
+  // Availability toggle handler
+  const toggleAvailability = async () => {
+    if (!profile?.id) return;
+    const newStatus = profile.availabilityStatus === 'available' ? 'away' : 'available';
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'profiles', profile.id), {
+        availabilityStatus: newStatus,
+        lastStatusUpdate: new Date().toISOString()
+      });
+      setProfile({ ...profile, availabilityStatus: newStatus });
+      showToast(`Status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  // Feature permission checks
+  const canSeeAnalytics = !isSubUser || profile?.allowAnalytics;
+  const canSeeAiAgent = !isSubUser || profile?.allowAiChat;
+  const canSeeLiveAgent = !isSubUser || profile?.allowLiveAgent;
+  const canSeeStock = !isSubUser || profile?.allowStock;
+  const canEditProfile = !isSubUser || profile?.allowProfileEdit;
+  const canSeeLeads = !isSubUser || profile?.allowLeadsAccess;
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-slate-50 w-full overflow-x-hidden relative">
@@ -708,50 +806,75 @@ export default function OwnerDashboard() {
           <div className="md:hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-end" onClick={() => setIsMobileMenuOpen(false)}>
             <div className="bg-slate-900 w-full rounded-t-3xl border-t border-slate-800 p-6 flex flex-col gap-2 pb-24" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-white font-bold mb-4 px-2">More Options</h3>
-              <button onClick={() => { setSidebarTab('marketing'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
-                <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
-              </button>
-              <button onClick={() => { setSidebarTab('agent'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
-                <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
-              </button>
-              <button onClick={() => { setSidebarTab('applications'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
-                <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
-              </button>
+              {canSeeAnalytics && (
+                <button onClick={() => { setSidebarTab('marketing'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                  <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
+                </button>
+              )}
+              {canSeeLiveAgent && (
+                <button onClick={() => { setSidebarTab('agent'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                  <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
+                </button>
+              )}
+              {!isSubUser && (
+                <button onClick={() => { setSidebarTab('applications'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                  <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
+                </button>
+              )}
+              {canSeeAiAgent && (
+                <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                  <MessageSquare size={20} /> <span className="flex-1 text-left">Smart AI Chatbot</span>
+                </button>
+              )}
+              {canSeeStock && (
+                <button onClick={() => { setSidebarTab('stock'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'stock' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                  <Briefcase size={20} /> <span className="flex-1 text-left">Stock & Inventory</span>
+                </button>
+              )}
               <button onClick={() => { setSidebarTab('plan'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
                 <Shield size={20} /> <span className="flex-1 text-left">Plan & Billing</span>
               </button>
-              <button onClick={() => { setSidebarTab('referrals'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
-                <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
-              </button>
+              {!isSubUser && !isEnterpriseOwner && (
+                <button onClick={() => { setSidebarTab('referrals'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                  <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {/* Mobile Native Bottom Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[50] bg-slate-900 border-t border-slate-800 pb-4 shadow-2xl flex justify-around px-2 py-2">
-           <button onClick={() => { setSidebarTab('profile'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'profile' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <LayoutDashboard size={20} />
-             <span className="text-[9px] font-bold">Profile</span>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-[50] bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 pb-1 shadow-2xl flex justify-around px-2 py-1.5 overflow-hidden items-center h-14">
+           <button onClick={() => { setSidebarTab('profile'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 min-w-[56px] py-1 transition-all ${sidebarTab === 'profile' && !isMobileMenuOpen ? 'text-blue-500 scale-105' : 'text-slate-500'}`}>
+             <LayoutDashboard size={18} />
+             <span className="text-[8px] font-black uppercase tracking-tighter">Profile</span>
            </button>
-           <button onClick={() => { setSidebarTab('analytics'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'analytics' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <BarChart3 size={20} />
-             <span className="text-[9px] font-bold">Stats</span>
-           </button>
-           <button onClick={() => { setSidebarTab('appointments'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'appointments' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <Calendar size={20} />
-             <span className="text-[9px] font-bold">Leads</span>
-           </button>
-           <button onClick={() => { setSidebarTab('agent'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'agent' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <Headset size={20} />
-             <span className="text-[9px] font-bold">Agent</span>
-           </button>
-           <button onClick={() => { setSidebarTab('team'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'team' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <Users size={20} className={profile?.plan === 'Enterprise' ? 'text-amber-400' : ''} />
-             <span className="text-[9px] font-bold text-center">Enterprise Team</span>
-           </button>
-           <button onClick={() => setIsMobileMenuOpen(true)} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <Menu size={20} />
-             <span className="text-[9px] font-bold">More</span>
+           {canSeeAnalytics && (
+             <button onClick={() => { setSidebarTab('analytics'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 min-w-[56px] py-1 transition-all ${sidebarTab === 'analytics' && !isMobileMenuOpen ? 'text-blue-500 scale-105' : 'text-slate-500'}`}>
+               <BarChart3 size={18} />
+               <span className="text-[8px] font-black uppercase tracking-tighter">Stats</span>
+             </button>
+           )}
+           {canSeeLeads && (
+             <button onClick={() => { setSidebarTab('appointments'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 min-w-[56px] py-1 transition-all ${sidebarTab === 'appointments' && !isMobileMenuOpen ? 'text-blue-500 scale-105' : 'text-slate-500'}`}>
+               <Calendar size={18} />
+               <span className="text-[8px] font-black uppercase tracking-tighter">Leads</span>
+             </button>
+           )}
+           {canSeeStock && (
+             <button onClick={() => { setSidebarTab('stock'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 min-w-[56px] py-1 transition-all ${sidebarTab === 'stock' && !isMobileMenuOpen ? 'text-blue-500 scale-105' : 'text-slate-500'}`}>
+               <Briefcase size={18} />
+               <span className="text-[8px] font-black uppercase tracking-tighter">Stock</span>
+             </button>
+           )}
+           {isEnterpriseOwner && (
+              <button onClick={() => { setSidebarTab('team'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 min-w-[56px] py-1 transition-all ${sidebarTab === 'team' && !isMobileMenuOpen ? 'text-blue-500 scale-105' : 'text-slate-500'}`}>
+                <Users size={18} className="text-amber-400" />
+                <span className="text-[8px] font-black uppercase tracking-tighter">Team</span>
+              </button>
+           )}
+           <button onClick={() => setIsMobileMenuOpen(true)} className={`flex flex-col items-center gap-1 min-w-[56px] py-1 transition-all ${isMobileMenuOpen ? 'text-blue-500 scale-105' : 'text-slate-500'}`}>
+             <Menu size={18} />
+             <span className="text-[8px] font-black uppercase tracking-tighter">More</span>
            </button>
         </div>
 
@@ -766,34 +889,54 @@ export default function OwnerDashboard() {
             <button onClick={() => setSidebarTab('profile')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
               <LayoutDashboard size={20} /> <span className="flex-1 text-left">My Digital Profile</span>
             </button>
-            <button onClick={() => setSidebarTab('analytics')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <BarChart3 size={20} /> <span className="flex-1 text-left">Analytics & Stats</span>
-            </button>
-            <button onClick={() => setSidebarTab('appointments')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Calendar size={20} /> <span className="flex-1 text-left">Appointments & Leads</span>
-            </button>
-            <button onClick={() => setSidebarTab('marketing')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
-            </button>
-            <button onClick={() => setSidebarTab('agent')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
-            </button>
-            <button onClick={() => setSidebarTab('applications')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
-            </button>
-            <button onClick={() => setSidebarTab('chatbot')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <MessageSquare size={20} /> <span className="flex-1 text-left">Smart AI Chatbot</span>
-            </button>
+            {canSeeAnalytics && (
+              <button onClick={() => setSidebarTab('analytics')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <BarChart3 size={20} /> <span className="flex-1 text-left">Analytics & Stats</span>
+              </button>
+            )}
+            {canSeeLeads && (
+              <button onClick={() => setSidebarTab('appointments')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Calendar size={20} /> <span className="flex-1 text-left">Appointments & Leads</span>
+              </button>
+            )}
+            {canSeeAnalytics && (
+              <button onClick={() => setSidebarTab('marketing')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
+              </button>
+            )}
+            {canSeeLiveAgent && (
+              <button onClick={() => setSidebarTab('agent')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
+              </button>
+            )}
+            {!isSubUser && (
+              <button onClick={() => setSidebarTab('applications')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
+              </button>
+            )}
+            {canSeeAiAgent && (
+              <button onClick={() => setSidebarTab('chatbot')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <MessageSquare size={20} /> <span className="flex-1 text-left">Smart AI Chatbot</span>
+              </button>
+            )}
+            {canSeeStock && (
+              <button onClick={() => setSidebarTab('stock')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'stock' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Briefcase size={20} /> <span className="flex-1 text-left">Stock & Inventory</span>
+              </button>
+            )}
             <button onClick={() => setSidebarTab('plan')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
               <Shield size={20} /> <span className="flex-1 text-left">Plan & Billing</span>
             </button>
-            <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
-            </button>
-            <button onClick={() => setSidebarTab('team')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Users size={20} /> <span className="flex-1 text-left">Enterprise Team (10 Profiles)</span>
-              {profile?.plan !== 'Enterprise' && <Sparkles size={14} className="text-yellow-400" />}
-            </button>
+            {!isSubUser && !isEnterpriseOwner && (
+              <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
+              </button>
+            )}
+            {isEnterpriseOwner && (
+              <button onClick={() => setSidebarTab('team')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Users size={20} /> <span className="flex-1 text-left">Enterprise Team (10 Profiles)</span>
+              </button>
+            )}
           </div>
           
           <div className="p-6 border-t border-slate-800 shrink-0 flex flex-col gap-3">
@@ -810,7 +953,45 @@ export default function OwnerDashboard() {
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden text-slate-900">
           <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full pb-24 md:pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4 md:gap-0">
-              <h1 className="m-0 text-xl md:text-2xl font-extrabold text-slate-900">Manage Your Digital Card</h1>
+              <div className="flex flex-col">
+                <h1 className="m-0 text-xl md:text-2xl font-extrabold text-slate-900">
+                  {editingSubProfileId ? `Editing Profile: ${formData.name || 'Staff'}` : 'Manage Your Digital Card'}
+                </h1>
+                {editingSubProfileId && (
+                  <button 
+                    onClick={() => {
+                      setEditingSubProfileId(null);
+                      setFormData(profile); // Reset to main profile
+                    }}
+                    className="mt-1 text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-1 hover:text-blue-700"
+                  >
+                    <ArrowLeft size={12} /> Switch Back to My Main Profile
+                  </button>
+                )}
+                {isSubUser && (
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={toggleAvailability}
+                      className={`mt-2 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border w-fit ${
+                        profile?.availabilityStatus === 'available' 
+                          ? 'bg-green-500/10 text-green-500 border-green-500/20' 
+                          : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                      }`}
+                    >
+                      <div className={`w-1.5 h-1.5 rounded-full ${profile?.availabilityStatus === 'available' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-slate-500'}`} />
+                      {profile?.availabilityStatus === 'available' ? 'Status: Available' : 'Status: Out of Service'}
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <div className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${canEditProfile ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                        {canEditProfile ? 'Full Editor Access' : 'Read-only Profile'}
+                      </div>
+                      {!canEditProfile && (
+                        <span className="text-[10px] text-slate-400 font-medium italic">Contact admin to change permissions</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2 w-full md:w-auto shrink-0">
                 <button onClick={() => {
                   setFormData({
@@ -860,7 +1041,17 @@ export default function OwnerDashboard() {
                   alert('Demo content loaded! Click "Save Changes" to publish.');
                 }} className="flex-1 md:flex-none px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-200 transition-colors shrink-0 text-center">Load Demo Content</button>
                 <Link to={`/profile/${profile?.slug || profile?.id}`} className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-50 transition-colors shrink-0 text-center">Preview Live</Link>
-                <button onClick={handleSave} className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white border-none rounded-lg text-sm font-semibold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm shrink-0 text-center">Save Changes</button>
+                <button 
+                  onClick={canEditProfile ? handleSave : () => alert('You do not have permission to edit this profile.')} 
+                  disabled={!canEditProfile}
+                  className={`w-full md:w-auto px-4 py-2 border-none rounded-lg text-sm font-semibold transition-colors shadow-sm shrink-0 text-center ${
+                    canEditProfile 
+                    ? 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700' 
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {canEditProfile ? 'Save Changes' : 'Editing Disabled'}
+                </button>
               </div>
             </div>
 
@@ -885,7 +1076,7 @@ export default function OwnerDashboard() {
               </div>
               <div className="p-4 md:p-6 lg:p-8 overflow-y-auto relative">
                 {isFreePlan && !['basic', 'contact', 'domain'].includes(activeTab) && (
-                  <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center pt-24">
+                  <div className="absolute inset-0 z-[100] bg-white/80 backdrop-blur-sm flex flex-col items-center pt-24">
                     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <span className="text-3xl">🔒</span>
@@ -926,6 +1117,13 @@ export default function OwnerDashboard() {
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image URL {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
                       <input type="text" disabled={isFreePlan} placeholder="https://..." value={formData.bannerUrl || ''} onChange={e => setFormData({...formData, bannerUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">YouTube Banner Video {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                        <span className="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded">NEW</span>
+                      </div>
+                      <input type="text" disabled={isFreePlan} placeholder="https://youtube.com/watch?v=..." value={formData.bannerVideoUrl || ''} onChange={e => setFormData({...formData, bannerVideoUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job Title {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
@@ -993,7 +1191,7 @@ export default function OwnerDashboard() {
                             try {
                               const aiInstance = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
                               const res = await aiInstance.models.generateContent({
-                                model: 'gemini-2.5-flash',
+                                model: 'gemini-3-flash-preview',
                                 contents: [{ role: 'user', parts: [{ text: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.` }] }]
                               });
                               const text = res.text;
@@ -1011,6 +1209,66 @@ export default function OwnerDashboard() {
                         >✨ AI Magic Writer</button>
                       </div>
                       <textarea disabled={isFreePlan} value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none disabled:bg-slate-100 disabled:opacity-60" />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 md:col-span-2 mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Shield size={18} className="text-blue-600" />
+                        <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Directory Privacy Settings</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Public Directory Visibility</label>
+                          <div className="flex flex-col gap-2">
+                            {[
+                              { id: 'full', label: 'Full Visibility', desc: 'Show all allowed info' },
+                              { id: 'partial', label: 'Partial Visibility', desc: 'Hide selected fields' },
+                              { id: 'hidden', label: 'Hidden From Search', desc: 'Do not list in directory' }
+                            ].map(opt => (
+                              <button
+                                key={opt.id}
+                                onClick={() => setFormData({...formData, directoryVisibility: opt.id})}
+                                className={`flex flex-col p-3 rounded-xl border text-left transition-all ${formData.directoryVisibility === opt.id ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                              >
+                                <span className={`font-black text-xs uppercase tracking-wider ${formData.directoryVisibility === opt.id ? 'text-blue-700' : 'text-slate-700'}`}>{opt.label}</span>
+                                <span className="text-[10px] text-slate-500 font-bold">{opt.desc}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {(formData.directoryVisibility === 'partial' || !formData.directoryVisibility) && (
+                          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Fields to HIDE in Directory</label>
+                            <div className="space-y-2">
+                              {[
+                                { id: 'phone', label: 'Personal Mobile Number' },
+                                { id: 'email', label: 'Professional Email' },
+                                { id: 'company', label: 'Company Name' },
+                                { id: 'location', label: 'City / Location' }
+                              ].map(field => {
+                                const isHidden = formData.directoryHiddenFields?.includes(field.id);
+                                return (
+                                  <label key={field.id} className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={isHidden || false}
+                                      onChange={(e) => {
+                                        const current = formData.directoryHiddenFields || [];
+                                        const next = e.target.checked ? [...current, field.id] : current.filter(f => f !== field.id);
+                                        setFormData({...formData, directoryHiddenFields: next});
+                                      }}
+                                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
+                                    />
+                                    <span className="text-xs font-bold text-slate-700">{field.label}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <p className="mt-4 text-[10px] text-slate-400 italic">Note: These choices only affect your appearance in public discovery/leaderboards. Direct profile views will remain full unless Restricted Mode is enabled.</p>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1094,6 +1352,69 @@ export default function OwnerDashboard() {
                               <input type="text" value={formData.socials?.[network] || ''} onChange={e => setFormData({...formData, socials: {...(formData.socials || {}), [network]: e.target.value}})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder={`${network} username/link...`} />
                             </div>
                         ))}
+                     </div>
+
+                    <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="flex items-center justify-between mb-4">
+                           <div>
+                              <h4 className="text-sm font-black text-slate-800 m-0">Staff Access Instructions</h4>
+                              <p className="text-[10px] text-slate-500 m-0 mt-1 uppercase tracking-wider font-bold">How staff members login</p>
+                           </div>
+                           <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                              <Brain size={16} />
+                           </div>
+                        </div>
+                        <div className="space-y-4">
+                           <div className="flex gap-4 items-start">
+                              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5 shadow-md shadow-blue-500/20">1</div>
+                              <div>
+                                <p className="text-xs font-black text-slate-800 m-0">Assign Staff Gmail</p>
+                                <p className="text-[11px] text-slate-500 m-0 leading-relaxed">Enter their personal/work <strong>Gmail address</strong> in the slot card above. This is their unique key to login.</p>
+                              </div>
+                           </div>
+                           <div className="flex gap-4 items-start">
+                              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5 shadow-md shadow-blue-500/20">2</div>
+                              <div>
+                                <p className="text-xs font-black text-slate-800 m-0">Share Dashboard Link</p>
+                                <p className="text-[11px] text-slate-500 m-0 leading-relaxed">Provide them with their specific <strong>Dashboard Link</strong> (copied from their card). They should visit this link to access their portal.</p>
+                              </div>
+                           </div>
+                           <div className="flex gap-4 items-start">
+                              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5 shadow-md shadow-blue-500/20">3</div>
+                              <div>
+                                <p className="text-xs font-black text-slate-800 m-0">Google Login & Permissions</p>
+                                <p className="text-[11px] text-slate-500 m-0 leading-relaxed">When they <strong>Login with Google</strong> using that exact email, they will automatically see their profile. Their level of access (Editing, Leads, etc.) is controlled by YOUR settings in their card.</p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="mt-4 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="flex items-center justify-between">
+                           <div>
+                              <h4 className="text-sm font-black text-slate-800 m-0">Refer & Earn Program Visibility</h4>
+                              <p className="text-xs text-slate-500 m-0 mt-1">By default, the referral button is visible to all users. Toggle this off to hide it.</p>
+                           </div>
+                           <button 
+                             onClick={() => setFormData({...formData, hideReferral: !formData.hideReferral})}
+                             className={`w-12 h-6 rounded-full relative transition-all ${!formData.hideReferral ? 'bg-blue-600' : 'bg-slate-300'}`}
+                           >
+                              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${!formData.hideReferral ? 'left-7' : 'left-1'}`} />
+                           </button>
+                        </div>
+                     </div>
+
+                     <div className="mt-4 p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-center justify-between">
+                        <div>
+                           <h4 className="text-sm font-black text-blue-800 m-0">Bulk Export Leads</h4>
+                           <p className="text-xs text-blue-600 m-0 mt-1">Download all your leads as a VCF file to import into your phone contacts.</p>
+                        </div>
+                        <button 
+                          onClick={handleExportVCF}
+                          className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
+                        >
+                          <UserPlus size={16} /> Export VCF
+                        </button>
                      </div>
                   </div>
                 )}
@@ -1516,7 +1837,7 @@ export default function OwnerDashboard() {
                   <div className="flex flex-col gap-10">
                      <div className="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm">
                        <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Booking Appointments Button</h3>
-                       {profile.plan === 'Basic' || profile.plan === 'Pro' ? (
+                       {!isEnterpriseOwner ? (
                          <div className="mt-4 bg-amber-50 border border-amber-200 p-5 rounded-xl">
                            <div className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-2">
                              <Shield size={18} /> Premium Feature Required
@@ -2142,37 +2463,138 @@ export default function OwnerDashboard() {
             </div>
           )}
 
-          {sidebarTab === 'chatbot' && (
+          {sidebarTab === 'stock' && (
             <div className="p-4 md:p-8 relative">
-               {isFreePlan && (
+               {!isEnterpriseOwner && !isSubUser && (
                  <div className="absolute inset-0 z-10 bg-slate-50/80 backdrop-blur-sm flex flex-col items-center pt-24">
                     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <span className="text-3xl">🔒</span>
                       </div>
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">Premium Feature Locked</h3>
-                      <p className="text-slate-500 text-sm mb-6">Upgrade to a premium plan to unlock the AI Chatbot Agent.</p>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">Enterprise Feature Locked</h3>
+                      <p className="text-slate-500 text-sm mb-6">Upgrade to an Enterprise plan to unlock advanced Stock & Inventory management.</p>
                       <button onClick={() => setSidebarTab('plan')} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">View Plans</button>
                     </div>
                   </div>
                )}
-               <div className="mb-8">
-                 <h2 className="text-2xl font-black text-slate-900 m-0">AI Chatbot Agent</h2>
-                 <p className="text-slate-500 m-0 mt-1 text-sm">Configure your automated 24/7 client assistant</p>
+               <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                 <div>
+                   <h2 className="text-2xl font-black text-slate-900 m-0">Stock & Inventory</h2>
+                   <p className="text-slate-500 m-0 mt-1 text-sm">Real-time product availability and pricing management</p>
+                 </div>
+                 <div className="flex gap-3">
+                    <button onClick={() => setSidebarTab('chatbot')} className="px-5 py-2.5 bg-blue-50 text-blue-600 text-xs font-black rounded-xl hover:bg-blue-100 transition-colors flex items-center gap-2">
+                       <Settings size={14} /> AI Sync Settings
+                     </button>
+                  </div>
                </div>
 
-               {profile.plan === 'Basic' ? (
-                 <div className="flex flex-col items-center justify-center p-12 md:p-20 bg-emerald-50 border-2 border-emerald-100 rounded-3xl text-center">
-                    <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6 animate-pulse">
-                      <MessageSquare size={40} strokeWidth={1.5} />
+               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                 <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                       <div className="flex items-center justify-between mb-8">
+                          <h4 className="text-lg font-black text-slate-900 m-0">Inventory Items</h4>
+                          <span className="text-[10px] font-black px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg">SYNCED WITH AI</span>
+                       </div>
+
+                       <div className="space-y-4">
+                          {(() => {
+                            const items = formData.stockManualData ? formData.stockManualData.split('\n').filter((l: string) => l.trim()).map((line: string, i: number) => {
+                               const parts = line.split('-').map(s => s.trim());
+                               return {
+                                 name: parts[0] || 'Unknown Item',
+                                 sku: `ITEM-${i+1}`,
+                                 stock: parts[1] || 'Unknown',
+                                 price: parts[2] || 'N/A',
+                                 status: (parts[1] || '').toLowerCase().includes('out') ? 'Out of Stock' : 'In Stock'
+                               };
+                            }) : [
+                              { name: 'iPhone 15 Pro Max', sku: 'IPH15PM-256', stock: '12 Units', price: 'AED 4,500', status: 'In Stock' },
+                              { name: 'MacBook Air M3', sku: 'MBA-M3-13', stock: '5 Units', price: 'AED 5,200', status: 'Low Stock' },
+                              { name: 'AirPods Pro 2', sku: 'APP2-GEN', stock: '25 Units', price: 'AED 899', status: 'In Stock' },
+                              { name: 'Apple Watch Ultra 2', sku: 'AWU2-ORG', stock: '0 Units', price: 'AED 3,200', status: 'Out of Stock' }
+                            ];
+
+                            return items.map((item: any) => (
+                              <div key={item.sku} className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-blue-200 transition-all">
+                                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 font-bold text-lg ${item.status === 'Out of Stock' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+                                    {item.name.charAt(0)}
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                       <h5 className="font-black text-slate-800 text-sm truncate m-0">{item.name}</h5>
+                                       <span className="text-[8px] font-black px-1.5 py-0.5 bg-slate-200 text-slate-600 rounded uppercase tracking-tighter">{item.sku}</span>
+                                    </div>
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.price}</div>
+                                 </div>
+                                 <div className="text-right">
+                                    <div className={`text-xs font-black mb-0.5 ${(item.stock+'').includes('0') || (item.stock+'').includes('Out') ? 'text-red-600' : 'text-slate-900'}`}>{item.stock}</div>
+                                    <div className={`text-[9px] font-black uppercase tracking-widest ${item.status === 'Out of Stock' ? 'text-red-400' : item.status === 'Low Stock' ? 'text-orange-400' : 'text-emerald-400'}`}>
+                                       {item.status}
+                                    </div>
+                                 </div>
+                              </div>
+                            ));
+                          })()}
+                       </div>
+                       
+                       <button className="w-full mt-6 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-sm font-black hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/50 transition-all">
+                          + Add New SKU to Inventory
+                       </button>
                     </div>
-                    <h3 className="text-xl font-black text-emerald-900 m-0">Unlock AI Assistant</h3>
-                    <p className="text-sm text-emerald-700 mt-3 mb-8 max-w-sm mx-auto leading-relaxed">
-                      Upgrade to <span className="font-black">Pro Plan</span> to let our trained AI handle your leads, booking questions, and customer queries automatically 24/7.
-                    </p>
-                    <button onClick={() => setSidebarTab('plan')} className="px-8 py-3 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95">Upgrade & Unlock AI</button>
                  </div>
-               ) : (
+
+                 <div className="space-y-6">
+                    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-white shadow-xl overflow-hidden relative">
+                       <div className="relative z-10">
+                          <div className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">CRM Status</div>
+                          <h4 className="text-lg font-black mb-2">Connected to {formData.crmProvider || 'Manual Source'}</h4>
+                          <p className="text-xs text-slate-400 leading-relaxed m-0">Your AI Agent is currently using this data to answer price and stock availability questions 24/7.</p>
+                          <div className="mt-6 flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                             <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Live Sync Active</span>
+                          </div>
+                       </div>
+                       <Briefcase size={120} className="absolute -bottom-8 -right-8 text-white opacity-[0.03]" />
+                    </div>
+
+                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                        <h4 className="text-sm font-black text-slate-800 mb-6 uppercase tracking-wider">Quick Stats</h4>
+                        <div className="space-y-4">
+                           <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-500">Out of Stock</span>
+                              <span className="text-xs font-black text-red-500">12</span>
+                           </div>
+                           <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-500">Inventory Value</span>
+                              <span className="text-xs font-black text-slate-900">AED 240,500</span>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
+
+          {sidebarTab === 'chatbot' && (
+             <div className="p-4 md:p-8 relative">
+                <div className="mb-8">
+                  <h2 className="text-2xl font-black text-slate-900 m-0">AI Chatbot Agent</h2>
+                  <p className="text-slate-500 m-0 mt-1 text-sm">Configure your automated 24/7 client assistant</p>
+                </div>
+
+                {isFreePlan ? (
+                  <div className="flex flex-col items-center justify-center p-12 md:p-20 bg-emerald-50 border-2 border-emerald-100 rounded-3xl text-center">
+                     <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6 animate-pulse">
+                       <MessageSquare size={40} strokeWidth={1.5} />
+                     </div>
+                     <h3 className="text-xl font-black text-emerald-900 m-0">Unlock AI Assistant</h3>
+                     <p className="text-sm text-emerald-700 mt-3 mb-8 max-w-sm mx-auto leading-relaxed">
+                       Upgrade to <span className="font-black">Pro Plan</span> to let our trained AI handle your leads, booking questions, and customer queries automatically 24/7.
+                     </p>
+                     <button onClick={() => setSidebarTab('plan')} className="px-8 py-3 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/20 active:scale-95">Upgrade & Unlock AI</button>
+                  </div>
+                ) : (
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                      <div className="flex flex-col gap-6">
                        <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
@@ -2352,14 +2774,49 @@ export default function OwnerDashboard() {
                     
                     <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col h-[600px] lg:h-auto">
                        <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-white font-black text-sm tracking-tight">AI PREVIEW</span>
+                          <div className="flex items-center gap-4">
+                            <button 
+                              onClick={() => setPreviewMode('chat')}
+                              className={`flex items-center gap-2 transition-all ${previewMode === 'chat' ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
+                            >
+                              <div className={`w-2 h-2 rounded-full ${previewMode === 'chat' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
+                              <span className="text-white font-black text-sm tracking-tight">AI PREVIEW</span>
+                            </button>
+                            <button 
+                              onClick={() => setPreviewMode('card')}
+                              className={`flex items-center gap-2 transition-all ${previewMode === 'card' ? 'opacity-100' : 'opacity-40 hover:opacity-100'}`}
+                            >
+                              <div className={`w-2 h-2 rounded-full ${previewMode === 'card' ? 'bg-blue-500 animate-pulse' : 'bg-slate-500'}`} />
+                              <span className="text-white font-black text-sm tracking-tight">LIVE CARD</span>
+                            </button>
                           </div>
-                          <button onClick={() => { localStorage.removeItem(`chat_history_${profile.id}`); window.location.reload(); }} className="text-[10px] font-black text-slate-400 hover:text-white transition-colors uppercase tracking-widest border border-slate-800 px-3 py-1 rounded-md bg-slate-800/50">Reset Chat</button>
+                          {previewMode === 'chat' ? (
+                            <button onClick={() => { localStorage.removeItem(`chat_history_${profile.id}`); window.location.reload(); }} className="text-[10px] font-black text-slate-400 hover:text-white transition-colors uppercase tracking-widest border border-slate-800 px-3 py-1 rounded-md bg-slate-800/50">Reset Chat</button>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time Preview</span>
+                            </div>
+                          )}
                        </div>
                        <div className="flex-1 overflow-hidden relative">
-                         <DashboardChatTester profile={profile} />
+                         {previewMode === 'chat' ? (
+                           <DashboardChatTester profile={profile} />
+                         ) : (
+                           <div className="w-full h-full bg-slate-100 flex items-center justify-center p-4">
+                              <div className="w-full h-full max-w-[375px] max-h-[812px] bg-white rounded-[2rem] shadow-2xl overflow-hidden border-[8px] border-slate-800 relative">
+                                 {/* Phone notch */}
+                                 <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-50">
+                                   <div className="w-24 h-5 bg-slate-800 rounded-b-xl" />
+                                 </div>
+                                 <iframe 
+                                   src={`${window.location.origin}/profile/${formData.slug || profile.slug}`} 
+                                   className="w-full h-full border-none"
+                                   title="Live Card Preview"
+                                   key={formData.slug} // Force reload when slug changes
+                                 />
+                              </div>
+                           </div>
+                         )}
                        </div>
                     </div>
                  </div>
@@ -2382,19 +2839,20 @@ export default function OwnerDashboard() {
                       <div className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/30">CURRENT ACTIVE PLAN</div>
                     </div>
                     <div className="flex items-center gap-4 mb-2">
-                      <h3 className="text-5xl font-black m-0">{profile.plan || 'Free'}</h3>
-                      <Sparkles size={32} className="text-amber-400" />
+                       <h3 className="text-5xl font-black m-0">{(user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com') ? 'Enterprise Lifetime' : (profile.plan || 'Free')}</h3>
+                       <Sparkles size={32} className="text-amber-400" />
                     </div>
-                    <p className="text-slate-400 m-0 text-sm max-w-sm leading-relaxed">You are enjoying all features associated with the {profile.plan || 'Free'} plan. Upgrade anytime for advanced enterprise tools.</p>
+                    <p className="text-slate-400 m-0 text-sm max-w-sm leading-relaxed">You are enjoying all features associated with the {(user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com') ? 'Enterprise Lifetime' : (profile.plan || 'Free')} plan. Upgrade anytime for advanced enterprise tools.</p>
                   </div>
                   <div className="relative z-10 text-center md:text-right bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl min-w-[200px]">
                      <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">MEMBERSHIP COST</div>
                      <div className="text-4xl font-black tabular-nums">
                         {(() => {
+                           if (user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com') return 'FREE ($0)';
                            const currentPlanData = (siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || []).find((p: any) => p.name === (profile.plan || 'Basic'));
                            return currentPlanData ? currentPlanData.price : 'Free';
                         })()}
-                        {(profile.plan !== 'Basic' && profile.plan !== 'Free') && <span className="text-sm font-bold text-slate-500 ml-1">/mo</span>}
+                        {(profile.plan !== 'Basic' && profile.plan !== 'Free' && user?.email?.toLowerCase() !== 'azmatfaiz9756@gmail.com') && <span className="text-sm font-bold text-slate-500 ml-1">/mo</span>}
                      </div>
                   </div>
                 </div>
@@ -2450,7 +2908,7 @@ export default function OwnerDashboard() {
 
           {sidebarTab === 'team' && (
              <div className="p-4 md:p-8">
-               {profile?.plan !== 'Enterprise' ? (
+               {profile?.plan !== 'Enterprise' && profile?.plan !== 'Enterprise Lifetime' && user?.email?.toLowerCase() !== 'azmatfaiz9756@gmail.com' ? (
                  <div className="max-w-2xl mx-auto py-20 text-center">
                     <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
                       <Users size={40} />
@@ -2468,19 +2926,11 @@ export default function OwnerDashboard() {
                        <h2 className="text-2xl font-black text-slate-900 m-0">Enterprise Management</h2>
                        <p className="text-slate-500 m-0 mt-1 text-sm">Manage 10 digital profiles ({teamProfiles.length}/10 used)</p>
                      </div>
-                     {isEditingTeamProfile && (
-                       <button 
-                         onClick={() => setIsEditingTeamProfile(null)}
-                         className="px-4 py-2 bg-slate-100 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-200"
-                       >
-                         Back to Slots
-                       </button>
-                     )}
                    </div>
 
                    {isEditingTeamProfile ? (
                      <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
-                       <h3 className="text-lg font-black mb-6">Editing Profile: {isEditingTeamProfile.name || 'New Profile'}</h3>
+                       <h3 className="text-lg font-black mb-6">Create New Staff Profile</h3>
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                           <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
@@ -2489,74 +2939,81 @@ export default function OwnerDashboard() {
                               value={isEditingTeamProfile.name || ''} 
                               onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, name: e.target.value})}
                               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold"
-                              placeholder="Employee Name"
+                              placeholder="Name"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Title / Role</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Role</label>
                             <input 
                               type="text" 
                               value={isEditingTeamProfile.title || ''} 
                               onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, title: e.target.value})}
                               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold"
-                              placeholder="e.g. Sales Manager"
+                              placeholder="Role"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Custom URL Slug</label>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Staff Gmail</label>
                             <input 
-                              type="text" 
-                              value={isEditingTeamProfile.slug || ''} 
-                              onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                              type="email" 
+                              value={isEditingTeamProfile.email || ''} 
+                              onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, email: e.target.value})}
                               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold"
-                              placeholder="employee-url-slug"
+                              placeholder="staff@gmail.com"
                             />
                           </div>
-                          <div>
-                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Profile Link</label>
-                            <div className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono truncate">
-                              {window.location.origin}/profile/{isEditingTeamProfile.slug || '...'}
-                            </div>
+                        </div>
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-6 mb-8">
+                          <h4 className="text-xs font-black text-blue-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <Shield size={14} /> Initial Access Permissions
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                             {[
+                                { id: 'allowProfileEdit', label: 'Edit Profile Information' },
+                                { id: 'allowLeadsAccess', label: 'View Leads / Contacts' },
+                                { id: 'allowAnalytics', label: 'View Analytics' },
+                                { id: 'allowAiChat', label: 'Manage AI Chatbot' },
+                                { id: 'allowLiveAgent', label: 'Live Agent Chat' },
+                                { id: 'allowStock', label: 'Stock / CRM Management' }
+                             ].map(feat => (
+                                <label key={feat.id} className="flex items-center gap-3 cursor-pointer">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={isEditingTeamProfile[feat.id] || false}
+                                    onChange={e => setIsEditingTeamProfile({...isEditingTeamProfile, [feat.id]: e.target.checked})}
+                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-xs font-bold text-slate-600">{feat.label}</span>
+                                </label>
+                             ))}
                           </div>
-                       </div>
+                        </div>
                        <div className="flex gap-4">
                          <button 
                            onClick={async () => {
+                             if(!isEditingTeamProfile.name) return;
                              try {
                                const { doc, setDoc } = await import('firebase/firestore');
-                               const pId = isEditingTeamProfile.id || `TEAM-${Date.now()}`;
-                               const newP = {
+                               const pId = `TEAM-${Date.now()}`;
+                               const newProfile = {
                                  ...isEditingTeamProfile,
                                  id: pId,
                                  ownerId: user.uid,
                                  isSubProfile: true,
-                                 parentProfileId: profile.id,
-                                 company: profile.company,
-                                 createdAt: isEditingTeamProfile.createdAt || new Date().toISOString(),
-                                 updatedAt: new Date().toISOString()
+                                 plan: 'Enterprise Sub'
                                };
-                               await setDoc(doc(db, 'profiles', pId), newP);
-                               showToast("Team profile saved!");
+                               await setDoc(doc(db, 'profiles', pId), newProfile);
+                               setEditingSubProfileId(pId);
+                               setFormData(newProfile);
+                               setSidebarTab('profile');
                                setIsEditingTeamProfile(null);
-                               // Refresh list
-                               const { query, collection, where, getDocs } = await import('firebase/firestore');
-                               const q = query(collection(db, 'profiles'), where('ownerId', '==', user.uid), where('isSubProfile', '==', true));
-                               const snap = await getDocs(q);
-                               setTeamProfiles(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-                             } catch(e) {
-                               showToast("Failed to save profile");
-                             }
+                             } catch(e) { /* ignore */ }
                            }}
-                           className="px-8 py-3 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700"
+                           className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl"
                          >
-                           Save Changes
+                           Prepare & Open Full Editor
                          </button>
-                         <button 
-                           onClick={() => setIsEditingTeamProfile(null)}
-                           className="px-8 py-3 bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200"
-                         >
-                           Cancel
-                         </button>
+                         <button onClick={() => setIsEditingTeamProfile(null)} className="px-6 py-3 bg-slate-100 rounded-xl">Cancel</button>
                        </div>
                      </div>
                    ) : (
@@ -2564,60 +3021,111 @@ export default function OwnerDashboard() {
                         {Array.from({ length: 10 }).map((_, idx) => {
                           const profileAtSlot = teamProfiles[idx];
                           return (
-                            <div key={idx} className={`bg-white border rounded-3xl p-6 flex flex-col justify-between min-h-[200px] transition-all ${profileAtSlot ? 'border-slate-200 shadow-sm' : 'border-dashed border-slate-300 bg-slate-50/50'}`}>
+                            <div key={idx} className={`bg-white border rounded-3xl p-6 flex flex-col justify-between min-h-[200px] ${profileAtSlot ? 'border-slate-200 shadow-sm' : 'border-dashed border-slate-300 bg-slate-50/50'}`}>
                               {profileAtSlot ? (
                                 <>
                                   <div className="mb-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-lg">
-                                        {profileAtSlot.name?.charAt(0)}
-                                      </div>
-                                      <div className="text-[10px] font-black uppercase bg-blue-100 text-blue-700 px-2 py-1 rounded-md">Slot {idx + 1}</div>
-                                    </div>
                                     <h3 className="font-black text-slate-900 m-0">{profileAtSlot.name}</h3>
-                                    <p className="text-xs text-slate-500 m-0 font-bold">{profileAtSlot.title || 'No Title'}</p>
-                                    <div className="mt-3 flex items-center gap-1.5 text-blue-600 font-bold text-[10px] truncate">
-                                      <LinkIcon size={12} /> {profileAtSlot.slug}
+                                    <p className="text-xs text-slate-500 m-0 font-bold">{profileAtSlot.title}</p>
+                                    <div className="flex justify-between items-center mt-2 font-bold text-[10px]">
+                                      <div className="text-blue-600 break-all">{profileAtSlot.slug}</div>
+                                      <div className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${profileAtSlot.email ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                                        {profileAtSlot.email ? 'Connected' : 'Missing Gmail'}
+                                      </div>
+                                    </div>
+                                    <div className="mt-1 text-slate-400 text-[9px] font-medium break-all">{profileAtSlot.email || 'No email set'}</div>
+                                    
+                                    <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col gap-2">
+                                       <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Access Permissions</div>
+                                       {[
+                                         { id: 'allowProfileEdit', label: 'Edit Profile' },
+                                         { id: 'allowLeadsAccess', label: 'Leads Access' },
+                                         { id: 'allowAnalytics', label: 'Analytics' },
+                                         { id: 'allowAiChat', label: 'AI Chatbot' },
+                                         { id: 'allowLiveAgent', label: 'Live Agent' },
+                                         { id: 'allowStock', label: 'Stock / CRM' }
+                                       ].map(feat => (
+                                         <label key={feat.id} className="flex items-center justify-between cursor-pointer group">
+                                           <span className="text-[10px] font-black text-slate-600 uppercase group-hover:text-blue-600 transition-colors">{feat.label}</span>
+                                           <input 
+                                             type="checkbox" 
+                                             checked={profileAtSlot[feat.id] || false}
+                                             onChange={async (e) => {
+                                                const checked = e.target.checked;
+                                                const { doc, updateDoc } = await import('firebase/firestore');
+                                                await updateDoc(doc(db, 'profiles', profileAtSlot.id), { [feat.id]: checked });
+                                                setTeamProfiles(prev => prev.map(p => p.id === profileAtSlot.id ? { ...p, [feat.id]: checked } : p));
+                                                showToast(`${feat.label} ${checked ? 'enabled' : 'disabled'} for ${profileAtSlot.name}`);
+                                             }}
+                                             className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" 
+                                           />
+                                         </label>
+                                       ))}
                                     </div>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex flex-col gap-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <button 
+                                        onClick={() => {
+                                          const url = `${window.location.origin}/profile/${profileAtSlot.slug || profileAtSlot.id}`;
+                                          navigator.clipboard.writeText(url);
+                                          showToast("Profile link copied!");
+                                        }}
+                                        className="py-2.5 bg-blue-50 text-blue-600 font-bold text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5"
+                                      >
+                                        <LinkIcon size={12} /> Profile Link
+                                      </button>
+                                      <button 
+                                        onClick={() => {
+                                          const url = `${window.location.origin}/dashboard`;
+                                          navigator.clipboard.writeText(url);
+                                          showToast("Dashboard link copied!");
+                                        }}
+                                        className="py-2.5 bg-emerald-50 text-emerald-600 font-bold text-[10px] uppercase rounded-xl flex items-center justify-center gap-1.5"
+                                      >
+                                        <LayoutDashboard size={12} /> Dash Link
+                                      </button>
+                                    </div>
                                     <button 
-                                      onClick={() => setIsEditingTeamProfile(profileAtSlot)}
-                                      className="flex-1 py-2.5 bg-slate-900 text-white font-black text-[10px] uppercase rounded-xl hover:bg-slate-800"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button 
-                                      onClick={async () => {
-                                        if(window.confirm('Are you sure you want to delete this profile?')) {
-                                          const { doc, deleteDoc } = await import('firebase/firestore');
-                                          await deleteDoc(doc(db, 'profiles', profileAtSlot.id));
-                                          showToast("Profile deleted");
-                                          setTeamProfiles(teamProfiles.filter(tp => tp.id !== profileAtSlot.id));
-                                        }
+                                      onClick={() => {
+                                        setEditingSubProfileId(profileAtSlot.id);
+                                        setFormData(profileAtSlot);
+                                        setSidebarTab('profile');
                                       }}
-                                      className="px-3 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors"
+                                      className="w-full py-2.5 bg-blue-600 text-white font-black text-[10px] uppercase rounded-xl"
                                     >
-                                      <X size={16} />
+                                      Full Editor
                                     </button>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <Link 
+                                        to={`/profile/${profileAtSlot.slug || profileAtSlot.id}`} 
+                                        target="_blank"
+                                        className="py-2.5 bg-slate-900 text-white font-black text-[10px] uppercase rounded-xl text-center flex items-center justify-center gap-1.5"
+                                      >
+                                        <Share2 size={12} /> Preview
+                                      </Link>
+                                      <button 
+                                        onClick={async () => {
+                                          if(window.confirm('Delete?')) {
+                                            const { doc, deleteDoc } = await import('firebase/firestore');
+                                            await deleteDoc(doc(db, 'profiles', profileAtSlot.id));
+                                            setTeamProfiles(teamProfiles.filter(tp => tp.id !== profileAtSlot.id));
+                                          }
+                                        }}
+                                        className="py-2.5 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-xl"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
                                   </div>
                                 </>
                               ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 mb-3">
-                                    <Plus size={20} />
-                                  </div>
-                                  <h5 className="text-slate-400 font-bold text-sm m-0">Empty Slot {idx + 1}</h5>
+                                <div className="flex-1 flex flex-col items-center justify-center">
                                   <button 
-                                    onClick={() => setIsEditingTeamProfile({ 
-                                      name: '', 
-                                      title: '', 
-                                      slug: `team-${idx + 1}-${Date.now().toString().slice(-4)}`,
-                                      isSubProfile: true
-                                    })}
-                                    className="mt-4 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase rounded-lg hover:border-blue-400 hover:text-blue-600 transition-all shadow-sm"
+                                    onClick={() => setIsEditingTeamProfile({ name: '', title: '', email: '', slug: `staff-${idx+1}-${Date.now().toString().slice(-4)}`, isSubProfile: true })}
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase rounded-lg hover:border-blue-400 transition-all"
                                   >
-                                    Create Profile
+                                    Add Profile
                                   </button>
                                 </div>
                               )}

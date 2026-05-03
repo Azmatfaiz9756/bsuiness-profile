@@ -11,6 +11,7 @@ import {
   BarChart3,
   Zap,
   ArrowDown,
+  Shield,
   Search,
   Filter,
   Loader2,
@@ -32,6 +33,7 @@ import {
 import { db } from "../../firebase";
 
 import ProfileChatbot from "../profile/components/ProfileChatbot";
+import { maskProfileForDirectory } from "../../lib/privacy";
 
 function HeroSection() {
   const titleWords = ["DIGITAL", "CONNECT."];
@@ -89,8 +91,13 @@ function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-400 font-bold text-[10px] sm:text-xs tracking-widest uppercase mb-6 border border-sky-400/20">
-              <Sparkles size={14} className="animate-pulse" /> Tap & Go Networking
+            <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-400 font-bold text-[10px] sm:text-xs tracking-widest uppercase border border-sky-400/20">
+                <Sparkles size={14} className="animate-pulse" /> Tap & Go Networking
+              </div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-[10px] sm:text-xs tracking-widest uppercase border border-emerald-400/20">
+                <Shield size={14} /> End-to-End Encrypted
+              </div>
             </div>
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] mb-8 tracking-tighter uppercase min-h-[120px] md:min-h-[220px]">
               <motion.div 
@@ -546,11 +553,15 @@ export default function FrontendHome() {
         setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
         setHasMore(snapshot.docs.length === 12);
         
-        // Merge with static profiles
-        const combined = [...staticProfiles];
+        // Merge with static profiles and apply masking
+        const combined = [...staticProfiles]
+          .map(p => maskProfileForDirectory(p))
+          .filter(p => p !== null);
+
         dbDocs.forEach(dbp => {
-          if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
-            combined.push(dbp);
+          const masked = maskProfileForDirectory(dbp);
+          if (masked && !combined.find(p => p.email === masked.email || p.id === masked.id)) {
+            combined.push(masked);
           }
         });
         setProfiles(combined);
@@ -562,8 +573,9 @@ export default function FrontendHome() {
         setProfiles((prev) => {
           const combined = [...prev];
           dbDocs.forEach(dbp => {
-             if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
-               combined.push(dbp);
+             const masked = maskProfileForDirectory(dbp);
+             if (masked && !combined.find(p => p.email === masked.email || p.id === masked.id)) {
+               combined.push(masked);
              }
           });
           return combined;
@@ -642,6 +654,40 @@ export default function FrontendHome() {
             Direct access to thousands of verified professionals. Start your
             search below or filter by industry.
           </p>
+
+          {/* Security Info Card */}
+          <div className="max-w-4xl mx-auto mb-12 p-8 bg-slate-800/40 rounded-[2.5rem] border border-slate-700/50 shadow-2xl relative overflow-hidden text-left sm:text-center flex flex-col sm:items-center">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[80px] rounded-full -mr-20 -mt-20"></div>
+             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-6 relative z-10">
+                <Shield size={14} /> Certified Secure Network
+             </div>
+             <h3 className="text-2xl md:text-3xl font-black text-white mb-4 tracking-tight leading-tight relative z-10">
+               Protected by <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">End-to-End Encryption.</span>
+             </h3>
+             <p className="text-slate-400 text-sm md:text-base font-medium max-w-2xl mb-8 relative z-10 leading-relaxed">
+               Your business interactions and personal data are shielded with zero-knowledge cryptographic security. We give you full control over what info shows in directories while maintaining a powerful direct-link profile.
+             </p>
+             <div className="flex flex-col sm:flex-row gap-6 relative z-10 w-full justify-center">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-emerald-400 shrink-0">
+                      <Zap size={18} />
+                   </div>
+                   <div className="text-left">
+                      <div className="text-white text-xs font-black uppercase">Rapid Delivery</div>
+                      <div className="text-slate-500 text-[10px] font-bold tracking-wide leading-none">Instant global sync</div>
+                   </div>
+                </div>
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-sky-400 shrink-0">
+                      <Shield size={18} />
+                   </div>
+                   <div className="text-left">
+                      <div className="text-white text-xs font-black uppercase">Private Discovery</div>
+                      <div className="text-slate-500 text-[10px] font-bold tracking-wide leading-none">Partial visibility mode</div>
+                   </div>
+                </div>
+             </div>
+          </div>
 
           {/* Global Search Bar */}
           <div className="flex max-w-2xl mx-auto bg-white rounded-xl p-2 shadow-xl shrink-0">
