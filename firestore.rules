@@ -30,9 +30,9 @@ service cloud.firestore {
     }
 
     // Profiles: Anyone can read, owner can write
-    match /profiles/{uid} {
+    match /profiles/{docId} {
       allow read: if true;
-      allow write: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(docId) || isAdmin() || (isSignedIn() && (resource == null || resource.data.ownerId == request.auth.uid));
     }
 
     // Appointments & Leads: Visitors can create, owner can manage

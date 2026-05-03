@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
-import { useEffect } from 'react';
-import { doc, getDocFromServer } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { doc, getDocFromServer, query, collection, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
@@ -46,7 +46,39 @@ import OwnerDashboard from './pages/dashboard/OwnerDashboard';
 import SeedDemo from './pages/SeedDemo';
 
 export default function App() {
+  const [domainProfileId, setDomainProfileId] = useState<string | null>(null);
+  const [isCheckingDomain, setIsCheckingDomain] = useState(true);
+
   useEffect(() => {
+    async function checkDomain() {
+      const hostname = window.location.hostname;
+      const mainDomains = [
+        'localhost', 
+        '127.0.0.1', 
+        'businessprofile.webdevelop.ae',
+        'ais-dev-pn2tu27zkvta4z3zy6bt5q-406651789755.europe-west1.run.app',
+        'ais-pre-pn2tu27zkvta4z3zy6bt5q-406651789755.europe-west1.run.app'
+      ];
+
+      // If it's a main domain, we use standard routing
+      const isMainDomain = mainDomains.some(d => hostname.includes(d));
+      
+      if (!isMainDomain) {
+        try {
+          const q = query(collection(db, 'profiles'), where('customDomain', '==', hostname));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            setDomainProfileId(snap.docs[0].id);
+          }
+        } catch (e) {
+          console.error("Domain check failed", e);
+        }
+      }
+      setIsCheckingDomain(false);
+    }
+    
+    checkDomain();
+
     async function testConnection() {
       try {
         await getDocFromServer(doc(db, 'test', 'connection'));
@@ -58,6 +90,22 @@ export default function App() {
     }
     testConnection();
   }, []);
+
+  if (isCheckingDomain) {
+    return <div className="h-screen w-full flex items-center justify-center bg-slate-50"><div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  }
+
+  // If we are on a custom domain, ONLY show the profile
+  if (domainProfileId) {
+    return (
+      <HelmetProvider>
+        <AppProvider>
+          <Toaster position="top-center" />
+          <FullProfile forcedId={domainProfileId} />
+        </AppProvider>
+      </HelmetProvider>
+    );
+  }
 
   return (
     <HelmetProvider>

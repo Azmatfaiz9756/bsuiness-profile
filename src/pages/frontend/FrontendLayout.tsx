@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { logout } from '../../firebase';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Menu, X, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { LoginModal } from '../../components/LoginModal';
 import toast from 'react-hot-toast';
 
@@ -67,28 +67,61 @@ export const FrontendLayout = () => {
       
       {/* Promotion Banner */}
       {!isShop && (
-        <div className="bg-blue-600 text-white py-2 px-4 text-center text-[10px] md:text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 overflow-hidden whitespace-nowrap">
-          <span className="flex items-center gap-1"><Sparkles size={14} className="text-yellow-300 shrink-0" /> Limited Offer: Get 1-Month FREE Trial on all Premium Plans!</span>
-          <Link to="/plans" className="underline hover:text-blue-100 transition-colors shrink-0">Claim Now →</Link>
+        <div className="bg-slate-900 text-white py-2.5 relative overflow-hidden border-b border-slate-800 shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
+          
+          <div className="animate-marquee flex whitespace-nowrap items-center">
+            {/* Duplicated content for seamless scrolling */}
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex items-center gap-12 px-6">
+                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-sky-400">
+                  <Sparkles size={14} className="text-yellow-400 animate-pulse shrink-0" /> 
+                  Premium Networking
+                </span>
+                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white">
+                  <Zap size={14} className="text-blue-400 shrink-0" /> 
+                  1-Month FREE Trial active
+                </span>
+                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-400">
+                   <ShieldCheck size={14} className="text-emerald-400 shrink-0" /> 
+                   Secure & Private
+                </span>
+                <Link to="/plans" className="text-[10px] md:text-xs font-black uppercase tracking-widest bg-blue-600 px-4 py-1 rounded-full hover:bg-blue-500 transition-all transform hover:scale-105 shadow-lg shadow-blue-600/20">
+                  Claim Now
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       
       {/* Desktop & Mobile Header */}
       {!isShop && (
-        <div className="nav flex h-[64px] items-center justify-between px-4 md:px-6 bg-white border-b border-slate-200 sticky top-0 z-50">
-          <Link to="/" className="nav-logo flex items-center gap-2 z-10">
-            <img src="/logo.png" alt="Digital Connect" className="w-8 h-8 rounded shrink-0 object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
-            <div className="nav-logo-icon w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0" style={{ display: 'none' }}>DBC</div>
+        <div className="nav flex h-[72px] md:h-[80px] items-center justify-between px-4 md:px-8 bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
+          <Link to="/" className="nav-logo flex items-center gap-3 z-10 group">
+            <div className="relative w-10 md:w-12 h-10 md:h-12 flex items-center justify-center">
+              {/* Spinning Premium Outline */}
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-600 border-r-indigo-500 animate-spin duration-700 shadow-[0_0_15px_rgba(37,99,235,0.2)]"></div>
+              <div className="absolute inset-1 rounded-full border border-dashed border-slate-200 animate-spin-reverse duration-[3000ms]"></div>
+              
+              <div className="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-full flex items-center justify-center font-black text-[10px] md:text-xs z-10 shadow-lg group-hover:scale-105 transition-transform">
+                DBC
+              </div>
+            </div>
+            
             <div className="hidden md:flex flex-col">
-              <span className="nav-logo-text font-bold text-slate-900 whitespace-nowrap leading-tight text-base">Digital Connect</span>
-              <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
+              <span className="nav-logo-text font-black text-slate-900 whitespace-nowrap leading-tight text-lg tracking-tighter uppercase italic">
+                Digital <span className="text-blue-600">Connect</span>
+              </span>
+              <span className="text-[8px] text-slate-400 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES</span>
             </div>
           </Link>
 
           {/* Centered Mobile Title */}
-          <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[60%]">
-            <span className="font-bold text-slate-900 whitespace-nowrap leading-tight text-base w-full overflow-hidden text-ellipsis">Digital Connect</span>
-            <span className="text-[8px] text-slate-500 font-bold tracking-wide w-full overflow-hidden text-ellipsis uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
+          <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[50%]">
+            <span className="font-black text-slate-900 whitespace-nowrap leading-tight text-sm tracking-tighter uppercase italic">Digital <span className="text-blue-600">Connect</span></span>
+            <span className="text-[7px] text-slate-400 font-bold tracking-widest uppercase truncate w-full">HAADI GLOBAL</span>
           </Link>
           
           {/* Desktop Links */}
@@ -226,15 +259,19 @@ export const FrontendLayout = () => {
           <div className="max-w-7xl mx-auto px-4 md:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
               <div>
-                <div className="flex items-center gap-2 mb-6">
-                  <img src="/logo.png" alt="Digital Connect" className="w-8 h-8 rounded shrink-0 object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
-                  <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0" style={{ display: 'none' }}>DBC</div>
+                <div className="flex items-center gap-3 mb-6 group cursor-default">
+                  <div className="relative w-10 h-10 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border border-transparent border-t-blue-500 border-r-blue-400 animate-spin"></div>
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-full flex items-center justify-center font-black text-[10px] z-10 shadow-lg shadow-blue-900/40 opacity-90">
+                      DBC
+                    </div>
+                  </div>
                   <div className="flex flex-col">
-                    <span className="font-bold text-white text-lg tracking-tight leading-tight">{siteSettings?.siteName || 'Digital Connect'}</span>
-                    <span className="text-[10px] text-blue-400 font-bold tracking-wider">HAADI GLOBAL VENTURES FZE LLC</span>
+                    <span className="font-black text-white text-lg tracking-tighter leading-tight uppercase italic">{siteSettings?.siteName || 'Digital Connect'}</span>
+                    <span className="text-[10px] text-blue-500 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES</span>
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed mb-6">
+                <p className="text-sm leading-relaxed mb-6 text-slate-500 font-medium">
                   {siteSettings?.seoDesc || 'The ultimate platform for premium professional networking. AI-powered digital business cards designed for the modern executive.'}
                 </p>
                 <div className="flex gap-4">

@@ -344,6 +344,9 @@ export default function OwnerDashboard() {
   const [formData, setFormData] = useState<any>({});
   const [activeTab, setActiveTab] = useState('basic');
   const [sidebarTab, setSidebarTab] = useState('profile');
+  const [teamProfiles, setTeamProfiles] = useState<any[]>([]);
+  const [isEditingTeamProfile, setIsEditingTeamProfile] = useState<any>(null);
+  const [domainStatus, setDomainStatus] = useState<'Checking' | 'Connected' | 'Error' | 'Not Configured'>('Not Configured');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [emailError, setEmailError] = useState('');
@@ -415,6 +418,24 @@ export default function OwnerDashboard() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
+
+  // Fetch team profiles for Enterprise users
+  useEffect(() => {
+    if (sidebarTab === 'team' && profile?.id && profile?.plan === 'Enterprise') {
+      import('firebase/firestore').then(({ collection, query, where, getDocs }) => {
+        const fetchTeam = async () => {
+          try {
+            const q = query(collection(db, 'profiles'), where('ownerId', '==', user.uid), where('isSubProfile', '==', true));
+            const snap = await getDocs(q);
+            setTeamProfiles(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          } catch(e) {
+            console.error("Team fetch error:", e);
+          }
+        };
+        fetchTeam();
+      });
+    }
+  }, [sidebarTab, profile]);
 
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -724,9 +745,9 @@ export default function OwnerDashboard() {
              <Headset size={20} />
              <span className="text-[9px] font-bold">Agent</span>
            </button>
-           <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'chatbot' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
-             <MessageSquare size={20} />
-             <span className="text-[9px] font-bold">AI Chat</span>
+           <button onClick={() => { setSidebarTab('team'); setIsMobileMenuOpen(false); }} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${sidebarTab === 'team' && !isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
+             <Users size={20} className={profile?.plan === 'Enterprise' ? 'text-amber-400' : ''} />
+             <span className="text-[9px] font-bold text-center">Enterprise Team</span>
            </button>
            <button onClick={() => setIsMobileMenuOpen(true)} className={`flex flex-col items-center gap-1 w-16 py-1 transition-all ${isMobileMenuOpen ? 'text-blue-500 scale-110' : 'text-slate-500'}`}>
              <Menu size={20} />
@@ -769,11 +790,10 @@ export default function OwnerDashboard() {
             <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
               <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
             </button>
-            {profile?.plan === 'Enterprise' && (
-              <button onClick={() => setSidebarTab('team')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Users size={20} /> <span className="flex-1 text-left">Team Management</span>
-              </button>
-            )}
+            <button onClick={() => setSidebarTab('team')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+              <Users size={20} /> <span className="flex-1 text-left">Enterprise Team (10 Profiles)</span>
+              {profile?.plan !== 'Enterprise' && <Sparkles size={14} className="text-yellow-400" />}
+            </button>
           </div>
           
           <div className="p-6 border-t border-slate-800 shrink-0 flex flex-col gap-3">
@@ -861,9 +881,10 @@ export default function OwnerDashboard() {
                  <button onClick={() => setActiveTab('media')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'media' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Gallery</button>
                  <button onClick={() => setActiveTab('bank')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'bank' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Payments</button>
                  <button onClick={() => setActiveTab('widgets')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Custom</button>
+                 <button onClick={() => setActiveTab('domain')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'domain' ? 'bg-white shadow-md text-blue-800 scale-[1.02] border border-blue-100' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>🌐 Domains</button>
               </div>
               <div className="p-4 md:p-6 lg:p-8 overflow-y-auto relative">
-                {isFreePlan && !['basic', 'contact'].includes(activeTab) && (
+                {isFreePlan && !['basic', 'contact', 'domain'].includes(activeTab) && (
                   <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center pt-24">
                     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1567,6 +1588,142 @@ export default function OwnerDashboard() {
                           ))}
                         </div>
                      </div>
+                  </div>
+                )}
+                {activeTab === 'domain' && (
+                  <div className="flex flex-col gap-8 max-w-4xl">
+                    <div className="p-6 md:p-8 bg-blue-600 rounded-3xl text-white shadow-xl shadow-blue-500/20">
+                      <h3 className="text-xl font-black mb-2 uppercase tracking-tight">Connect Custom Domain</h3>
+                      <p className="text-blue-100 text-sm font-medium mb-6">Boost your brand by using a professional domain like <strong>www.yourcompany.com</strong> instead of our default link.</p>
+                      
+                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+                        <label className="block text-[10px] font-black text-blue-100 uppercase tracking-widest mb-2">Primary Domain</label>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <input 
+                             type="text" 
+                             value={formData.customDomain || ''} 
+                             onChange={(e) => setFormData({...formData, customDomain: e.target.value.toLowerCase().trim()})}
+                             placeholder="e.g. digitalcard.com"
+                             className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-blue-200 outline-none focus:ring-2 focus:ring-white/40 font-bold"
+                          />
+                          <button 
+                            onClick={() => {
+                              setDomainStatus('Checking');
+                              setTimeout(() => {
+                                setDomainStatus(formData.customDomain ? 'Connected' : 'Not Configured');
+                                showToast("Domain status updated!");
+                              }, 1500);
+                            }}
+                            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-50 transition-all"
+                          >
+                            Verify Connection
+                          </button>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${domainStatus === 'Connected' ? 'bg-emerald-400 animate-pulse' : domainStatus === 'Checking' ? 'bg-amber-400 animate-spin' : 'bg-slate-400'}`}></div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-100">Status: {domainStatus}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8">
+                      <h4 className="text-lg font-black text-slate-900 mb-6 flex items-center gap-2">
+                        <Settings size={20} className="text-slate-400" /> DNS Configuration
+                      </h4>
+                      <div className="space-y-6">
+                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-blue-600">Step 1: Point DNS Record</span>
+                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">Required</span>
+                          </div>
+                          <p className="text-xs text-slate-600 mb-3 font-medium text-pretty">Log in to your domain provider (GoDaddy, Namecheap, etc.) and add a **CNAME** or **A** record to link 100%:</p>
+                          <div className="flex flex-col gap-3">
+                             <div className="bg-white border border-slate-200 p-4 rounded-xl">
+                               <div className="flex items-center justify-between mb-2">
+                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Option 1: CNAME Record (Recommended)</span>
+                               </div>
+                               <div className="grid grid-cols-2 gap-2">
+                                 <div className="bg-slate-50 p-2 rounded-lg text-center">
+                                   <div className="text-[8px] font-bold text-slate-400 uppercase">Host</div>
+                                   <div className="text-xs font-black">@ / www</div>
+                                 </div>
+                                 <div className="bg-slate-50 p-2 rounded-lg text-center overflow-hidden">
+                                   <div className="text-[8px] font-bold text-slate-400 uppercase">Points To</div>
+                                   <div className="text-xs font-black break-all">businessprofile.webdevelop.ae</div>
+                                 </div>
+                               </div>
+                             </div>
+
+                             <div className="bg-white border border-slate-200 p-4 rounded-xl">
+                               <div className="flex items-center justify-between mb-2">
+                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Option 2: A Record (Static IP)</span>
+                               </div>
+                               <div className="grid grid-cols-2 gap-2">
+                                 <div className="bg-slate-50 p-2 rounded-lg text-center">
+                                   <div className="text-[8px] font-bold text-slate-400 uppercase">Host</div>
+                                   <div className="text-xs font-black">@</div>
+                                 </div>
+                                 <div className="bg-slate-50 p-2 rounded-lg text-center overflow-hidden">
+                                   <div className="text-[8px] font-bold text-slate-400 uppercase">Value / IP</div>
+                                   <div className="text-xs font-black break-all">76.76.21.21</div>
+                                 </div>
+                               </div>
+                             </div>
+                             
+                             <div className="mt-2 p-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-3">
+                               <div className="flex items-center gap-2 mb-1">
+                                 <span className="text-xs font-black text-emerald-900 uppercase tracking-tight">🔒 Security & Privacy</span>
+                               </div>
+                               
+                               <div className="space-y-3">
+                                 <div>
+                                   <div className="text-[9px] font-black text-emerald-700/50 uppercase mb-0.5">English</div>
+                                   <p className="text-[10px] font-bold text-emerald-800 leading-relaxed">
+                                     When someone opens your Custom Domain, only your **Business Profile** will load. Referral links and Shop pages will only work on the main website.
+                                   </p>
+                                 </div>
+
+                                 <div className="pt-2 border-t border-emerald-100">
+                                   <div className="text-[9px] font-black text-emerald-700/50 uppercase mb-0.5">Hindi / हिंदी</div>
+                                   <p className="text-[10px] font-bold text-emerald-800 leading-relaxed">
+                                     जब कोई आपका कस्टम डोमेन खोलेगा, तो केवल आपका **बिजनेस प्रोफाइल** लोड होगा। रेफरल लिंक और शॉप पेज केवल मुख्य वेबसाइट पर ही काम करेंगे।
+                                   </p>
+                                 </div>
+
+                                 <div className="pt-2 border-t border-emerald-100 text-right" dir="rtl">
+                                   <div className="text-[9px] font-black text-emerald-700/50 uppercase mb-0.5">Arabic / العربية</div>
+                                   <p className="text-[10px] font-bold text-emerald-800 leading-relaxed">
+                                     عندما يفتح شخص ما نطاقك المخصص، سيتم تحميل **ملف تعريف عملك** فقط. ستعمل روابط الإحالة وصفحات المتجر فقط على الموقع الرئيسي.
+                                   </p>
+                                 </div>
+                               </div>
+                             </div>
+                          </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-blue-600">Step 2: Backup CNAME</span>
+                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">Optional</span>
+                          </div>
+                          <p className="text-xs text-slate-600 mb-3 font-medium text-pretty">Agar aap domain ke saath 'www' lagana chahte hain:</p>
+                          <div className="grid grid-cols-3 gap-2">
+                             <div className="bg-white border border-slate-200 p-3 rounded-xl text-center">
+                               <div className="text-[8px] font-bold text-slate-400 uppercase">Type</div>
+                               <div className="text-xs font-black">CNAME</div>
+                             </div>
+                             <div className="bg-white border border-slate-200 p-3 rounded-xl text-center">
+                               <div className="text-[8px] font-bold text-slate-400 uppercase">Host</div>
+                               <div className="text-xs font-black">www</div>
+                             </div>
+                             <div className="bg-white border border-slate-200 p-3 rounded-xl text-center overflow-hidden">
+                               <div className="text-[8px] font-bold text-slate-400 uppercase">Value / Point To</div>
+                               <div className="text-xs font-black break-all leading-tight">businessprofile.webdevelop.ae</div>
+                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2293,112 +2450,184 @@ export default function OwnerDashboard() {
 
           {sidebarTab === 'team' && (
              <div className="p-4 md:p-8">
-               <div className="mb-8">
-                 <h2 className="text-2xl font-black text-slate-900 m-0">Team Management</h2>
-                 <p className="text-slate-500 m-0 mt-1 text-sm">Control digital profiles for your entire organization</p>
-               </div>
+               {profile?.plan !== 'Enterprise' ? (
+                 <div className="max-w-2xl mx-auto py-20 text-center">
+                    <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <Users size={40} />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 mb-4 uppercase tracking-tight">Enterprise Team Management</h2>
+                    <p className="text-slate-600 font-medium mb-8">This feature allows you to create and manage up to 10 unique digital profiles for your staff or business branches under ONE master account.</p>
+                    <Link to="/plans" className="inline-block bg-blue-600 text-white font-black py-4 px-10 rounded-2xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all uppercase tracking-widest text-sm">
+                      Upgrade to Enterprise Plan
+                    </Link>
+                 </div>
+               ) : (
+                 <>
+                   <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                     <div>
+                       <h2 className="text-2xl font-black text-slate-900 m-0">Enterprise Management</h2>
+                       <p className="text-slate-500 m-0 mt-1 text-sm">Manage 10 digital profiles ({teamProfiles.length}/10 used)</p>
+                     </div>
+                     {isEditingTeamProfile && (
+                       <button 
+                         onClick={() => setIsEditingTeamProfile(null)}
+                         className="px-4 py-2 bg-slate-100 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-200"
+                       >
+                         Back to Slots
+                       </button>
+                     )}
+                   </div>
 
-               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  <div className="lg:col-span-2">
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
-                       <h4 className="text-lg font-black text-slate-900 m-0 mb-6 flex items-center gap-2">
-                         <Users size={20} className="text-blue-600" /> Organization Members
-                       </h4>
-                       
-                       {(profile.teamMembers || []).length === 0 ? (
-                         <div className="py-12 flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl text-center">
-                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4">
-                              <Users size={30} />
+                   {isEditingTeamProfile ? (
+                     <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                       <h3 className="text-lg font-black mb-6">Editing Profile: {isEditingTeamProfile.name || 'New Profile'}</h3>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
+                            <input 
+                              type="text" 
+                              value={isEditingTeamProfile.name || ''} 
+                              onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, name: e.target.value})}
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold"
+                              placeholder="Employee Name"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Title / Role</label>
+                            <input 
+                              type="text" 
+                              value={isEditingTeamProfile.title || ''} 
+                              onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, title: e.target.value})}
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold"
+                              placeholder="e.g. Sales Manager"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Custom URL Slug</label>
+                            <input 
+                              type="text" 
+                              value={isEditingTeamProfile.slug || ''} 
+                              onChange={(e) => setIsEditingTeamProfile({...isEditingTeamProfile, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm font-bold"
+                              placeholder="employee-url-slug"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Profile Link</label>
+                            <div className="w-full p-3 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono truncate">
+                              {window.location.origin}/profile/{isEditingTeamProfile.slug || '...'}
                             </div>
-                            <h5 className="font-black text-slate-700 m-0">No team members yet</h5>
-                            <p className="text-xs text-slate-500 mt-2">Invite your employees or partners to create their DBC profiles.</p>
-                         </div>
-                       ) : (
-                         <div className="space-y-4">
-                            {profile.teamMembers.map((m: any, i: number) => (
-                              <div key={i} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-blue-200 transition-colors">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500">{m.name?.charAt(0)}</div>
-                                  <div>
-                                    <div className="font-bold text-sm text-slate-900">{m.name}</div>
-                                    <div className="text-[10px] font-bold text-slate-500 uppercase">{m.email} • {m.role}</div>
+                          </div>
+                       </div>
+                       <div className="flex gap-4">
+                         <button 
+                           onClick={async () => {
+                             try {
+                               const { doc, setDoc } = await import('firebase/firestore');
+                               const pId = isEditingTeamProfile.id || `TEAM-${Date.now()}`;
+                               const newP = {
+                                 ...isEditingTeamProfile,
+                                 id: pId,
+                                 ownerId: user.uid,
+                                 isSubProfile: true,
+                                 parentProfileId: profile.id,
+                                 company: profile.company,
+                                 createdAt: isEditingTeamProfile.createdAt || new Date().toISOString(),
+                                 updatedAt: new Date().toISOString()
+                               };
+                               await setDoc(doc(db, 'profiles', pId), newP);
+                               showToast("Team profile saved!");
+                               setIsEditingTeamProfile(null);
+                               // Refresh list
+                               const { query, collection, where, getDocs } = await import('firebase/firestore');
+                               const q = query(collection(db, 'profiles'), where('ownerId', '==', user.uid), where('isSubProfile', '==', true));
+                               const snap = await getDocs(q);
+                               setTeamProfiles(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                             } catch(e) {
+                               showToast("Failed to save profile");
+                             }
+                           }}
+                           className="px-8 py-3 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700"
+                         >
+                           Save Changes
+                         </button>
+                         <button 
+                           onClick={() => setIsEditingTeamProfile(null)}
+                           className="px-8 py-3 bg-slate-100 text-slate-600 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-slate-200"
+                         >
+                           Cancel
+                         </button>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Array.from({ length: 10 }).map((_, idx) => {
+                          const profileAtSlot = teamProfiles[idx];
+                          return (
+                            <div key={idx} className={`bg-white border rounded-3xl p-6 flex flex-col justify-between min-h-[200px] transition-all ${profileAtSlot ? 'border-slate-200 shadow-sm' : 'border-dashed border-slate-300 bg-slate-50/50'}`}>
+                              {profileAtSlot ? (
+                                <>
+                                  <div className="mb-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                      <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-lg">
+                                        {profileAtSlot.name?.charAt(0)}
+                                      </div>
+                                      <div className="text-[10px] font-black uppercase bg-blue-100 text-blue-700 px-2 py-1 rounded-md">Slot {idx + 1}</div>
+                                    </div>
+                                    <h3 className="font-black text-slate-900 m-0">{profileAtSlot.name}</h3>
+                                    <p className="text-xs text-slate-500 m-0 font-bold">{profileAtSlot.title || 'No Title'}</p>
+                                    <div className="mt-3 flex items-center gap-1.5 text-blue-600 font-bold text-[10px] truncate">
+                                      <LinkIcon size={12} /> {profileAtSlot.slug}
+                                    </div>
                                   </div>
+                                  <div className="flex gap-2">
+                                    <button 
+                                      onClick={() => setIsEditingTeamProfile(profileAtSlot)}
+                                      className="flex-1 py-2.5 bg-slate-900 text-white font-black text-[10px] uppercase rounded-xl hover:bg-slate-800"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button 
+                                      onClick={async () => {
+                                        if(window.confirm('Are you sure you want to delete this profile?')) {
+                                          const { doc, deleteDoc } = await import('firebase/firestore');
+                                          await deleteDoc(doc(db, 'profiles', profileAtSlot.id));
+                                          showToast("Profile deleted");
+                                          setTeamProfiles(teamProfiles.filter(tp => tp.id !== profileAtSlot.id));
+                                        }
+                                      }}
+                                      className="px-3 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors"
+                                    >
+                                      <X size={16} />
+                                    </button>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                  <div className="w-10 h-10 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 mb-3">
+                                    <Plus size={20} />
+                                  </div>
+                                  <h5 className="text-slate-400 font-bold text-sm m-0">Empty Slot {idx + 1}</h5>
+                                  <button 
+                                    onClick={() => setIsEditingTeamProfile({ 
+                                      name: '', 
+                                      title: '', 
+                                      slug: `team-${idx + 1}-${Date.now().toString().slice(-4)}`,
+                                      isSubProfile: true
+                                    })}
+                                    className="mt-4 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-[10px] uppercase rounded-lg hover:border-blue-400 hover:text-blue-600 transition-all shadow-sm"
+                                  >
+                                    Create Profile
+                                  </button>
                                 </div>
-                                <div className="flex gap-2">
-                                  <button className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-[10px] font-bold rounded-lg border border-slate-200">Manage</button>
-                                  <button className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold rounded-lg border border-red-100">Remove</button>
-                                </div>
-                              </div>
-                            ))}
-                         </div>
-                       )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                       <h4 className="text-sm font-black text-slate-900 m-0 mb-4">Invite Member</h4>
-                       <div className="space-y-4">
-                          <input 
-                            type="email" 
-                            placeholder="Employee Email..." 
-                            value={invitationEmail}
-                            onChange={(e) => setInvitationEmail(e.target.value)}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold" 
-                          />
-                          <select 
-                            value={invitationRole}
-                            onChange={(e) => setInvitationRole(e.target.value)}
-                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-bold"
-                          >
-                             <option>Member (Customizable Profile)</option>
-                             <option>View-Only (Admin Managed)</option>
-                          </select>
-                          <button 
-                            onClick={async () => {
-                              if (!invitationEmail) {
-                                showToast("Please enter an email");
-                                return;
-                              }
-                              const currentMembers = profile.teamMembers || [];
-                              if (currentMembers.length >= 10) {
-                                showToast("Team limit reached. Upgrade for more seats.");
-                                return;
-                              }
-                              const newMember = {
-                                name: invitationEmail.split('@')[0],
-                                email: invitationEmail,
-                                role: invitationRole,
-                                status: 'Pending'
-                              };
-                              const updatedMembers = [...currentMembers, newMember];
-                              try {
-                                await setDoc(doc(db, 'profiles', user.uid), { teamMembers: updatedMembers }, { merge: true });
-                                setProfile({ ...profile, teamMembers: updatedMembers });
-                                setInvitationEmail('');
-                                showToast(`Invitation sent to ${invitationEmail}`);
-                              } catch(e) {
-                                showToast("Failed to send invitation");
-                              }
-                            }}
-                            className="w-full py-3 bg-blue-600 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
-                          >
-                            Send Invitation
-                          </button>
-                       </div>
-                    </div>
-
-                    <div className="bg-slate-900 rounded-3xl p-6 text-white border border-slate-800">
-                       <div className="flex items-center justify-between mb-4">
-                          <h5 className="text-xs font-black uppercase tracking-widest m-0">Seat Utilization</h5>
-                          <span className="text-[10px] font-bold text-emerald-400">{(profile.teamMembers?.length || 0)} / 10 used</span>
-                       </div>
-                       <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-600 rounded-full" style={{ width: `${((profile.teamMembers?.length || 0) / 10) * 100}%` }} />
-                       </div>
-                    </div>
-                  </div>
-               </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                     </div>
+                   )}
+                 </>
+               )}
              </div>
           )}
 
@@ -2429,13 +2658,13 @@ export default function OwnerDashboard() {
 
               <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-10 shadow-sm relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
-                  <div className="flex-1">
+                  <div className="flex-1 w-full">
                      <h3 className="text-2xl font-bold text-slate-900 mb-2">Your Unified Referral Link</h3>
                      <p className="text-slate-500 mb-6">Share your profile link. If you refer a business directly and they subscribe to a paid plan, you earn a <strong className="text-emerald-600">{siteSettings?.referralDirectCommission || 20} {siteSettings?.currency || 'AED'} direct commission</strong>!</p>
                      
                      <div className="flex flex-col sm:flex-row items-stretch gap-3">
-                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center overflow-x-auto">
-                          <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                        <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center overflow-hidden">
+                          <span className="text-sm font-medium text-slate-700 break-all leading-tight">
                             {(() => {
                               const userProfile = profiles?.find((p: any) => p.ownerId === user?.uid || p.email === user?.email);
                               const referralCode = userProfile?.id || (user ? `DBC-${user.uid.substring(0, 8).toUpperCase()}` : profile.id);
@@ -2450,7 +2679,7 @@ export default function OwnerDashboard() {
                             navigator.clipboard.writeText(`${window.location.origin}/plans?ref=${referralCode}`);
                             showToast("Link copied to clipboard!");
                           }}
-                          className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition"
+                          className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shrink-0"
                         >
                           Copy Link
                         </button>

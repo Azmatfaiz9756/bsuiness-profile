@@ -9,8 +9,13 @@ import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Share2, Download } from 'lucide-react';
 
-export default function FullProfile() {
-  const { id } = useParams();
+interface FullProfileProps {
+  forcedId?: string;
+}
+
+export default function FullProfile({ forcedId }: FullProfileProps) {
+  const { id: routeId } = useParams();
+  const id = forcedId || routeId;
   const navigate = useNavigate();
   const location = useLocation();
   const isPreview = new URLSearchParams(location.search).get('preview') === 'true';

@@ -5,6 +5,15 @@
   100% { transform: translateX(-50%); }
 }
 
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 3s linear infinite;
+}
+
 .animate-marquee {
   display: flex !important;
   animation: marquee 30s linear infinite;

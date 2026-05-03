@@ -9,7 +9,11 @@
         "title": { "type": "string" },
         "bio": { "type": "string" },
         "email": { "type": "string" },
-        "phone": { "type": "string" }
+        "phone": { "type": "string" },
+        "customDomain": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "isSubProfile": { "type": "boolean" },
+        "parentProfileId": { "type": "string" }
       }
     },
     "Appointment": {

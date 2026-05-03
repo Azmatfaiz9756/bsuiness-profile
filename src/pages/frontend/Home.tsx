@@ -34,6 +34,45 @@ import { db } from "../../firebase";
 import ProfileChatbot from "../profile/components/ProfileChatbot";
 
 function HeroSection() {
+  const titleWords = ["DIGITAL", "CONNECT."];
+  const subTitleText = "Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR.";
+  const subTitleWords = subTitleText.split(" ");
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const letterVariants = {
+    hidden: { opacity: 0, y: 30, rotateX: -60 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        damping: 10,
+        stiffness: 100,
+      }
+    },
+  };
+
+  const wordVariants = {
+    hidden: { opacity: 0, y: 10, filter: "blur(4px)" },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      filter: "blur(0px)",
+      transition: { duration: 0.4 }
+    },
+  };
+
   return (
     <div className="relative bg-slate-900 border-b border-slate-800 overflow-hidden min-h-[600px] flex flex-col justify-center">
       {/* Background Decorative Elements */}
@@ -51,16 +90,58 @@ function HeroSection() {
             transition={{ duration: 0.5 }}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-400 font-bold text-[10px] sm:text-xs tracking-widest uppercase mb-6 border border-sky-400/20">
-              <Sparkles size={14} /> Tap & Go Networking
+              <Sparkles size={14} className="animate-pulse" /> Tap & Go Networking
             </div>
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] mb-8 tracking-tighter uppercase">
-              DIGITAL <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400">CONNECT.</span>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] mb-8 tracking-tighter uppercase min-h-[120px] md:min-h-[220px]">
+              <motion.div 
+                className="flex flex-wrap justify-center lg:justify-start gap-x-[0.2em]"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {titleWords[0].split("").map((char, index) => (
+                  <motion.span key={index} variants={letterVariants} className="inline-block">
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.div>
+              <motion.div 
+                className="flex flex-wrap justify-center lg:justify-start gap-x-[0.2em] mt-2"
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
+                {titleWords[1].split("").map((char, index) => (
+                  <motion.span 
+                    key={index} 
+                    variants={letterVariants} 
+                    className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-blue-400 to-indigo-400 drop-shadow-[0_0_15px_rgba(56,189,248,0.2)]"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.div>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-lg mb-10 leading-relaxed font-medium">
-              Elevate your networking game. No apps, no paper. Just seamless
-              digital profile exchange via NFC or QR.
-            </p>
+            <motion.p 
+              className="text-base sm:text-lg md:text-xl text-slate-400 max-w-lg mb-10 leading-relaxed font-medium min-h-[80px]"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.04,
+                    delayChildren: 1.2
+                  }
+                }
+              }}
+              initial="hidden"
+              animate="visible"
+            >
+              {subTitleWords.map((word, i) => (
+                <motion.span key={i} variants={wordVariants} className="inline-block mr-1">
+                  {word}
+                </motion.span>
+              ))}
+            </motion.p>
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center lg:justify-start">
               <a
                 href="#directory"
