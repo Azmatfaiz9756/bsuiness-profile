@@ -365,7 +365,7 @@ export default function OwnerDashboard() {
       const completePayment = async () => {
         try {
           // Verify with server
-          const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:3000' : window.location.origin;
+          const apiUrl = '';
           const verifyRes = await fetch(`${apiUrl}/api/verify-checkout-session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

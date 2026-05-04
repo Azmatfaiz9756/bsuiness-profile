@@ -165,6 +165,10 @@ async function startServer() {
         return res.status(400).json({ error: "Invalid price" });
       }
 
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -180,8 +184,8 @@ async function startServer() {
           },
         ],
         mode: 'payment',
-        success_url: `${req.protocol}://${req.get('host')}/dashboard?payment_success=true&session_id={CHECKOUT_SESSION_ID}&plan=${encodeURIComponent(planName)}`,
-        cancel_url: `${req.protocol}://${req.get('host')}/dashboard?payment_canceled=true`,
+        success_url: `${baseUrl}/dashboard?payment_success=true&session_id={CHECKOUT_SESSION_ID}&plan=${encodeURIComponent(planName)}`,
+        cancel_url: `${baseUrl}/dashboard?payment_canceled=true`,
         metadata: {
           uid: uid,
           plan: planName
@@ -209,6 +213,10 @@ async function startServer() {
         return res.status(400).json({ error: "Invalid top-up amount" });
       }
 
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [
@@ -226,8 +234,8 @@ async function startServer() {
           },
         ],
         mode: "payment",
-        success_url: `${req.protocol}://${req.get("host")}/wallet?payment_success=true&session_id={CHECKOUT_SESSION_ID}&amount=${amount}`,
-        cancel_url: `${req.protocol}://${req.get("host")}/wallet?payment_canceled=true`,
+        success_url: `${baseUrl}/wallet?payment_success=true&session_id={CHECKOUT_SESSION_ID}&amount=${amount}`,
+        cancel_url: `${baseUrl}/wallet?payment_canceled=true`,
         metadata: {
           uid: uid,
           type: "wallet_topup",
@@ -273,12 +281,16 @@ async function startServer() {
         };
       });
 
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      const host = req.headers['x-forwarded-host'] || req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: lineItems,
         mode: 'payment',
-        success_url: `${req.protocol}://${req.get('host')}/shop?shop_payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.protocol}://${req.get('host')}/shop?shop_payment_canceled=true`,
+        success_url: `${baseUrl}/shop?shop_payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/shop?shop_payment_canceled=true`,
         metadata: {
           uid: uid || 'guest',
           profileId: profileId
