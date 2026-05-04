@@ -1,148 +1,64 @@
 {
   "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Core account data for the professional user",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "plan": { "type": "string", "enum": ["Free", "Basic", "Enterprise"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "verified": { "type": "boolean" }
+      },
+      "required": ["email", "name"]
+    },
     "Profile": {
-      "title": "Business Profile",
-      "description": "Public business profile data",
+      "title": "Digital Card Profile",
+      "description": "Public-facing digital business card details",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "title": { "type": "string" },
-        "bio": { "type": "string" },
-        "email": { "type": "string" },
-        "phone": { "type": "string" },
-        "customDomain": { "type": "string" },
-        "directoryVisibility": { "type": "string", "enum": ["full", "partial", "hidden"] },
-        "directoryHiddenFields": { "type": "array", "items": { "type": "string" } },
         "ownerId": { "type": "string" },
-        "isSubProfile": { "type": "boolean" },
-        "parentProfileId": { "type": "string" }
-      }
-    },
-    "Appointment": {
-      "title": "Appointment",
-      "description": "Booking request from client",
-      "type": "object",
-      "properties": {
-        "customerName": { "type": "string" },
-        "customerEmail": { "type": "string" },
-        "date": { "type": "string" },
-        "time": { "type": "string" },
-        "profileId": { "type": "string" }
-      },
-      "required": ["customerName", "customerEmail", "date", "time", "profileId"]
-    },
-    "Inquiry": {
-      "title": "Lead/Inquiry",
-      "description": "Contact message from client",
-      "type": "object",
-      "properties": {
         "name": { "type": "string" },
-        "email": { "type": "string" },
-        "message": { "type": "string" },
-        "profileId": { "type": "string" }
-      },
-      "required": ["name", "email", "message", "profileId"]
-    },
-    "Follower": {
-      "title": "Follower",
-      "description": "User who follows a business profile",
-      "type": "object",
-      "properties": {
-        "profileId": { "type": "string" },
-        "name": { "type": "string" },
-        "phone": { "type": "string" },
-        "email": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["profileId", "email"]
-    },
-    "Campaign": {
-      "title": "Marketing Campaign",
-      "description": "Broadcast message sent to followers",
-      "type": "object",
-      "properties": {
-        "profileId": { "type": "string" },
-        "message": { "type": "string" },
-        "imageUrl": { "type": "string" },
-        "type": { "type": "string", "enum": ["WhatsApp", "Push", "Email"] },
-        "status": { "type": "string" },
-        "sentAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["profileId", "message", "type"]
-    },
-    "ChatSession": {
-      "title": "Chat Session",
-      "description": "Conversation between a customer and a business",
-      "type": "object",
-      "properties": {
-        "profileId": { "type": "string" },
-        "customerName": { "type": "string" },
-        "customerEmail": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Queued", "Closed"] },
-        "lastMessage": { "type": "string" },
+        "bio": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "quickPayAmount": { "type": "number" },
+        "quickPayCurrency": { "type": "string", "enum": ["AED", "USD", "INR"] },
+        "templateId": { "type": "string" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["profileId", "customerName", "status"]
+      "required": ["ownerId", "name"]
     },
-    "ChatMessage": {
-      "title": "Chat Message",
-      "description": "Individual message in a chat session",
+    "Appointment": {
+      "title": "Booking",
+      "description": "Client appointment booking",
       "type": "object",
       "properties": {
-        "sessionId": { "type": "string" },
-        "senderType": { "type": "string", "enum": ["Customer", "Agent", "AI"] },
-        "text": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "ownerId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientEmail": { "type": "string" },
+        "service": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Confirmed", "Completed", "Cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["senderType", "text", "timestamp"]
-    },
-    "JoinNotification": {
-      "title": "Join Notification",
-      "description": "Alert when a new user joins the platform",
-      "type": "object",
-      "properties": {
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userEmail": { "type": "string" },
-        "plan": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "type": { "type": "string" }
-      },
-      "required": ["userId", "userName", "userEmail", "createdAt"]
+      "required": ["ownerId", "clientName", "clientEmail"]
     }
   },
   "firestore": {
-    "/profiles/{uid}": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User account documents"
+    },
+    "/profiles/{profileId}": {
       "schema": "Profile",
-      "description": "Professional profiles"
+      "description": "Digital business card documents"
     },
-    "/appointments/{id}": {
+    "/appointments/{appointmentId}": {
       "schema": "Appointment",
-      "description": "Client bookings"
-    },
-    "/leads/{id}": {
-      "schema": "Inquiry",
-      "description": "Contact inquiries"
-    },
-    "/followers/{id}": {
-      "schema": "Follower",
-      "description": "Business followers"
-    },
-    "/campaigns/{id}": {
-      "schema": "Campaign",
-      "description": "Marketing broadcasts"
-    },
-    "/chat_sessions/{id}": {
-      "schema": "ChatSession",
-      "description": "Active and past support chats"
-    },
-    "/chat_sessions/{id}/messages/{msgId}": {
-      "schema": "ChatMessage",
-      "description": "Live messages"
-    },
-    "/join_notifications/{id}": {
-      "schema": "JoinNotification",
-      "description": "Admin alerts for new user signups"
+      "description": "Booking records"
     }
   }
 }

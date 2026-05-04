@@ -323,6 +323,38 @@ export default function MinimalClean({
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 32 }}>
+            {profile.quickPayAmount > 0 && (
+              <button
+                onClick={() => {
+                  const paymentLink = profile.paymentLinks?.[0]?.url;
+                  if (paymentLink) {
+                    window.open(paymentLink, '_blank');
+                  } else {
+                    setActiveTab('payments');
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  background: "#18181b",
+                  color: "#fff",
+                  padding: "16px",
+                  borderRadius: 999,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  fontSize: 16,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                  border: "none",
+                  textTransform: 'uppercase',
+                  letterSpacing: 2
+                }}
+              >
+                <Wallet size={20} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
+              </button>
+            )}
             <div style={{ display: "flex", gap: 12 }}>
               <button
                 onClick={() => setActiveTab('inquiry')}

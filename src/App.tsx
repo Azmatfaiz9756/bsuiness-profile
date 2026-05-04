@@ -83,7 +83,7 @@ export default function App() {
 
     async function testConnection() {
       try {
-        await getDocFromServer(doc(db, 'test', 'connection'));
+        await getDocFromServer(doc(db, 'settings', 'system'));
         console.log("Firebase connection successful.");
       } catch (error: any) {
         if(error.code === 'unknown' && error.message.includes('auth/network-request-failed')) {

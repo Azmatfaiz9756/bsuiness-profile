@@ -35,8 +35,8 @@ export default function AdminDirectory() {
 
   const filteredProfiles = useMemo(() => {
     return allProfiles.filter((p: any) => {
-      const pName = p.name || '';
-      const pComp = p.company || '';
+      const pName = String(p.name || '');
+      const pComp = String(p.company || '');
       const matchesSearch = pName.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            pComp.toLowerCase().includes(searchTerm.toLowerCase());
       if (filter === 'featured') return matchesSearch && p.featured;
@@ -140,21 +140,21 @@ export default function AdminDirectory() {
                 <tr key={p.id} style={{ borderBottom: '1px solid #f8fafc' }}>
                   <td style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 32, height: 32, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#2563eb' }}>{p.avatar || (p.name ? p.name[0].toUpperCase() : 'U')}</div>
+                      <div style={{ width: 32, height: 32, background: '#f1f5f9', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#2563eb' }}>{p.avatar || (p.name ? String(p.name)[0].toUpperCase() : 'U')}</div>
                       <div>
                         <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{p.name}</div>
                         <div style={{ fontSize: 10, color: '#94a3b8' }}>ID: {p.id}</div>
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: '16px', fontSize: 14, color: '#334155' }}>{p.company}</td>
+                  <td style={{ padding: '16px', fontSize: 14, color: '#334155' }}>{p.company || 'N/A'}</td>
                   <td style={{ padding: '16px' }}>
                     <span style={{ 
                       padding: '4px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700,
-                      background: p.plan.includes('VIP') ? '#fefce8' : '#eff6ff',
-                      color: p.plan.includes('VIP') ? '#a16207' : '#1e40af'
+                      background: String(p.plan || '').includes('VIP') ? '#fefce8' : '#eff6ff',
+                      color: String(p.plan || '').includes('VIP') ? '#a16207' : '#1e40af'
                     }}>
-                      {p.plan}
+                      {p.plan || 'Standard'}
                     </span>
                   </td>
                   <td style={{ padding: '16px' }}>

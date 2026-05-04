@@ -102,7 +102,7 @@ export default function AdminProfiles() {
                 <td>
                   <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
                     <div style={{width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--gold), var(--gold2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#ffffff'}}>
-                      {p.name.substring(0,2).toUpperCase()}
+                      {String(p.name || 'U').substring(0,2).toUpperCase()}
                     </div>
                     <div>
                       <div style={{fontWeight: 600, color: 'var(--text)'}}>{p.name}</div>

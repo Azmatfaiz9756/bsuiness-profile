@@ -2,7 +2,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // --- GLOBAL HELPERS ---
+    // 0. GLOBAL SAFETY NET: Deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- PHASE 3: GLOBAL HELPERS ---
     
     function isSignedIn() {
       return request.auth != null;
@@ -17,7 +22,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == "azmatfaiz9756@gmail.com";
+      // Platform admin email protection
+      return isSignedIn() && request.auth.token.email == 'azmatfaiz9756@gmail.com' && isEmailVerified();
     }
 
     function isValidId(id) {
@@ -32,7 +38,7 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // --- ENTITY VALIDATORS ---
+    // --- PHASE 4: ENTITY VALIDATORS ---
 
     function isValidUser(data) {
       return data.email is string && data.email.size() <= 100 &&
@@ -50,20 +56,14 @@ service cloud.firestore {
 
     function isValidAppointment(data) {
       return isValidId(data.ownerId) &&
-             (data.keys().contains('clientName') ? data.clientName is string : data.name is string) &&
-             (data.keys().contains('clientEmail') ? data.clientEmail is string : data.email is string) &&
-             data.status in ['Pending', 'Confirmed', 'Completed', 'Cancelled', 'New'] &&
-             data.keys().size() <= 40;
+             data.clientName is string && data.clientName.size() <= 100 &&
+             data.clientEmail is string && data.clientEmail.size() <= 100 &&
+             data.status in ['Pending', 'Confirmed', 'Completed', 'Cancelled'];
     }
 
-    function isValidLead(data) {
-      return isValidId(data.ownerId) &&
-             (data.keys().contains('clientName') ? data.clientName is string : data.name is string) &&
-             data.keys().size() <= 40;
-    }
+    // --- PHASE 5: COLLECTION MATCHES ---
 
-    // --- COLLECTION MATCHES ---
-
+    // Users: Private data, only owner can access
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && isValidUser(incoming());
@@ -71,6 +71,7 @@ service cloud.firestore {
                     incoming().diff(existing()).affectedKeys().hasOnly(['name', 'photoURL']);
     }
 
+    // Profiles: Publicly readable, owner manages
     match /profiles/{docId} {
       allow read: if true;
       allow create: if isOwner(docId) && isValidProfile(incoming());
@@ -80,14 +81,14 @@ service cloud.firestore {
                     incoming().diff(existing()).affectedKeys().hasOnly([
                       'name', 'bio', 'photoURL', 'whatsapp', 'quickPayAmount', 
                       'quickPayCurrency', 'templateId', 'updatedAt', 'services', 
-                      'socials', 'testimonials', 'faqs', 'gallery', 'videos',
-                      'meetingUrl', 'documentUrl', 'documentButtonText', 'customButtons'
+                      'socials', 'testimonials', 'faqs', 'gallery', 'videos'
                     ]);
       allow delete: if isOwner(docId) || isAdmin();
     }
 
+    // Appointments & Leads
     match /appointments/{appId} {
-      allow create: if isValidAppointment(incoming());
+      allow create: if isValidAppointment(incoming()); // Visitors can create
       allow list: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
       allow get: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
       allow update: if isOwner(existing().ownerId) && 
@@ -96,10 +97,11 @@ service cloud.firestore {
     }
 
     match /leads/{leadId} {
-      allow create: if isValidLead(incoming());
+      allow create: if true; // Any visitor
       allow read, write: if isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin());
     }
 
+    // Chat Sessions
     match /chat_sessions/{sessionId} {
       allow create: if true;
       allow get: if true;
@@ -108,27 +110,14 @@ service cloud.firestore {
 
       match /messages/{messageId} {
         allow read, create: if true;
-        allow update, delete: if false;
+        allow update, delete: if false; // Messages are immutable for security
       }
     }
 
-    match /join_notifications/{id} {
-      allow read: if isAdmin();
-      allow create: if true; // Any join event
-    }
-
-    match /test/connection {
-      allow read: if true;
-    }
-
+    // Generic protections for remaining paths
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();
-    }
-
-    // 0. GLOBAL SAFETY NET: Deny all by default
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }

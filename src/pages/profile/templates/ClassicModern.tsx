@@ -722,53 +722,98 @@ export default function ClassicModern({
           <div
             style={{
               display: "flex",
-              gap: 10,
-              justifyContent: "center",
-              marginTop: 20,
+              flexDirection: "column",
+              gap: 12,
+              marginBottom: 12
             }}
           >
-            <button
-              onClick={() => handleSave()}
-              style={{
-                flex: 1,
-                background: "#000",
-                color: "#fff",
-                border: "none",
-                height: 52,
-                borderRadius: 14,
-                fontWeight: 800,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                fontSize: 14,
-                boxShadow: "0 10px 20px -5px rgba(0,0,0,0.3)"
-              }}
-            >
-              <UserPlus size={20} /> Exchange Contact
-            </button>
-            <button
-              onClick={() => setShowShareModal(true)}
-              style={{
-                flex: 1,
-                background: "#f3f4f6",
-                color: "#1f2937",
-                border: "1px solid #e5e7eb",
-                height: 52,
-                borderRadius: 14,
-                fontWeight: 800,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                fontSize: 14
-              }}
-            >
-              <Send size={18} /> Share Profile
-            </button>
+            {profile.quickPayAmount > 0 && (
+              <button
+                onClick={() => {
+                  const paymentLink = profile.paymentLinks?.[0]?.url;
+                  if (paymentLink) {
+                    window.open(paymentLink, '_blank');
+                  } else {
+                    setActiveTab('payments');
+                    // Scroll to payments section if needed
+                    const el = document.getElementById('payments-section');
+                    if (el) el.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  background: "linear-gradient(135deg, #059669, #047857)",
+                  color: "#fff",
+                  padding: "18px",
+                  borderRadius: 20,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                  fontSize: 18,
+                  boxShadow: "0 12px 24px -6px rgba(5,150,105,0.4)",
+                  border: "none",
+                  animation: "pulse-green 2s infinite"
+                }}
+              >
+                <Wallet size={24} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
+              </button>
+            )}
+            
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => handleSave()}
+                style={{
+                  flex: 1,
+                  background: "#000",
+                  color: "#fff",
+                  border: "none",
+                  height: 52,
+                  borderRadius: 14,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  fontSize: 14,
+                  boxShadow: "0 10px 20px -5px rgba(0,0,0,0.3)"
+                }}
+              >
+                <UserPlus size={20} /> Exchange Contact
+              </button>
+              <button
+                onClick={() => setShowShareModal(true)}
+                style={{
+                  flex: 1,
+                  background: "#f3f4f6",
+                  color: "#1f2937",
+                  border: "1px solid #e5e7eb",
+                  height: 52,
+                  borderRadius: 14,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  fontSize: 14
+                }}
+              >
+                <Send size={18} /> Share Profile
+              </button>
+            </div>
           </div>
+          
+          <style>{`
+            @keyframes pulse-green {
+              0% { transform: scale(1); box-shadow: 0 12px 24px -6px rgba(5,150,105,0.4); }
+              50% { transform: scale(1.02); box-shadow: 0 16px 32px -4px rgba(5,150,105,0.6); }
+              100% { transform: scale(1); box-shadow: 0 12px 24px -6px rgba(5,150,105,0.4); }
+            }
+          `}</style>
 
           <div style={{ padding: "0 20px", marginTop: 12 }}>
             <button

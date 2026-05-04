@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2 } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
 
@@ -653,7 +653,9 @@ export default function OwnerDashboard() {
             ],
             bankAccounts: [
               { bankName: 'Emirates NBD', country: 'UAE', accountName: 'Jane Doe', accountNumber: '12345678901234', iban: 'AE120260000000012345678', swift: 'EBIZAEAXXX' }
-            ]
+            ],
+            quickPayAmount: 0,
+            quickPayCurrency: 'AED'
           };
           setProfile(emptyProfile);
           setFormData(emptyProfile);
@@ -962,58 +964,65 @@ export default function OwnerDashboard() {
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">HAADI GLOBAL VENTURES FZE LLC</span>
           </div>
 
-          <div className="flex flex-col flex-1 py-6 overflow-y-auto px-3 gap-1">
-            <button onClick={() => setSidebarTab('profile')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <LayoutDashboard size={20} /> <span className="flex-1 text-left">My Digital Profile</span>
-            </button>
-            {canSeeAnalytics && (
-              <button onClick={() => setSidebarTab('analytics')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <BarChart3 size={20} /> <span className="flex-1 text-left">Analytics & Stats</span>
+          <div className="flex flex-col flex-1 py-6 overflow-y-auto px-3 gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 opacity-50">Core Tools</span>
+              <button onClick={() => setSidebarTab('profile')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <LayoutDashboard size={18} /> <span className="flex-1 text-left tracking-tight">Profile Dashboard</span>
               </button>
-            )}
-            {canSeeLeads && (
-              <button onClick={() => setSidebarTab('appointments')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Calendar size={20} /> <span className="flex-1 text-left">Appointments & Leads</span>
+              {canSeeAnalytics && (
+                <button onClick={() => setSidebarTab('analytics')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'analytics' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <BarChart3 size={18} /> <span className="flex-1 text-left tracking-tight">Analytics & Stats</span>
+                </button>
+              )}
+              {canSeeLeads && (
+                <button onClick={() => setSidebarTab('appointments')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'appointments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <Calendar size={18} /> <span className="flex-1 text-left tracking-tight">Leads & Bookings</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 opacity-50">Sales Automation</span>
+              {canSeeAiAgent && (
+                <button onClick={() => setSidebarTab('chatbot')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <MessageSquare size={18} /> <span className="flex-1 text-left tracking-tight">Smart AI Bot</span>
+                </button>
+              )}
+              {canSeeLiveAgent && (
+                <button onClick={() => setSidebarTab('agent')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <Users size={18} /> <span className="flex-1 text-left tracking-tight">Live Support</span>
+                </button>
+              )}
+               {canSeeAnalytics && (
+                <button onClick={() => setSidebarTab('marketing')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <Megaphone size={18} /> <span className="flex-1 text-left tracking-tight">Broadcasting</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <span className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 opacity-50">Operations</span>
+               {isEnterpriseOwner && (
+                <button onClick={() => setSidebarTab('team')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <Users size={18} /> <span className="flex-1 text-left tracking-tight">Team Management</span>
+                </button>
+              )}
+              {canSeeStock && (
+                <button onClick={() => setSidebarTab('stock')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'stock' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                  <Briefcase size={18} /> <span className="flex-1 text-left tracking-tight">Stock Sync</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1 mt-auto pt-4 border-t border-slate-800">
+               <button onClick={() => setSidebarTab('plan')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Shield size={18} /> <span className="flex-1 text-left tracking-tight">Plan & Billing</span>
               </button>
-            )}
-            {canSeeAnalytics && (
-              <button onClick={() => setSidebarTab('marketing')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Megaphone size={20} /> <span className="flex-1 text-left">Broadcast Marketing</span>
+              <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Gift size={18} /> <span className="flex-1 text-left tracking-tight">Referrals</span>
               </button>
-            )}
-            {canSeeLiveAgent && (
-              <button onClick={() => setSidebarTab('agent')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'agent' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Users size={20} /> <span className="flex-1 text-left">Live Agent Panel</span>
-              </button>
-            )}
-            {!isSubUser && (
-              <button onClick={() => setSidebarTab('applications')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'applications' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
-              </button>
-            )}
-            {canSeeAiAgent && (
-              <button onClick={() => setSidebarTab('chatbot')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <MessageSquare size={20} /> <span className="flex-1 text-left">Smart AI Chatbot</span>
-              </button>
-            )}
-            {canSeeStock && (
-              <button onClick={() => setSidebarTab('stock')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'stock' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Briefcase size={20} /> <span className="flex-1 text-left">Stock & Inventory</span>
-              </button>
-            )}
-            <button onClick={() => setSidebarTab('plan')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'plan' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-              <Shield size={20} /> <span className="flex-1 text-left">Plan & Billing</span>
-            </button>
-            {!isSubUser && !isEnterpriseOwner && (
-              <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
-              </button>
-            )}
-            {isEnterpriseOwner && (
-              <button onClick={() => setSidebarTab('team')} className={`px-4 py-3.5 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'team' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                <Users size={20} /> <span className="flex-1 text-left">Enterprise Team (10 Profiles)</span>
-              </button>
-            )}
+            </div>
           </div>
           
           <div className="p-6 border-t border-slate-800 shrink-0 flex flex-col gap-3">
@@ -1134,22 +1143,53 @@ export default function OwnerDashboard() {
 
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-full">
           {sidebarTab === 'profile' && (
-            <>
-              <div className="flex flex-wrap bg-slate-100 p-2 gap-2 border-b border-slate-200 sticky top-0 z-20 backdrop-blur-md">
-                 <button onClick={() => setActiveTab('basic')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'basic' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Basic Info</button>
-                 <button onClick={() => setActiveTab('contact')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'contact' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Contact & Map</button>
-                 <button onClick={() => setActiveTab('social')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'social' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Social Links</button>
-                 <button onClick={() => setActiveTab('jobs')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'jobs' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Hiring</button>
-                 <button onClick={() => setActiveTab('theme')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'theme' ? 'bg-white shadow-md text-blue-700 scale-[1.02] border border-blue-100' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>💎 Layouts</button>
-                 <button onClick={() => setActiveTab('business')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'business' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Services</button>
-                 <button onClick={() => setActiveTab('products')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'products' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Shop</button>
-                 <button onClick={() => setActiveTab('testimonials')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'testimonials' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Reviews</button>
-                 <button onClick={() => setActiveTab('faq')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'faq' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>FAQs</button>
-                 <button onClick={() => setActiveTab('hours')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'hours' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Timing</button>
-                 <button onClick={() => setActiveTab('media')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'media' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Gallery</button>
-                 <button onClick={() => setActiveTab('bank')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'bank' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Payments</button>
-                 <button onClick={() => setActiveTab('widgets')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'widgets' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>Custom</button>
-                 <button onClick={() => setActiveTab('domain')} className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all whitespace-nowrap ${activeTab === 'domain' ? 'bg-white shadow-md text-blue-800 scale-[1.02] border border-blue-100' : 'bg-transparent text-slate-500 hover:bg-slate-200/50'}`}>🌐 Domains</button>
+            <div className="flex flex-col h-full bg-slate-50">
+              {/* Onboarding Checklist */}
+              <div className="px-4 py-6 md:px-8 shrink-0">
+                 <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 -mr-16 -mt-16 rounded-full" />
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h3 className="m-0 text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                            👋 Welcome, {formData.name?.split(' ')[0] || 'Member'}
+                          </h3>
+                          <p className="text-sm text-slate-500 m-0 mt-1">Complete your setup to go live</p>
+                        </div>
+                        <div className="flex flex-col items-end">
+                           <div className="text-2xl font-black text-blue-600">
+                             {Math.round([formData.photoURL, (formData.socials?.whatsapp || formData.whatsapp), formData.quickPayAmount, formData.bio].filter(Boolean).length / 4 * 100)}%
+                           </div>
+                           <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Progress</div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                         {[
+                           { label: 'Profile Photo', done: !!formData.photoURL, icon: ImageIcon },
+                           { label: 'WhatsApp link', done: !!(formData.socials?.whatsapp || formData.whatsapp), icon: Share2 },
+                           { label: 'Quick Pay Set', done: !!formData.quickPayAmount, icon: Coins },
+                           { label: 'Business Bio', done: !!formData.bio, icon: LayoutDashboard }
+                         ].map((step, i) => (
+                           <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${step.done ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${step.done ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-200 text-slate-400'}`}>
+                               {step.done ? '✓' : <step.icon size={14} />}
+                             </div>
+                             <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-tight ${step.done ? 'text-emerald-700' : 'text-slate-600'}`}>{step.label}</span>
+                           </div>
+                         ))}
+                      </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="flex border-b border-slate-200 bg-white sticky top-0 md:top-0 z-30 px-4 md:px-8 overflow-x-auto no-scrollbar shrink-0">
+                <button onClick={() => setActiveTab('basic')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'basic' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Personal Info</button>
+                <button onClick={() => setActiveTab('social')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'social' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Social Connections</button>
+                <button onClick={() => setActiveTab('commerce')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'commerce' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Quick Pay & Services</button>
+                <button onClick={() => setActiveTab('design')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'design' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Theme & Style</button>
+                <button onClick={() => setActiveTab('widgets')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'widgets' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Booking Tool</button>
+                <button onClick={() => setActiveTab('domain')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'domain' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Custom Domain</button>
               </div>
               <div className="p-4 md:p-6 lg:p-8 overflow-y-auto relative">
                 {isFreePlan && !['basic', 'contact', 'domain'].includes(activeTab) && (
@@ -1505,159 +1545,117 @@ export default function OwnerDashboard() {
                   </div>
                 )}
 
-                {activeTab === 'business' && (
-                  <div className="flex flex-col gap-8">
-                    <div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                        <h3 className="m-0 text-base font-bold text-slate-800">Services & Products</h3>
-                        <button onClick={() => setFormData({...formData, services: [...(formData.services || []), { name: '', desc: '', price: '', priceType: 'Fixed' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Service</button>
-                      </div>
-                      <div className="flex flex-col gap-4">
-                        {(formData.services || []).map((svc: any, index: number) => (
-                           <div key={`svc-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
-                             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                               <div className="md:col-span-6">
-                                 <input type="text" placeholder="Service Name" value={svc.name || ''} onChange={e => { const s = [...formData.services]; s[index].name = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               </div>
-                               <div className="md:col-span-3">
-                                 <select value={svc.priceType || 'Fixed'} onChange={e => { const s = [...formData.services]; s[index].priceType = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
-                                   <option value="Fixed">Fixed Price</option>
-                                   <option value="Hourly">Hourly Rate</option>
-                                   <option value="Call for Price">Call for Price</option>
-                                   <option value="Custom">Custom</option>
-                                 </select>
-                               </div>
-                               <div className="md:col-span-3">
-                                 {(!svc.priceType || svc.priceType === 'Fixed' || svc.priceType === 'Hourly') && (
-                                   <input type="text" placeholder={svc.priceType === 'Hourly' ? "Rate (e.g. AED 150)" : "Price (e.g. AED 500)"} value={svc.price || ''} onChange={e => { const s = [...formData.services]; s[index].price = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                                 )}
-                               </div>
+                {activeTab === 'commerce' && (
+                  <div className="flex flex-col gap-10">
+                     {/* Quick Pay Featured Section */}
+                     <div className="p-6 md:p-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] text-white shadow-xl shadow-slate-900/10 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-3xl -mr-32 -mt-32 rounded-full" />
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-3 mb-6">
+                             <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
+                               <Coins size={24} className="text-white" />
                              </div>
-                             <textarea placeholder="Service Description..." value={svc.desc || ''} onChange={e => { const s = [...formData.services]; s[index].desc = e.target.value; setFormData({...formData, services: s}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 resize-none font-sans" />
-                             <div className="flex justify-end">
-                               <button onClick={() => { const s = [...formData.services]; s.splice(index, 1); setFormData({...formData, services: s}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove</button>
+                             <div>
+                               <h3 className="m-0 text-xl font-black tracking-tight uppercase">Quick Pay Setup</h3>
+                               <p className="text-blue-200 text-[10px] font-bold m-0 uppercase tracking-widest opacity-80">Instant Payment via QR & NFC</p>
                              </div>
-                           </div>
-                        ))}
-                        {(!formData.services || formData.services.length === 0) && <div className="text-slate-500 text-sm italic">No services added yet.</div>}
-                      </div>
-                    </div>
+                          </div>
 
-                    <div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                        <h3 className="m-0 text-base font-bold text-slate-800">Team Members</h3>
-                        <button onClick={() => setFormData({...formData, team: [...(formData.team || []), { name: '', role: '', image: '', desc: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Team Member</button>
-                      </div>
-                      <div className="flex flex-col gap-4">
-                        {(formData.team || []).map((member: any, index: number) => (
-                           <div key={`tm-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                               <input type="text" placeholder="Name" value={member.name || ''} onChange={e => { const t = [...formData.team]; t[index].name = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               <input type="text" placeholder="Role/Title" value={member.role || ''} onChange={e => { const t = [...formData.team]; t[index].role = e.target.value; setFormData({...formData, team: t}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               <div className="sm:col-span-2">
-                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Team Member Photo</label>
-                                 <ImageUploadCrop 
-                                   value={member.image || ''} 
-                                   onChange={(url) => { const t = [...formData.team]; t[index].image = url; setFormData({...formData, team: t}); }}
-                                   id={`team-${index}-${formData.id || user.uid}`}
-                                   folder="team"
-                                   circular={true}
-                                 />
-                               </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                             <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-blue-300 uppercase tracking-widest">Amount to Collect</label>
+                                <div className="flex items-center bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-1">
+                                   <select 
+                                      value={formData.quickPayCurrency || 'AED'} 
+                                      onChange={e => setFormData({...formData, quickPayCurrency: e.target.value})}
+                                      className="bg-transparent text-white font-black px-4 py-3 outline-none border-r border-white/10"
+                                   >
+                                      <option value="AED" className="bg-slate-900">AED</option>
+                                      <option value="USD" className="bg-slate-900">USD</option>
+                                      <option value="INR" className="bg-slate-900">INR</option>
+                                   </select>
+                                   <input 
+                                      type="number" 
+                                      value={formData.quickPayAmount || ''} 
+                                      onChange={e => setFormData({...formData, quickPayAmount: parseFloat(e.target.value) || 0})}
+                                      placeholder="0.00"
+                                      className="flex-1 bg-transparent px-4 py-3 text-white font-black placeholder:text-blue-200/30 outline-none text-xl" 
+                                   />
+                                </div>
                              </div>
-                             <textarea placeholder="Short Bio (Optional)" value={member.desc || ''} onChange={e => { const t = [...formData.team]; t[index].desc = e.target.value; setFormData({...formData, team: t}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-                             <div className="flex justify-end">
-                               <button onClick={() => { const t = [...formData.team]; t.splice(index, 1); setFormData({...formData, team: t}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove</button>
+                             
+                             <div className="flex flex-col gap-3">
+                                <button 
+                                  onClick={handleSave}
+                                  className="w-full py-4 bg-white text-slate-900 font-black rounded-2xl flex items-center justify-center gap-2 hover:bg-blue-50 transition-all active:scale-95 shadow-xl shadow-white/5 uppercase text-xs tracking-widest"
+                                >
+                                  Update Payment
+                                </button>
+                                <p className="text-[9px] text-blue-300/40 font-bold m-0 text-center leading-relaxed italic uppercase">
+                                  Amount auto-updates on your QR and NFC Card instantly
+                                </p>
                              </div>
-                           </div>
-                        ))}
-                        {(!formData.team || formData.team.length === 0) && <div className="text-slate-500 text-sm italic">No team members added.</div>}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'products' && (
-                  <div className="flex flex-col gap-8">
-                    <div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                        <div>
-                          <h3 className="m-0 text-base font-bold text-slate-800">Products (Store)</h3>
-                          <p className="m-1 text-xs text-slate-500">Add products for visitors to view and buy directly via WhatsApp.</p>
+                          </div>
                         </div>
-                        <button onClick={() => setFormData({...formData, products: [...(formData.products || []), { name: '', description: '', price: '', image: '', link: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors shrink-0">+ Add Product</button>
-                      </div>
-                      <div className="flex flex-col gap-4">
-                        {(formData.products || []).map((prod: any, index: number) => (
-                           <div key={`prod-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                               <input type="text" placeholder="Product Name" value={prod.name || ''} onChange={e => { const p = [...formData.products]; p[index].name = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               <input type="text" placeholder="Price (e.g. 50 AED)" value={prod.price || ''} onChange={e => { const p = [...formData.products]; p[index].price = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <textarea placeholder="Product Description" value={prod.description || ''} onChange={e => { const p = [...formData.products]; p[index].description = e.target.value; setFormData({...formData, products: p}); }} rows={2} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-                             <div className="grid grid-cols-1 gap-3">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Product Photo</label>
-                               <ImageUploadCrop 
-                                 value={prod.image || ''} 
-                                 onChange={(url) => { const p = [...formData.products]; p[index].image = url; setFormData({...formData, products: p}); }}
-                                 id={`product-${index}-${formData.id || user.uid}`}
-                                 folder="products"
-                                 circular={false}
-                                 aspectRatio={1}
-                               />
-                               <input type="url" placeholder="External Buy Link (Optional)" value={prod.link || ''} onChange={e => { const p = [...formData.products]; p[index].link = e.target.value; setFormData({...formData, products: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <div className="flex justify-end mt-2">
-                               <button onClick={() => { const p = [...formData.products]; p.splice(index, 1); setFormData({...formData, products: p}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove Product</button>
-                             </div>
-                           </div>
-                        ))}
-                        {(!formData.products || formData.products.length === 0) && <div className="text-slate-500 text-sm italic">No products added yet.</div>}
-                      </div>
-                    </div>
+                     </div>
+
+                     {/* Services Section */}
+                     <div className="flex flex-col gap-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="m-0 text-lg font-black text-slate-900">Services & Products</h3>
+                            <p className="text-xs text-slate-500 m-0 mt-1 font-medium">List your offerings with price tags</p>
+                          </div>
+                          <button onClick={() => setFormData({...formData, services: [...(formData.services || []), { name: '', desc: '', price: '', priceType: 'Fixed' }]})} className="px-5 py-2.5 bg-blue-600 text-white text-[10px] font-black rounded-xl hover:bg-blue-700 transition uppercase tracking-widest shadow-lg shadow-blue-600/20">
+                            + Add Item
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                          {(formData.services || []).map((service: any, index: number) => (
+                            <div key={`srv-${index}`} className="group bg-white border border-slate-200 p-6 rounded-[2rem] relative transition-all hover:border-blue-200 hover:shadow-xl">
+                               <button 
+                                 onClick={() => { const s = [...formData.services]; s.splice(index, 1); setFormData({...formData, services: s}); }}
+                                 className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                               >
+                                 <X size={14} />
+                               </button>
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</label>
+                                   <input type="text" value={service.name} onChange={e => { const s = [...formData.services]; s[index].name = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Design Strategy" />
+                                 </div>
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price</label>
+                                   <div className="flex gap-2">
+                                     <input type="text" value={service.price} onChange={e => { const s = [...formData.services]; s[index].price = e.target.value; setFormData({...formData, services: s}); }} className="flex-1 p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="AED 500" />
+                                     <select value={service.priceType} onChange={e => { const s = [...formData.services]; s[index].priceType = e.target.value; setFormData({...formData, services: s}); }} className="w-24 p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500 font-bold text-xs uppercase">
+                                       <option>Fixed</option>
+                                       <option>Hourly</option>
+                                       <option>From</option>
+                                     </select>
+                                   </div>
+                                 </div>
+                                 <div className="md:col-span-2 flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                                   <textarea value={service.desc} onChange={e => { const s = [...formData.services]; s[index].desc = e.target.value; setFormData({...formData, services: s}); }} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]" placeholder="Briefly explain what's included..." />
+                                 </div>
+                               </div>
+                            </div>
+                          ))}
+                          {(!formData.services || formData.services.length === 0) && (
+                            <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-[2rem] bg-slate-50">
+                               <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">No services listed yet</p>
+                            </div>
+                          )}
+                        </div>
+                     </div>
                   </div>
                 )}
 
-                {activeTab === 'jobs' && (
-                  <div className="flex flex-col gap-8">
-                    <div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                        <div>
-                          <h3 className="m-0 text-base font-bold text-slate-800">Job Openings</h3>
-                          <p className="m-1 text-xs text-slate-500">Post jobs and hire candidates directly from your digital profile.</p>
-                        </div>
-                        <button onClick={() => setFormData({...formData, jobOpenings: [...(formData.jobOpenings || []), { title: '', type: 'Full-time', location: '', salary: '', description: '', link: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors shrink-0">+ Add Job</button>
-                      </div>
-                      <div className="flex flex-col gap-4">
-                        {(formData.jobOpenings || []).map((job: any, index: number) => (
-                           <div key={`job-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                               <input type="text" placeholder="Job Title (e.g. Sales Manager)" value={job.title || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].title = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               <select value={job.type || 'Full-time'} onChange={e => { const j = [...formData.jobOpenings]; j[index].type = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
-                                 <option value="Full-time">Full-time</option>
-                                 <option value="Part-time">Part-time</option>
-                                 <option value="Contract">Contract</option>
-                                 <option value="Freelance">Freelance</option>
-                               </select>
-                             </div>
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                               <input type="text" placeholder="Location (e.g. Dubai, UAE / Remote)" value={job.location || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].location = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               <input type="text" placeholder="Salary Range (Optional)" value={job.salary || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].salary = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <textarea placeholder="Job Description & Requirements" value={job.description || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].description = e.target.value; setFormData({...formData, jobOpenings: j}); }} rows={3} className="w-full p-3 border border-slate-300 rounded-lg font-sans outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
-                             <div className="grid grid-cols-1 gap-3">
-                               <input type="url" placeholder="Application Link (e.g. Google Form or external site - Optional)" value={job.link || ''} onChange={e => { const j = [...formData.jobOpenings]; j[index].link = e.target.value; setFormData({...formData, jobOpenings: j}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <div className="flex justify-end mt-2">
-                               <button onClick={() => { const j = [...formData.jobOpenings]; j.splice(index, 1); setFormData({...formData, jobOpenings: j}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove Job</button>
-                             </div>
-                           </div>
-                        ))}
-                        {(!formData.jobOpenings || formData.jobOpenings.length === 0) && <div className="text-slate-500 text-sm italic">No job openings posted.</div>}
-                      </div>
-                    </div>
-                  </div>
-                )}
+
+
+
 
                 {activeTab === 'testimonials' && (
                   <div className="flex flex-col gap-8">
@@ -1803,90 +1801,9 @@ export default function OwnerDashboard() {
                   </div>
                 )}
 
-                {activeTab === 'bank' && (
-                  <div className="flex flex-col gap-10">
-                    <div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                         <h3 className="m-0 text-base font-bold text-slate-800">Bank Accounts</h3>
-                         <button onClick={() => setFormData({...formData, bankAccounts: [...(formData.bankAccounts || []), { country: 'UAE', bankName: '', accountName: '', accountNumber: '', iban: '', swift: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">+ Add Account</button>
-                      </div>
-                      <div className="flex flex-col gap-6">
-                        {(formData.bankAccounts || []).map((acc: any, index: number) => (
-                           <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 md:p-6 border border-slate-200 rounded-xl bg-slate-50 shadow-sm">
-                             <div className="flex flex-col gap-1.5">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bank Name</label>
-                               <input type="text" value={acc.bankName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].bankName = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <div className="flex flex-col gap-1.5">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Country</label>
-                               <input type="text" value={acc.country || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].country = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <div className="flex flex-col gap-1.5 md:col-span-2">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Holder Name</label>
-                               <input type="text" value={acc.accountName || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].accountName = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                             </div>
-                             <div className="flex flex-col gap-1.5">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Number</label>
-                               <input type="text" value={acc.accountNumber || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].accountNumber = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
-                             </div>
-                             <div className="flex flex-col gap-1.5">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">IBAN</label>
-                               <input type="text" value={acc.iban || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].iban = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
-                             </div>
-                             <div className="flex flex-col gap-1.5">
-                               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">SWIFT Code</label>
-                               <input type="text" value={acc.swift || ''} onChange={e => { const b = [...formData.bankAccounts]; b[index].swift = e.target.value; setFormData({...formData, bankAccounts: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-mono" />
-                             </div>
-                             <div className="md:col-span-2 flex justify-end mt-2">
-                               <button onClick={() => { const b = [...formData.bankAccounts]; b.splice(index, 1); setFormData({...formData, bankAccounts: b}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">Remove Account</button>
-                             </div>
-                           </div>
-                        ))}
-                        {(!formData.bankAccounts || formData.bankAccounts.length === 0) && <div className="text-slate-500 text-sm italic">No bank details provided.</div>}
-                      </div>
-                    </div>
-                    
-                    <div className="mt-8 border-t border-slate-200 pt-10">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                         <div>
-                            <h3 className="m-0 text-base font-bold text-slate-800">Payment Links & QR</h3>
-                            <p className="m-1 text-xs text-slate-500">Add Stripe, PayPal, UPI, or PayTabs links for direct payment</p>
-                         </div>
-                         <button onClick={() => setFormData({...formData, paymentLinks: [...(formData.paymentLinks || []), { platform: 'Stripe', url: '', qrCodeUrl: '' }]})} className="bg-emerald-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-sm">+ Add Payment Link</button>
-                      </div>
-                      <div className="flex flex-col gap-4">
-                        {(formData.paymentLinks || []).map((link: any, index: number) => (
-                           <div key={`pl-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
-                             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                               <div className="sm:col-span-4">
-                                 <select value={link.platform} onChange={e => { const p = [...formData.paymentLinks]; p[index].platform = e.target.value; setFormData({...formData, paymentLinks: p}); }} className="w-full p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium">
-                                   <option value="Stripe">Stripe</option>
-                                   <option value="PayPal">PayPal</option>
-                                   <option value="UPI">UPI</option>
-                                   <option value="PayTabs">PayTabs</option>
-                                   <option value="Custom">Custom Link</option>
-                                 </select>
-                               </div>
-                               <div className="sm:col-span-8">
-                                 <input type="url" placeholder="Direct Payment URL (e.g., https://buy.stripe.com/...)" value={link.url || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].url = e.target.value; setFormData({...formData, paymentLinks: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               </div>
-                             </div>
-                             <div className="flex items-center gap-2">
-                               <div className="flex-1">
-                                 <input type="url" placeholder="Optional QR Code Image URL" value={link.qrCodeUrl || ''} onChange={e => { const p = [...formData.paymentLinks]; p[index].qrCodeUrl = e.target.value; setFormData({...formData, paymentLinks: p}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               </div>
-                               <button onClick={() => { const p = [...formData.paymentLinks]; p.splice(index, 1); setFormData({...formData, paymentLinks: p}); }} className="p-3 bg-red-50 text-red-600 border-none rounded-lg cursor-pointer hover:bg-red-100 transition-colors shrink-0">
-                                 <X size={20} />
-                               </button>
-                             </div>
-                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
 
-                {activeTab === 'theme' && (
+
+                {activeTab === 'design' && (
                   <div className="flex flex-col gap-10">
                     <div>
                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Profile Layout & Theme</h3>
@@ -1936,80 +1853,89 @@ export default function OwnerDashboard() {
                 )}
                 {activeTab === 'widgets' && (
                   <div className="flex flex-col gap-10">
-                     <div className="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm">
-                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Booking Appointments Button</h3>
-                       {!isEnterpriseOwner ? (
-                         <div className="mt-4 bg-amber-50 border border-amber-200 p-5 rounded-xl">
-                           <div className="flex items-center gap-2 text-amber-800 font-bold text-sm mb-2">
-                             <Shield size={18} /> Premium Feature Required
-                           </div>
-                           <p className="m-0 text-xs text-amber-700 leading-relaxed">External Appointment Booking Link is not available on your current plan. Note: Our built-in booking feature is available for all plans.</p>
-                           <button onClick={() => setSidebarTab('plan')} className="mt-4 bg-amber-600 text-white border-none py-2 px-6 rounded-lg text-xs font-bold cursor-pointer hover:bg-amber-700 transition-colors shadow-lg shadow-amber-600/20">Upgrade Plan</button>
-                         </div>
-                       ) : (
-                         <div className="mt-4 space-y-4">
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Calendly / External Booking Link</label>
-                             <input type="text" value={formData.meetingUrl || ''} onChange={e => setFormData({...formData, meetingUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://calendly.com/yourname" />
-                             <p className="text-[10px] font-medium text-slate-500 mt-1">If provided, a custom "Book Meeting" button will redirect visitors to this link instead of using the built-in system.</p>
-                           </div>
-                         </div>
-                       )}
-                     </div>
-
-                     <div className="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm">
-                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Business Document / Portfolio</h3>
-                       <p className="m-0 text-xs text-slate-500 mb-6">Upload or link a PDF file like your Company Profile, Portfolio, or Resume.</p>
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                         <div className="flex flex-col gap-1.5">
-                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Document URL (PDF / Web Link)</label>
-                           <input type="url" value={formData.documentUrl || ''} onChange={e => setFormData({...formData, documentUrl: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://..." />
-                         </div>
-                         <div className="flex flex-col gap-1.5">
-                           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Custom Button Text</label>
-                           <input type="text" value={formData.documentButtonText || ''} onChange={e => setFormData({...formData, documentButtonText: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Download Company Profile" />
-                         </div>
-                       </div>
-                     </div>
-
-                     <div className="mt-4 pt-10 border-t border-slate-200">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-                          <div>
-                            <h3 className="m-0 text-base font-bold text-slate-800">Custom Action Buttons</h3>
-                            <p className="m-1 text-xs text-slate-500">Add extra buttons to link to apps, websites, or features.</p>
-                          </div>
-                          <button onClick={() => setFormData({...formData, customButtons: [...(formData.customButtons || []), { label: '', url: '', icon: 'Link', isPrimary: false }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors shadow-sm">+ Add Button</button>
-                        </div>
-                        <div className="flex flex-col gap-4">
-                          {(formData.customButtons || []).map((btn: any, index: number) => (
-                             <div key={`cbtn-${index}`} className="border border-slate-200 p-4 md:p-6 rounded-xl bg-slate-50 flex flex-col gap-4 shadow-sm">
-                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                 <input type="text" placeholder="Button Label (e.g. Visit Website)" value={btn.label || ''} onChange={e => { const b = [...formData.customButtons]; b[index].label = e.target.value; setFormData({...formData, customButtons: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                                 <input type="url" placeholder="URL Link" value={btn.url || ''} onChange={e => { const b = [...formData.customButtons]; b[index].url = e.target.value; setFormData({...formData, customButtons: b}); }} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
-                               </div>
-                               <div className="flex flex-wrap items-center justify-between gap-4">
-                                 <select value={btn.icon || 'Link'} onChange={e => { const b = [...formData.customButtons]; b[index].icon = e.target.value; setFormData({...formData, customButtons: b}); }} className="flex-1 min-w-[140px] p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-blue-500 font-medium font-sans">
-                                   <option value="Link">🔗 Standard Link</option>
-                                   <option value="Globe">🌐 Website</option>
-                                   <option value="Calendar">📅 Calendar</option>
-                                   <option value="FileText">📄 Document</option>
-                                   <option value="Download">📥 Download</option>
-                                   <option value="MessageCircle">💬 Chat</option>
-                                 </select>
-                                 <div className="flex items-center gap-4">
-                                   <label className="flex items-center gap-2 text-xs font-bold text-slate-500 cursor-pointer select-none">
-                                     <input type="checkbox" checked={btn.isPrimary || false} onChange={e => { const b = [...formData.customButtons]; b[index] = { ...b[index], isPrimary: e.target.checked }; setFormData({...formData, customButtons: b}); }} className="accent-blue-600" />
-                                     Primary Style
-                                   </label>
-                                   <button onClick={() => { const b = [...formData.customButtons]; b.splice(index, 1); setFormData({...formData, customButtons: b}); }} className="bg-red-50 text-red-600 border-none py-1.5 px-4 rounded-lg font-bold text-xs cursor-pointer hover:bg-red-100 transition-colors">
-                                     Remove
-                                   </button>
-                                 </div>
-                               </div>
+                    {/* Testimonials */}
+                    <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-[2rem]">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-lg font-black text-slate-800">Testimonials</h3>
+                        <button onClick={() => setFormData({...formData, testimonials: [...(formData.testimonials || []), { name: '', role: '', quote: '', rating: 5 }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer transition uppercase tracking-widest text-[10px]">
+                          + Add New
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        {(formData.testimonials || []).map((test: any, index: number) => (
+                           <div key={`ts-${index}`} className="border border-slate-100 p-6 rounded-2xl bg-slate-50 relative group">
+                             <button onClick={() => { const t = [...formData.testimonials]; t.splice(index, 1); setFormData({...formData, testimonials: t}); }} className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg">
+                               <X size={12} />
+                             </button>
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                               <input type="text" placeholder="Name" value={test.name || ''} onChange={e => { const t = [...formData.testimonials]; t[index].name = e.target.value; setFormData({...formData, testimonials: t}); }} className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                               <select value={test.rating || 5} onChange={e => { const t = [...formData.testimonials]; t[index].rating = Number(e.target.value); setFormData({...formData, testimonials: t}); }} className="w-full p-3 border border-slate-200 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 font-bold text-xs">
+                                 <option value={5}>5 Stars ★★★★★</option>
+                                 <option value={4}>4 Stars ★★★★</option>
+                                 <option value={3}>3 Stars ★★★</option>
+                               </select>
                              </div>
-                          ))}
-                        </div>
-                     </div>
+                             <textarea placeholder="Client Review..." value={test.quote || ''} onChange={e => { const t = [...formData.testimonials]; t[index].quote = e.target.value; setFormData({...formData, testimonials: t}); }} rows={2} className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white min-h-[60px]" />
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* FAQ */}
+                    <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-[2rem]">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                        <h3 className="m-0 text-lg font-black text-slate-800">FAQs</h3>
+                        <button onClick={() => setFormData({...formData, faqs: [...(formData.faqs || []), { question: '', answer: '' }]})} className="bg-blue-600 text-white border-none py-2 px-4 rounded-lg text-sm font-bold cursor-pointer transition uppercase tracking-widest text-[10px]">
+                          + Add FAQ
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        {(formData.faqs || []).map((faq: any, index: number) => (
+                           <div key={`faq-${index}`} className="border border-slate-100 p-6 rounded-2xl bg-slate-50 relative group">
+                             <button onClick={() => { const f = [...formData.faqs]; f.splice(index, 1); setFormData({...formData, faqs: f}); }} className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg">
+                               <X size={12} />
+                             </button>
+                             <input type="text" placeholder="Question" value={faq.question || ''} onChange={e => { const f = [...formData.faqs]; f[index].question = e.target.value; setFormData({...formData, faqs: f}); }} className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-2 font-bold" />
+                             <textarea placeholder="Answer" value={faq.answer || ''} onChange={e => { const f = [...formData.faqs]; f[index].answer = e.target.value; setFormData({...formData, faqs: f}); }} rows={2} className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Gallery & Media */}
+                    <div className="bg-white border border-slate-200 p-6 md:p-8 rounded-[2rem]">
+                      <h3 className="m-0 text-lg font-black text-slate-800 mb-6">Gallery & Videos</h3>
+                      <div className="flex flex-col gap-8">
+                         <div>
+                            <div className="flex justify-between items-center mb-4">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Images (URLs)</label>
+                              <button onClick={() => setFormData({...formData, gallery: [...(formData.gallery || []), '']})} className="text-blue-600 text-[10px] font-black uppercase tracking-widest hover:underline">+ Add Image URL</button>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                               {(formData.gallery || []).map((url: string, i: number) => (
+                                 <div key={i} className="flex gap-2">
+                                   <input type="text" value={url} onChange={e => { const g = [...formData.gallery]; g[i] = e.target.value; setFormData({...formData, gallery: g}); }} className="flex-1 p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs" placeholder="https://..." />
+                                   <button onClick={() => { const g = [...formData.gallery]; g.splice(i, 1); setFormData({...formData, gallery: g}); }} className="p-3 bg-red-50 text-red-600 rounded-xl shrink-0"><X size={16}/></button>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                         <div>
+                            <div className="flex justify-between items-center mb-4">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">YouTube Embeds</label>
+                              <button onClick={() => setFormData({...formData, videos: [...(formData.videos || []), '']})} className="text-red-600 text-[10px] font-black uppercase tracking-widest hover:underline">+ Add Video URL</button>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2">
+                               {(formData.videos || []).map((url: string, i: number) => (
+                                 <div key={i} className="flex gap-2">
+                                   <input type="text" value={url} onChange={e => { const v = [...formData.videos]; v[i] = e.target.value; setFormData({...formData, videos: v}); }} className="flex-1 p-3 border border-slate-200 rounded-xl bg-slate-50 text-xs" placeholder="https://youtube.com/embed/..." />
+                                   <button onClick={() => { const v = [...formData.videos]; v.splice(i, 1); setFormData({...formData, videos: v}); }} className="p-3 bg-red-50 text-red-600 rounded-xl shrink-0"><X size={16}/></button>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {activeTab === 'domain' && (
@@ -2165,7 +2091,7 @@ export default function OwnerDashboard() {
                   </div>
                 )}
               </div>
-            </>
+            </div>
           )}
 
           {sidebarTab === 'analytics' && (

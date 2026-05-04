@@ -424,76 +424,109 @@ export default function ExecutiveDark({
           <div
             style={{
               display: "flex",
+              flexDirection: "column",
               gap: 12,
-              justifyContent: "center",
               marginTop: 24,
             }}
           >
-            {!profile.plan?.includes("Enterprise") && (
-              <Link
-                to="/referrals"
+            {profile.quickPayAmount > 0 && (
+              <button
+                onClick={() => {
+                  const paymentLink = profile.paymentLinks?.[0]?.url;
+                  if (paymentLink) {
+                    window.open(paymentLink, '_blank');
+                  }
+                }}
                 style={{
                   width: "100%",
-                  background: "#b45309",
+                  background: "#16a34a",
                   color: "#fff",
-                  border: "none",
-                  padding: "12px",
+                  padding: "16px",
                   borderRadius: 4,
-                  fontWeight: 700,
+                  fontWeight: 900,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 8,
-                  textDecoration: "none",
-                  fontSize: 14,
+                  gap: 12,
+                  fontSize: 16,
+                  boxShadow: "0 8px 16px rgba(22,163,74,0.3)",
+                  border: "none",
                   textTransform: 'uppercase',
-                  letterSpacing: 1
+                  letterSpacing: 2
                 }}
               >
-                <Share2 size={16} /> Refer & Earn
-              </Link>
+                <Wallet size={20} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
+              </button>
             )}
-            <div style={{ display: "flex", gap: 8, width: "100%" }}>
-              <button
-                onClick={handleSave}
-                style={{
-                  flex: 1,
-                  background: "#fff",
-                  color: "#000",
-                  border: "none",
-                  padding: "12px",
-                  borderRadius: 4,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  fontSize: 13,
-                }}
-              >
-                <UserPlus size={16} /> Save
-              </button>
-              <button
-                onClick={() => setShowShareModal(true)}
-                style={{
-                  flex: 1,
-                  background: "transparent",
-                  color: "#fff",
-                  border: "1px solid #444",
-                  padding: "12px",
-                  borderRadius: 4,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-              >
-                <Send size={16} /> Share
-              </button>
+            
+            <div style={{ display: "flex", gap: 12 }}>
+              {!profile.plan?.includes("Enterprise") && (
+                <Link
+                  to="/referrals"
+                  style={{
+                    flex: 1,
+                    background: "#b45309",
+                    color: "#fff",
+                    border: "none",
+                    padding: "12px",
+                    borderRadius: 4,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    textDecoration: "none",
+                    fontSize: 14,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1
+                  }}
+                >
+                  <Share2 size={16} /> Refer & Earn
+                </Link>
+              )}
+              <div style={{ display: "flex", gap: 8, flex: 1.5 }}>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    flex: 1,
+                    background: "#fff",
+                    color: "#000",
+                    border: "none",
+                    padding: "12px",
+                    borderRadius: 4,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 13,
+                  }}
+                >
+                  <UserPlus size={16} /> Save
+                </button>
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  style={{
+                    flex: 1,
+                    background: "transparent",
+                    color: "#fff",
+                    border: "1px solid #444",
+                    padding: "12px",
+                    borderRadius: 4,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Send size={16} /> Share
+                </button>
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>

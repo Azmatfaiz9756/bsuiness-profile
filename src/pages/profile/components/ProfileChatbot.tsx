@@ -753,18 +753,18 @@ Assist visitors with inquiries about the business, services, and contact informa
                           setIdentityError('');
                           setIdentityForm({...identityForm, countryCode: e.target.value});
                         }}
-                        style={{ padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', width: '90px', fontSize: 14 }}
+                        style={{ padding: '12px', borderRadius: 12, border: '1.5px solid #e2e8f0', outline: 'none', background: '#f8fafc', width: '100px', fontSize: 14, fontWeight: 600 }}
                       >
-                        <option value="+971">+971</option>
-                        <option value="+91">+91</option>
-                        <option value="+1">+1</option>
-                        <option value="+44">+44</option>
-                        <option value="+966">+966</option>
-                        <option value="+974">+974</option>
-                        <option value="+973">+973</option>
-                        <option value="+965">+965</option>
-                        <option value="+968">+968</option>
-                        <option value="+92">+92</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+966">🇸🇦 +966</option>
+                        <option value="+974">🇶🇦 +974</option>
+                        <option value="+973">🇧🇭 +973</option>
+                        <option value="+965">🇰🇼 +965</option>
+                        <option value="+968">🇴🇲 +968</option>
+                        <option value="+92">🇵🇰 +92</option>
                       </select>
                       <input 
                         type="tel" 
@@ -774,7 +774,7 @@ Assist visitors with inquiries about the business, services, and contact informa
                           setIdentityError('');
                           setIdentityForm({...identityForm, phone: e.target.value.replace(/\D/g, '')});
                         }}
-                        style={{ flex: 1, padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', width: '100%', fontSize: 14 }}
+                        style={{ flex: 1, padding: '12px 18px', borderRadius: 12, border: '1.5px solid #e2e8f0', outline: 'none', width: '100%', fontSize: 14, fontWeight: 500 }}
                         placeholder={phoneValidationRules[identityForm.countryCode]?.placeholder || "Mobile no."}
                       />
                     </div>
