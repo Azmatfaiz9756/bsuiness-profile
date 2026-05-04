@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
@@ -37,7 +37,9 @@ import {
   X,
   Users,
   Bird,
-  Briefcase
+  Briefcase,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -59,7 +61,7 @@ export default function ClassicModern({
   onExit,
 }: {
   profile: any;
-  onExit: () => void;
+  onExit?: () => void;
 }) {
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
@@ -69,6 +71,8 @@ export default function ClassicModern({
   const [isRatingSubmitted, setIsRatingSubmitted] = useState(false);
   const [showFollowModal, setShowFollowModal] = useState(false);
   const [followerInfo, setFollowerInfo] = useState({ name: '', phone: '', email: '' });
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const shareUrl = user ? `${window.location.origin}${window.location.pathname}?ref=${user.uid}` : window.location.href.split('?')[0];
   const [followLoading, setFollowLoading] = useState(false);
@@ -77,6 +81,17 @@ export default function ClassicModern({
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectInfo, setConnectInfo] = useState({ name: '', phone: '', whatsapp: '', company: '' });
   const [connectLoading, setConnectLoading] = useState(false);
+
+  const toggleAudio = () => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      const command = isMuted ? 'unMute' : 'mute';
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: '' }),
+        '*'
+      );
+      setIsMuted(!isMuted);
+    }
+  };
 
   const getYoutubeVideoId = (url: string) => {
     if (!url) return null;
@@ -319,18 +334,25 @@ export default function ClassicModern({
              </div>
           )}
           {videoId ? (
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <div 
+              onClick={toggleAudio}
+              style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer' }}
+            >
               <iframe
+                ref={iframeRef}
                 style={{
                   width: '100%',
                   height: '100%',
                   transform: 'scale(1.5)',
                   pointerEvents: 'none'
                 }}
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1`}
                 frameBorder="0"
                 allow="autoplay; encrypted-media"
               ></iframe>
+              <div style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '50%', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </div>
             </div>
           ) : profile.bannerUrl && !profile.bannerVideo && (
             <img 
@@ -346,41 +368,42 @@ export default function ClassicModern({
             />
           )}
           {profile.bannerVideo && !videoId && (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              style={{
-                position: "absolute",
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                opacity: 0.8,
+            <div 
+              onClick={(e) => {
+                const video = e.currentTarget.querySelector('video');
+                if (video) {
+                  video.muted = !video.muted;
+                  setIsMuted(video.muted);
+                }
               }}
+              style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer' }}
             >
-              <source src={profile.bannerVideo} type="video/mp4" />
-            </video>
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: 0.8,
+                }}
+              >
+                <source src={profile.bannerVideo} type="video/mp4" />
+              </video>
+              <div style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '50%', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </div>
+            </div>
           )}
-          
-          <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
-            <button
-              onClick={onExit}
-              style={{
-                background: "rgba(0,0,0,0.3)",
-                backdropFilter: "blur(4px)",
-                border: "none",
-                color: "white",
-                padding: "8px 16px",
-                borderRadius: "20px",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: "pointer"
-              }}
-            >
-              Close Profile
-            </button>
-          </div>
+  
+          {profile.logoUrl && (
+            <div style={{ position: 'absolute', zIndex: 5, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <img src={profile.logoUrl} style={{ maxWidth: 80, maxHeight: 80, objectFit: 'contain' }} alt="Logo" />
+            </div>
+          )}
         </div>
 
         <div

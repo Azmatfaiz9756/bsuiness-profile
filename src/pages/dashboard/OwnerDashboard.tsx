@@ -2031,7 +2031,7 @@ export default function OwnerDashboard() {
                           <button 
                             onClick={async () => {
                               if (!formData.customDomain) {
-                                showToast("Please enter a domain name first", "error");
+                                showToast("Please enter a domain name first");
                                 return;
                               }
                               setDomainStatus('Checking');
@@ -2049,7 +2049,7 @@ export default function OwnerDashboard() {
                                 showToast("Domain format verified! Note: DNS propagation can take 24-48 hours.");
                               } catch (err: any) {
                                 setDomainStatus('Not Configured');
-                                showToast(err.message || "Could not verify domain connection", "error");
+                                showToast(err.message || "Could not verify domain connection");
                               }
                             }}
                             className="bg-white text-blue-600 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-50 transition-all"
