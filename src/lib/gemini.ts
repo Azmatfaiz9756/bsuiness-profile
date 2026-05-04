@@ -14,6 +14,7 @@ export class ProxyGoogleGenAI {
     generateContent: async (args: any) => {
       // Use relative path by default.
       // In development, this hits the Express server which proxies to Gemini.
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const headers: Record<string, string> = { 
         'Content-Type': 'application/json'
       };
@@ -24,7 +25,9 @@ export class ProxyGoogleGenAI {
         headers['Authorization'] = `Bearer ${this.apiKey}`;
       }
       
-      const endpoint = `/api/gemini/generateContent`;
+      const endpoint = apiUrl 
+        ? `${apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl}/api/gemini/generateContent` 
+        : `/api/gemini/generateContent`;
       
       try {
         console.log(`[ProxyGoogleGenAI] Fetching from: ${endpoint}`);
