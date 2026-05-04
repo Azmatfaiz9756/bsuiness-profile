@@ -72,6 +72,9 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                  const storageKey = `last_view_${pId}`;
                  const lastView = localStorage.getItem(storageKey);
                  const FIFTEEN_MINUTES = 15 * 60 * 1000;
+                 
+                 // Save the profile we visited for sharing commission tracking
+                 localStorage.setItem('dbc_profile_visited', pId);
 
                  if (!lastView || (now - parseInt(lastView)) > FIFTEEN_MINUTES) {
                    const { increment, updateDoc } = await import('firebase/firestore');

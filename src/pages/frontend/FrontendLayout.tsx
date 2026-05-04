@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import { logout } from '../../firebase';
 import { Menu, X, Sparkles, Zap, ShieldCheck } from 'lucide-react';
 import { LoginModal } from '../../components/LoginModal';
+import AnimatedLogo from '../../components/AnimatedLogo';
 import toast from 'react-hot-toast';
 
 export const FrontendLayout = () => {
@@ -100,19 +101,10 @@ export const FrontendLayout = () => {
       {!isShop && (
         <div className="nav flex h-[72px] md:h-[80px] items-center justify-between px-4 md:px-8 bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
           <Link to="/" className="nav-logo flex items-center gap-3 z-10 group">
-            <div className="relative w-10 md:w-12 h-10 md:h-12 flex items-center justify-center">
-              {/* Spinning Premium Outline */}
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-600 border-r-indigo-500 animate-spin duration-700 shadow-[0_0_15px_rgba(37,99,235,0.2)]"></div>
-              <div className="absolute inset-1 rounded-full border border-dashed border-slate-200 animate-spin-reverse duration-[3000ms]"></div>
-              
-              <div className="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-full flex items-center justify-center font-black text-[10px] md:text-xs z-10 shadow-lg group-hover:scale-105 transition-transform">
-                DBC
-              </div>
-            </div>
-            
+            <AnimatedLogo size={10} theme="light" />
             <div className="hidden md:flex flex-col">
               <span className="nav-logo-text font-black text-slate-900 whitespace-nowrap leading-tight text-lg tracking-tighter uppercase italic">
-                Digital <span className="text-blue-600">Connect</span>
+                VIBE<span className="text-blue-600"> Digital Connect</span>
               </span>
               <span className="text-[8px] text-slate-400 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
             </div>
@@ -120,7 +112,7 @@ export const FrontendLayout = () => {
 
           {/* Centered Mobile Title */}
           <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[50%]">
-            <span className="font-black text-slate-900 whitespace-nowrap leading-tight text-sm tracking-tighter uppercase italic">Digital <span className="text-blue-600">Connect</span></span>
+            <span className="font-black text-slate-900 whitespace-nowrap leading-tight text-base tracking-tighter uppercase italic">VIBE<span className="text-blue-600"> Digital Connect</span></span>
             <span className="text-[7px] text-slate-400 font-bold tracking-widest uppercase truncate w-full">HAADI GLOBAL VENTURES FZE LLC</span>
           </Link>
           
@@ -262,14 +254,9 @@ export const FrontendLayout = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-16">
               <div>
                 <div className="flex items-center gap-3 mb-6 group cursor-default">
-                  <div className="relative w-10 h-10 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border border-transparent border-t-blue-500 border-r-blue-400 animate-spin"></div>
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-full flex items-center justify-center font-black text-[10px] z-10 shadow-lg shadow-blue-900/40 opacity-90">
-                      DBC
-                    </div>
-                  </div>
+                  <AnimatedLogo size={10} />
                   <div className="flex flex-col">
-                    <span className="font-black text-white text-lg tracking-tighter leading-tight uppercase italic">{siteSettings?.siteName || 'Digital Connect'}</span>
+                    <span className="font-black text-white text-lg tracking-tighter leading-tight uppercase italic">{siteSettings?.siteName || 'VIBE Digital Connect'}</span>
                     <span className="text-[10px] text-blue-500 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES</span>
                   </div>
                 </div>
@@ -326,7 +313,7 @@ export const FrontendLayout = () => {
             </div>
 
             <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-slate-900 text-xs">
-              <p>© {new Date().getFullYear()} Digital Connect by Haadi Global Ventures Fze LLC. All rights reserved.</p>
+              <p>© {new Date().getFullYear()} VIBE Digital Connect by Haadi Global Ventures Fze LLC. All rights reserved.</p>
               <div className="flex items-center gap-2 mt-4 md:mt-0">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 Systems Operational

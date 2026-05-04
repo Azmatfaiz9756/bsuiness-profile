@@ -22,7 +22,7 @@ export default function ContactUs() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-16 text-slate-800">
       <Helmet>
-        <title>Contact Us - {siteSettings?.siteName || 'Premium Digital Business Cards'}</title>
+        <title>Contact Us - {siteSettings?.siteName || 'VIBE Digital Connect'}</title>
         <meta name="description" content="Get in touch with us for support, sales, or partnerships." />
       </Helmet>
       

@@ -83,9 +83,14 @@ export default function App() {
     async function testConnection() {
       try {
         await getDocFromServer(doc(db, 'test', 'connection'));
-      } catch (error) {
-        if(error instanceof Error && error.message.includes('the client is offline')) {
-          console.error("Please check your Firebase configuration.");
+        console.log("Firebase connection successful.");
+      } catch (error: any) {
+        if(error.code === 'unknown' && error.message.includes('auth/network-request-failed')) {
+          console.warn("Firebase Auth unreachable. This might be a temporary network issue.");
+        } else if(error.message.includes('the client is offline')) {
+          console.error("Firebase is in offline mode. Please check your internet connection and Firebase configuration.");
+        } else {
+          console.error("Firebase connection test failed:", error.message || error);
         }
       }
     }

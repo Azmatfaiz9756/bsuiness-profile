@@ -57,6 +57,8 @@ export default function ExecutiveDark({
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
 
+  const shareUrl = user ? `${window.location.origin}${window.location.pathname}?ref=${user.uid}` : window.location.href.split('?')[0];
+
   const SectionContainer = ({ icon, title, children }: any) => {
     return (
       <div
@@ -105,7 +107,7 @@ export default function ExecutiveDark({
   const handleWhatsAppShare = () => {
     if (!sharePhone) return alert("Enter a mobile number");
     window.open(
-      `https://wa.me/${sharePhone}?text=Check out my digital profile: ${window.location.href}`,
+      `https://wa.me/${sharePhone}?text=Check out my digital profile: ${shareUrl}`,
       "_blank",
     );
   };
@@ -1628,7 +1630,7 @@ export default function ExecutiveDark({
                   style={{ display: "flex", gap: 12, justifyContent: "center" }}
                 >
                   <a
-                    href={`https://wa.me/?text=Check out this profile: ${window.location.href}`}
+                    href={`https://wa.me/?text=Check out this profile: ${shareUrl}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{
@@ -1646,7 +1648,7 @@ export default function ExecutiveDark({
                     <FaWhatsapp size={20} />
                   </a>
                   <a
-                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${window.location.href}`}
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{
@@ -1664,7 +1666,7 @@ export default function ExecutiveDark({
                     <FaLinkedin size={20} />
                   </a>
                   <a
-                    href={`https://twitter.com/intent/tweet?url=${window.location.href}&text=Check out this profile!`}
+                    href={`https://twitter.com/intent/tweet?url=${shareUrl}&text=Check out this profile!`}
                     target="_blank"
                     rel="noreferrer"
                     style={{
@@ -1682,7 +1684,7 @@ export default function ExecutiveDark({
                     <FaTwitter size={20} />
                   </a>
                   <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`}
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{
@@ -1723,7 +1725,7 @@ export default function ExecutiveDark({
                 >
                   <QRCode
                     id="profile-qr-dark"
-                    value={window.location.href}
+                    value={shareUrl}
                     size={150}
                   />
                 </div>
@@ -1769,7 +1771,7 @@ export default function ExecutiveDark({
               marginBottom: 4,
             }}
           >
-            Powered by Digital Business Cards
+            Powered by VIBE Digital Connect
           </div>
           <div style={{ fontSize: 12, color: "#888", marginBottom: 16 }}>
             Create your own free digital profile today

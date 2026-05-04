@@ -5,7 +5,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-16 text-slate-800">
       <Helmet>
-        <title>Privacy Policy - Premium Digital Business Cards</title>
+        <title>Privacy Policy - VIBE Digital Connect</title>
         <meta name="description" content="Privacy Policy for our Premium Digital Business Card platform." />
       </Helmet>
       

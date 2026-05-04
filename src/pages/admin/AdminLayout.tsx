@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { loginWithGoogle, logout } from '../../firebase';
+import AnimatedLogo from '../../components/AnimatedLogo';
 
 export const AdminLayout = () => {
   const location = useLocation();
@@ -64,8 +65,7 @@ export const AdminLayout = () => {
       {/* Mobile Top Header */}
       <div className="md:hidden flex h-16 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-50">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Digital Connect" className="w-8 h-8 rounded shrink-0 object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
-          <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs" style={{ display: 'none' }}>DBC</div>
+          <AnimatedLogo size={8} />
           <span className="font-bold text-white text-lg">Admin Panel</span>
         </div>
         <button className="text-slate-400 hover:text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
@@ -85,10 +85,9 @@ export const AdminLayout = () => {
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}>
           <div className="hidden md:flex h-16 items-center gap-3 px-6 shrink-0 border-b border-slate-800">
-            <img src="/logo.png" alt="Digital Connect" className="w-8 h-8 rounded shrink-0 object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
-            <div className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs shrink-0" style={{ display: 'none' }}>DBC</div>
+            <AnimatedLogo size={8} />
             <div className="flex flex-col">
-              <span className="font-bold text-white text-sm leading-tight">Digital Connect</span>
+              <span className="font-bold text-white text-sm leading-tight">VIBE Digital Connect</span>
               <span className="text-[10px] text-blue-400 font-bold tracking-wider">HAADI GLOBAL VENTURES FZE LLC</span>
             </div>
           </div>

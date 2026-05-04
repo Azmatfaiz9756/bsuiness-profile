@@ -5,7 +5,7 @@ export default function TermsConditions() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-16 text-slate-800">
       <Helmet>
-        <title>Terms & Conditions - Premium Digital Business Cards</title>
+        <title>Terms & Conditions - VIBE Digital Connect</title>
         <meta name="description" content="Terms and Conditions of use for our Premium Digital Business Card platform." />
       </Helmet>
       

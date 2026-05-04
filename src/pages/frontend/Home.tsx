@@ -118,7 +118,7 @@ function ROISummary() {
 }
 
 function HeroSection() {
-  const titleWords = ["DIGITAL", "CONNECT."];
+  const titleWords = ["VIBE", "DIGITAL", "CONNECT."];
   const subTitleText = "Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR.";
   const subTitleWords = subTitleText.split(" ");
 
@@ -189,7 +189,7 @@ function HeroSection() {
                 animate="visible"
               >
                 {titleWords[0].split("").map((char, index) => (
-                  <motion.span key={index} variants={letterVariants} className="inline-block">
+                  <motion.span key={index} variants={letterVariants} className="inline-block text-black [-webkit-text-stroke:1.5px_#ffffff] drop-shadow-md">
                     {char}
                   </motion.span>
                 ))}
@@ -202,6 +202,19 @@ function HeroSection() {
                 viewport={{ once: true }}
               >
                 {titleWords[1].split("").map((char, index) => (
+                  <motion.span key={index} variants={letterVariants} className="inline-block">
+                    {char}
+                  </motion.span>
+                ))}
+              </motion.div>
+              <motion.div 
+                className="flex flex-wrap justify-center lg:justify-start gap-x-[0.2em] mt-2"
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
+                {titleWords[2].split("").map((char, index) => (
                   <motion.span 
                     key={index} 
                     variants={letterVariants} 
@@ -483,7 +496,7 @@ function ChatbotShowcase() {
     { text: "Hi! How much for a digital card bundle?", sender: "user", time: "10:00 AM" },
     { text: "Our starter bundle is AED 320! Which includes a premium card and leather holder. I can help you purchase it right now, want the link?", sender: "bot", time: "10:00 AM" },
     { text: "Yes please!", sender: "user", time: "10:01 AM" },
-    { text: "Here is the direct checkout link: dbc.network/pay. Let me know if you need any other help!", sender: "bot", time: "10:01 AM" }
+    { text: "Here is the direct checkout link: vibedigitalconnect.com/pay. Let me know if you need any other help!", sender: "bot", time: "10:01 AM" }
   ];
 
   return (
@@ -750,17 +763,17 @@ export default function FrontendHome() {
   return (
     <div className="bg-slate-50 min-h-screen pb-16 font-sans overflow-x-hidden">
       <Helmet>
-        <title>Digital Connect | Haadi Global Ventures Fze LLC</title>
+        <title>VIBE Digital Connect | Haadi Global Ventures Fze LLC</title>
         <meta name="description" content="Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR. Join thousands of professionals and brands in the official directory." />
         <meta name="keywords" content="digital business card, networking, AI, NFC card, professional profile, DBC network, business cards" />
-        <meta property="og:title" content="Digital Connect | Haadi Global Ventures Fze LLC" />
+        <meta property="og:title" content="VIBE Digital Connect | Haadi Global Ventures Fze LLC" />
         <meta property="og:description" content="Share your contact info, social links, and portfolio with a single tap using our NFC-enabled smart cards." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://dbc.network" />
+        <meta property="og:url" content="https://vibedigitalconnect.com" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Digital Connect | Haadi Global Ventures Fze LLC" />
+        <meta name="twitter:title" content="VIBE Digital Connect | Haadi Global Ventures Fze LLC" />
         <meta name="twitter:description" content="Direct access to thousands of verified professionals. Start your search now." />
-        <link rel="canonical" href="https://dbc.network" />
+        <link rel="canonical" href="https://vibedigitalconnect.com" />
       </Helmet>
 
       {/* Limited Offer Banner */}
@@ -1179,7 +1192,7 @@ export default function FrontendHome() {
           { title: 'Digital Business Cards', description: 'NFC-enabled dynamic cards' },
           { title: 'Platform Support', description: 'User guidance and premium support' }
         ],
-        email: 'support@dbc.network',
+        email: 'support@vibedigitalconnect.com',
         phone: ''
       }} />
     </div>

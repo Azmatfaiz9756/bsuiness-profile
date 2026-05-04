@@ -32,11 +32,7 @@ export default function FrontendReferrals() {
   
   const trialPeriod = siteSettings?.trialPeriod || '1 Month';
   const purchaseWindow = siteSettings?.referralPurchaseWindow || 35;
-  
-  const countryRefSettings = siteSettings?.countryReferrals?.[selectedCountry] || siteSettings?.countryReferrals?.['Global'] || { currency: 'USD', normalUserReward: 1, profileOwnerReward: 5, directCommission: 20 };
-  const referralNormalUserReward = countryRefSettings.normalUserReward;
-  const referralProfileOwnerReward = countryRefSettings.profileOwnerReward;
-  const referralDirectCommission = countryRefSettings.directCommission;
+  const countryRefSettings = siteSettings?.countryReferrals?.[selectedCountry] || siteSettings?.countryReferrals?.['Global'] || { currency: 'USD' };
   const currency = countryRefSettings.currency;
 
   const copyRef = () => {
@@ -56,8 +52,9 @@ export default function FrontendReferrals() {
             When you share a business profile and it leads to a premium plan sale within {purchaseWindow} days, everyone wins! All new profiles get a {trialPeriod} Free Trial.
           </p>
           <ul className="text-left list-disc pl-5 mt-4 space-y-2 bg-black/10 rounded-xl p-4 backdrop-blur-sm">
-            <li><strong>As a Normal User:</strong> Share any profile. If they purchase a plan, you earn <strong>{referralNormalUserReward} {currency}</strong> per sale, and the profile owner earns <strong>{referralProfileOwnerReward} {currency}</strong>.</li>
-            <li><strong>As a Profile Owner:</strong> Share your own profile directly. If someone signs up and buys a plan through your link, you earn a <strong>{referralDirectCommission} {currency}</strong> direct commission!</li>
+            <li><strong>As a Normal User / Free Trial User:</strong> Share any profile. If someone purchases a plan through it, you earn <strong>5% of the plan cost</strong> per sale, and the profile owner also earns <strong>5% of the plan cost</strong>.</li>
+            <li><strong>As a Profile Owner:</strong> Share your own profile directly. If someone signs up and buys a plan through your link, you earn a <strong>10% direct commission</strong> of their plan cost!</li>
+            <li><strong>Welcome Bonus:</strong> Subscribe to a paid plan (excluding Enterprise) and instantly receive a <strong>10% Welcome Bonus</strong> in your wallet!</li>
           </ul>
         </div>
 

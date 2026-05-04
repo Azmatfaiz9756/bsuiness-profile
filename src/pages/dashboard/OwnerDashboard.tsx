@@ -11,6 +11,7 @@ import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
 import { PaymentModal } from '../../components/PaymentModal';
 import { ImageUploadCrop } from '../../components/ImageUploadCrop';
+import AnimatedLogo from '../../components/AnimatedLogo';
 
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
 
@@ -380,19 +381,81 @@ export default function OwnerDashboard() {
              return;
           }
 
-          const { updateDoc } = await import('firebase/firestore');
+          const { getDoc, updateDoc, increment, collection, query, where, getDocs } = await import('firebase/firestore');
           const userRef = doc(db, 'profiles', profile.id);
+          const decodedPlanName = decodeURIComponent(planName);
           const updateData: any = {
-            plan: decodeURIComponent(planName),
+            plan: decodedPlanName,
             updatedAt: new Date().toISOString()
           };
           const refCode = localStorage.getItem('dbc_referred_by');
+          const profileRefId = localStorage.getItem('dbc_profile_visited');
+
           if (refCode) {
             updateData.referredBy = refCode;
             localStorage.removeItem('dbc_referred_by');
           }
           await updateDoc(userRef, updateData);
-          showToast(`Succesfully subscribed to ${decodeURIComponent(planName)}!`);
+
+          // Calculate and distribute bonuses
+          try {
+             // 1. Find Plan Cost
+             const currentPlanData = (siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || []).find((p: any) => p.name === decodedPlanName);
+             const planCostRaw = currentPlanData?.price || '0';
+             const planCost = parseFloat(planCostRaw.replace(/[^0-9.]/g, '')) || 0;
+
+             if (planCost > 0) {
+               // 2. Welcome Bonus (10% to buyer) except Enterprise
+               if (decodedPlanName !== 'Enterprise' && decodedPlanName !== 'Enterprise Sub') {
+                  const welcomeBonus = planCost * 0.10;
+                  await updateDoc(doc(db, 'profiles', profile.id), { walletBalance: increment(welcomeBonus) });
+               }
+
+               // 3. Referral Bonuses
+               if (refCode) {
+                 const qObj = query(collection(db, 'profiles'), where('ownerId', '==', refCode));
+                 const snap = await getDocs(qObj);
+                 
+                 let referrerRef: any = null;
+                 let referrerData: any = null;
+                 
+                 if (!snap.empty) {
+                    referrerRef = snap.docs[0].ref;
+                    referrerData = snap.docs[0].data();
+                 }
+
+                 let isNormalUserSharing = false;
+                 if (profileRefId && profileRefId !== refCode) {
+                     isNormalUserSharing = true;
+                 }
+
+                 if (isNormalUserSharing) {
+                     // Normal User sharing a profile (5% to Normal User, 5% to Profile Owner)
+                     if (referrerRef) await updateDoc(referrerRef, { walletBalance: increment(planCost * 0.05) });
+                     
+                     if (profileRefId) {
+                         const profileOwnerRef = doc(db, 'profiles', profileRefId);
+                         const poDoc = await getDoc(profileOwnerRef);
+                         if (poDoc.exists()) {
+                            await updateDoc(profileOwnerRef, { walletBalance: increment(planCost * 0.05) });
+                         }
+                     }
+                 } else {
+                     // Direct Referral
+                     if (referrerRef) {
+                         const referrerPlan = referrerData?.plan || 'Basic';
+                         const isPaid = !referrerPlan.toLowerCase().includes('free') && !referrerPlan.toLowerCase().includes('basic');
+                         const bonus = isPaid ? (planCost * 0.10) : (planCost * 0.05);
+                         await updateDoc(referrerRef, { walletBalance: increment(bonus) });
+                     }
+                 }
+               }
+             }
+          } catch (err) {
+             console.error("Error distributing bonuses:", err);
+          }
+
+          showToast(`Succesfully subscribed to ${decodedPlanName}!`);
           
           // Clear URL params
           setSearchParams({});
@@ -794,8 +857,7 @@ export default function OwnerDashboard() {
       {/* Mobile Top Header */}
       <div className="md:hidden flex h-14 items-center justify-between px-4 bg-slate-900 border-b border-slate-800 shrink-0 z-[40]">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="DBC" className="w-6 h-6 rounded object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling!.style.display = 'flex'; }} />
-          <div className="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-[10px] uppercase" style={{ display: 'none' }}>DBC</div>
+          <AnimatedLogo size={6} />
           <span className="font-bold text-white text-sm">Business Portal</span>
         </div>
         <Link to="/" className="text-xs font-bold text-slate-400 bg-slate-800 px-3 py-1.5 rounded-lg">Exit</Link>
@@ -882,7 +944,7 @@ export default function OwnerDashboard() {
         {/* Desktop Sidebar */}
         <div className="hidden md:flex md:relative z-50 flex-col w-[280px] h-full bg-slate-900 border-r border-slate-800 transition-all duration-300 ease-in-out">
           <div className="flex flex-col px-6 py-8 border-b border-slate-800">
-            <h2 className="m-0 text-xl font-black text-white tracking-tight">Digital Connect</h2>
+            <h2 className="m-0 text-xl font-black text-white tracking-tight">VIBE Digital Connect</h2>
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">HAADI GLOBAL VENTURES FZE LLC</span>
           </div>
 
@@ -3193,7 +3255,7 @@ export default function OwnerDashboard() {
                 <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
                   <div className="flex-1 w-full">
                      <h3 className="text-2xl font-bold text-slate-900 mb-2">Your Unified Referral Link</h3>
-                     <p className="text-slate-500 mb-6">Share your profile link. If you refer a business directly and they subscribe to a paid plan, you earn a <strong className="text-emerald-600">{siteSettings?.referralDirectCommission || 20} {siteSettings?.currency || 'AED'} direct commission</strong>!</p>
+                     <p className="text-slate-500 mb-6">Share your profile link. If you refer a business directly and they subscribe to a paid plan, you earn a <strong className="text-emerald-600">10% direct commission</strong> of their plan cost!</p>
                      
                      <div className="flex flex-col sm:flex-row items-stretch gap-3">
                         <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center overflow-hidden">
