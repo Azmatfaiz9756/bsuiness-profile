@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
 
 export const AppContext = createContext<any>(null);
 
@@ -12,6 +12,36 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [profiles, setProfiles] = useState<any[]>([]);
   
+  const [joinNotifications, setJoinNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    const SUPER_ADMINS = ['azmatfaiz9756@gmail.com'];
+    if (user && SUPER_ADMINS.includes(user.email || '')) {
+      const q = query(collection(db, 'join_notifications'), orderBy('createdAt', 'desc'), limit(20));
+      const unsub = onSnapshot(q, (snapshot) => {
+        const newDocs = snapshot.docChanges().filter(change => change.type === 'added');
+        if (newDocs.length > 0 && !snapshot.metadata.hasPendingWrites) {
+           // Basic check to see if this is initial load vs new doc
+           // If we have existing notifications, it's likely a new user join
+           setJoinNotifications(prev => {
+             if (prev.length > 0) {
+                newDocs.forEach(d => {
+                  const data = d.doc.data();
+                  console.log(`New Join: ${data.userName}`);
+                  // Note: We can't easily trigger a toast from here without a global toast state
+                  // but we already have joinNotifications state which AdminLayout uses.
+                });
+             }
+             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+           });
+        } else {
+           setJoinNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }
+      }, (err) => console.error("Notif listener error:", err));
+      return () => unsub();
+    }
+  }, [user]);
+
   useEffect(() => {
     // Fetch few active profiles for initial context/previews
     import('firebase/firestore').then(({ limit, query, collection, where, onSnapshot }) => {
@@ -230,7 +260,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       addresses, setAddresses, siteSettings, setSiteSettings,
       shopBanners, setShopBanners,
       jobOpenings, setJobOpenings,
-      selectedCountry, setSelectedCountry
+      selectedCountry, setSelectedCountry,
+      joinNotifications
     }}>
       {children}
     </AppContext.Provider>

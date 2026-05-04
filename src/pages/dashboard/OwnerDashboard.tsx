@@ -660,6 +660,20 @@ export default function OwnerDashboard() {
           // Auto create
           await setDoc(docRef, emptyProfile);
           
+          // Create Join Notification for Admin
+          try {
+            await addDoc(collection(db, 'join_notifications'), {
+              userId: user.uid,
+              userName: emptyProfile.name,
+              userEmail: emptyProfile.email,
+              plan: emptyProfile.plan,
+              createdAt: serverTimestamp(),
+              type: 'NEW_USER_JOIN'
+            });
+          } catch (notifErr) {
+            console.error("Join notification failed:", notifErr);
+          }
+          
           // Trigger Welcome Email
           try {
             await fetch('/api/send-email', {

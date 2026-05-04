@@ -95,6 +95,20 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["senderType", "text", "timestamp"]
+    },
+    "JoinNotification": {
+      "title": "Join Notification",
+      "description": "Alert when a new user joins the platform",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "plan": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "type": { "type": "string" }
+      },
+      "required": ["userId", "userName", "userEmail", "createdAt"]
     }
   },
   "firestore": {
@@ -125,6 +139,10 @@
     "/chat_sessions/{id}/messages/{msgId}": {
       "schema": "ChatMessage",
       "description": "Live messages"
+    },
+    "/join_notifications/{id}": {
+      "schema": "JoinNotification",
+      "description": "Admin alerts for new user signups"
     }
   }
 }

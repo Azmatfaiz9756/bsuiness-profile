@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, Tag, Percent, Archive, Briefcase, Share2, Globe, Plus, LogOut, Menu, X, MessageSquare, Bell } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { loginWithGoogle, logout } from '../../firebase';
 import AnimatedLogo from '../../components/AnimatedLogo';
@@ -9,7 +9,8 @@ export const AdminLayout = () => {
   const location = useLocation();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, authLoading } = useAppContext();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { user, authLoading, joinNotifications } = useAppContext();
 
   const SUPER_ADMINS = ['azmatfaiz9756@gmail.com']; // Allow this email specifically for super admin
 
@@ -179,7 +180,52 @@ export const AdminLayout = () => {
                location.pathname === '/admin/analytics' ? 'Analytics' :
                'Admin Panel'}
             </div>
-            <div className="relative shrink-0">
+            <div className="flex items-center gap-2 md:gap-4 shrink-0 relative">
+              <button 
+                className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors relative"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell size={20} />
+                {joinNotifications?.length > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </button>
+              
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-72 md:w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-[100] py-2 overflow-hidden">
+                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">New User Joins</span>
+                    <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold">{joinNotifications?.length || 0}</span>
+                  </div>
+                  <div className="max-h-[350px] overflow-y-auto">
+                    {joinNotifications && joinNotifications.length > 0 ? (
+                      joinNotifications.map((n: any) => (
+                        <div key={n.id} className="px-4 py-3 hover:bg-slate-50 border-b border-slate-50 transition-colors last:border-0">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-sm font-bold text-slate-900">{n.userName}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${n.plan === 'Free' ? 'bg-slate-100 text-slate-600' : 'bg-blue-100 text-blue-700'}`}>
+                              {n.plan}
+                            </span>
+                          </div>
+                          <div className="text-xs text-slate-500 mb-2 truncate">{n.userEmail}</div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
+                            <span>📅 {n.createdAt?.seconds ? new Date(n.createdAt.seconds * 1000).toLocaleString() : 'Just now'}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-8 text-center">
+                        <div className="text-slate-300 mb-2">📭</div>
+                        <div className="text-xs text-slate-500 font-medium">No new notifications</div>
+                      </div>
+                    )}
+                  </div>
+                  <Link to="/admin/profiles" onClick={() => setShowNotifications(false)} className="block w-full text-center py-2 text-[11px] font-bold text-blue-600 bg-slate-50 hover:bg-white border-t border-slate-100 transition-colors">
+                    VIEW ALL PROFILES
+                  </Link>
+                </div>
+              )}
+
               <button 
                 className="bg-slate-900 hover:bg-slate-800 text-white px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2" 
                 onClick={() => setShowQuickAdd(!showQuickAdd)}

@@ -84,5 +84,10 @@ service cloud.firestore {
     match /test/{doc} {
       allow read, write: if true;
     }
+
+    match /join_notifications/{notifId} {
+      allow create: if isSignedIn();
+      allow read: if isAdmin();
+    }
   }
 }
