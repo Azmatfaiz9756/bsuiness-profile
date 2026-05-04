@@ -170,7 +170,7 @@ async function startServer() {
       const baseUrl = `${protocol}://${host}`;
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
+        automatic_payment_methods: { enabled: true },
         line_items: [
           {
             price_data: {
@@ -218,7 +218,7 @@ async function startServer() {
       const baseUrl = `${protocol}://${host}`;
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
+        automatic_payment_methods: { enabled: true },
         line_items: [
           {
             price_data: {
@@ -286,7 +286,7 @@ async function startServer() {
       const baseUrl = `${protocol}://${host}`;
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
+        automatic_payment_methods: { enabled: true },
         line_items: lineItems,
         mode: 'payment',
         success_url: `${baseUrl}/shop?shop_payment_success=true&session_id={CHECKOUT_SESSION_ID}`,
