@@ -2037,7 +2037,7 @@ export default function OwnerDashboard() {
                               setDomainStatus('Checking');
                               try {
                                 // Simple validation: check if domain has a dot and no spaces
-                                const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+                                const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
                                 if (!domainRegex.test(formData.customDomain)) {
                                   throw new Error("Invalid domain format (e.g. example.com)");
                                 }
