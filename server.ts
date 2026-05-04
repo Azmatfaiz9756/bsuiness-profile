@@ -16,7 +16,7 @@ const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 async function startServer() {
   const app = express();
   app.set('trust proxy', true);
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || "3000", 10);
   
   app.use(cors());
 
@@ -513,9 +513,14 @@ async function startServer() {
       }
       
       // Replace placeholders
-      html = html.replace(/__PAGE_TITLE__/g, title)
-                 .replace(/__PAGE_DESCRIPTION__/g, description)
-                 .replace(/__PAGE_IMAGE__/g, image);
+      html = html.replace(/<title>.*?<\/title>/g, `<title>${title}</title>`)
+                 .replace(/<meta name="description" content=".*?" \/>/g, `<meta name="description" content="${description}" />`)
+                 .replace(/<meta property="og:title" content=".*?" \/>/g, `<meta property="og:title" content="${title}" />`)
+                 .replace(/<meta property="og:description" content=".*?" \/>/g, `<meta property="og:description" content="${description}" />`)
+                 .replace(/<meta property="og:image" content=".*?" \/>/g, `<meta property="og:image" content="${image}" />`)
+                 .replace(/<meta name="twitter:title" content=".*?" \/>/g, `<meta name="twitter:title" content="${title}" />`)
+                 .replace(/<meta name="twitter:description" content=".*?" \/>/g, `<meta name="twitter:description" content="${description}" />`)
+                 .replace(/<meta name="twitter:image" content=".*?" \/>/g, `<meta name="twitter:image" content="${image}" />`);
       
       res.send(html);
     });

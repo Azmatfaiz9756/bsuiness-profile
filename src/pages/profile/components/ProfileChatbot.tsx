@@ -24,7 +24,8 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const [stockData, setStockData] = useState<string>('');
 
   const [showIdentityForm, setShowIdentityForm] = useState(false);
-  const [identityForm, setIdentityForm] = useState({ name: '', phone: '' });
+  const [identityForm, setIdentityForm] = useState({ name: '', phone: '', countryCode: '+971' });
+  const [identityError, setIdentityError] = useState('');
   const [visitorDetails, setVisitorDetails] = useState<{name: string, phone: string, id: string} | null>(null);
   const [routingStatus, setRoutingStatus] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -411,12 +412,36 @@ Assist visitors with inquiries about the business, services, and contact informa
     }
   };
 
+  const phoneValidationRules: Record<string, { min: number, max: number, placeholder: string }> = {
+    '+971': { min: 9, max: 9, placeholder: '50 123 4567' },
+    '+91': { min: 10, max: 10, placeholder: '98765 43210' },
+    '+1': { min: 10, max: 10, placeholder: '202 555 0123' },
+    '+44': { min: 10, max: 11, placeholder: '7700 900000' },
+    '+966': { min: 9, max: 9, placeholder: '50 123 4567' },
+    '+974': { min: 8, max: 8, placeholder: '3312 3456' },
+    '+973': { min: 8, max: 8, placeholder: '3912 3456' },
+    '+965': { min: 8, max: 8, placeholder: '9123 4567' },
+    '+968': { min: 8, max: 8, placeholder: '9123 4567' },
+    '+92': { min: 10, max: 10, placeholder: '300 1234567' },
+  };
+
   const submitIdentity = (e: React.FormEvent) => {
     e.preventDefault();
     if (!identityForm.name || !identityForm.phone) return;
+    
+    const rules = phoneValidationRules[identityForm.countryCode];
+    if (rules) {
+      const pLen = identityForm.phone.length;
+      if (pLen < rules.min || pLen > rules.max) {
+        setIdentityError(`Phone number must be ${rules.min === rules.max ? rules.min : `${rules.min}-${rules.max}`} digits for ${identityForm.countryCode}`);
+        return;
+      }
+    }
+
+    setIdentityError('');
     const newVisitor = { 
       name: identityForm.name.trim(), 
-      phone: identityForm.phone.trim(), 
+      phone: `${identityForm.countryCode} ${identityForm.phone.trim()}`, 
       id: `guest_${Date.now()}_${Math.random().toString(36).substring(2,9)}`
     };
     setVisitorDetails(newVisitor);
@@ -721,15 +746,44 @@ Assist visitors with inquiries about the business, services, and contact informa
                   </div>
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4, display: 'block' }}>Mobile Number</label>
-                    <input 
-                      type="tel" 
-                      required
-                      value={identityForm.phone} 
-                      onChange={e => setIdentityForm({...identityForm, phone: e.target.value})}
-                      style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none' }}
-                      placeholder="Your mobile no."
-                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <select 
+                        value={identityForm.countryCode}
+                        onChange={e => {
+                          setIdentityError('');
+                          setIdentityForm({...identityForm, countryCode: e.target.value});
+                        }}
+                        style={{ padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', background: '#f8fafc', width: '90px', fontSize: 14 }}
+                      >
+                        <option value="+971">+971</option>
+                        <option value="+91">+91</option>
+                        <option value="+1">+1</option>
+                        <option value="+44">+44</option>
+                        <option value="+966">+966</option>
+                        <option value="+974">+974</option>
+                        <option value="+973">+973</option>
+                        <option value="+965">+965</option>
+                        <option value="+968">+968</option>
+                        <option value="+92">+92</option>
+                      </select>
+                      <input 
+                        type="tel" 
+                        required
+                        value={identityForm.phone} 
+                        onChange={e => {
+                          setIdentityError('');
+                          setIdentityForm({...identityForm, phone: e.target.value.replace(/\D/g, '')});
+                        }}
+                        style={{ flex: 1, padding: '12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', width: '100%', fontSize: 14 }}
+                        placeholder={phoneValidationRules[identityForm.countryCode]?.placeholder || "Mobile no."}
+                      />
+                    </div>
                   </div>
+                  {identityError && (
+                    <div style={{ color: '#ef4444', fontSize: 13, background: '#fef2f2', padding: '8px 12px', borderRadius: 6 }}>
+                      {identityError}
+                    </div>
+                  )}
                   <motion.button 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
