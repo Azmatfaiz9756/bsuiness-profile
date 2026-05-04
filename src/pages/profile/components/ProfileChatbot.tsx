@@ -152,7 +152,7 @@ Assist visitors with inquiries about the business, services, and contact informa
               setStockData(text);
             }
           } else if (profile.stockSourceType === 'CRM') {
-            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const apiUrl = '';
             const resp = await fetch(`${apiUrl}/api/crm/stock/${profile.id}`);
             if (resp.ok) {
                const data = await resp.json();

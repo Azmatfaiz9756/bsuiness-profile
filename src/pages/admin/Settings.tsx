@@ -67,7 +67,7 @@ export default function AdminSettings() {
     }
     try {
       setSavingKeys(true);
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = '';
       const response = await fetch(`${apiUrl}/api/admin/env`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

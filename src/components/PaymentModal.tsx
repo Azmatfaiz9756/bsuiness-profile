@@ -43,7 +43,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
     }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = '';
       const response = await fetch(`${apiUrl}/api/create-checkout-session`, {
         method: 'POST',
         headers: {

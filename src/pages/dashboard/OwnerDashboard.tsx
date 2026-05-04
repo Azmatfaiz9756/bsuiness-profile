@@ -771,7 +771,7 @@ export default function OwnerDashboard() {
       
       // Save sensitive CRM keys via proxy server
       if (formData.crmProvider) {
-        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const apiUrl = '';
         await fetch(`${apiUrl}/api/crm/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

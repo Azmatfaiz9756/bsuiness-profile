@@ -21,7 +21,7 @@ export default function FrontendWallet() {
       if (!isNaN(addAmount) && sessionId) {
         const verifyPayment = async () => {
           try {
-            const apiUrl = import.meta.env.VITE_API_URL || '';
+            const apiUrl = '';
             const verifyRes = await fetch(`${apiUrl}/api/verify-checkout-session`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -70,7 +70,7 @@ export default function FrontendWallet() {
     
     setIsProcessing(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = '';
       const response = await fetch(`${apiUrl}/api/create-wallet-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

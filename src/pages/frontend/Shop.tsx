@@ -49,7 +49,7 @@ export default function FrontendShop() {
     if (shopPaymentSuccess === 'true' && sessionId) {
       const verifyPayment = async () => {
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || '';
+          const apiUrl = '';
           const verifyRes = await fetch(`${apiUrl}/api/verify-checkout-session`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -156,7 +156,7 @@ export default function FrontendShop() {
   const handleCheckout = async () => {
     setIsProcessingPayment(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const apiUrl = '';
       const response = await fetch(`${apiUrl}/api/create-shop-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
