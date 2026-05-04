@@ -4,6 +4,14 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import Stripe from "stripe";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import fs from 'fs';
+
+// Initialize Firebase for server-side profile fetching
+const firebaseConfig = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 
 async function startServer() {
   const app = express();
@@ -452,8 +460,62 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    
+    app.get('*', async (req, res) => {
+      const indexPath = path.join(distPath, 'index.html');
+      let html = fs.readFileSync(indexPath, 'utf8');
+      
+      const urlPath = req.path;
+      const isProfile = urlPath.startsWith('/profile/');
+      
+      let title = "Vibecard | Digital Business Card";
+      let description = "Elevated networking via smart digital business cards. Check my digital business Vibecard.";
+      let image = "/logo.png";
+      
+      if (isProfile) {
+        try {
+          const profileIdOrSlug = urlPath.split('/profile/')[1]?.split('/')[0];
+          if (profileIdOrSlug) {
+            let profileData: any = null;
+            
+            // 1. Try fetching by ID
+            const profileDoc = await getDoc(doc(db, "profiles", profileIdOrSlug));
+            if (profileDoc.exists()) {
+              profileData = profileDoc.data();
+            } else {
+              // 2. Try fetching by slug
+              const q = query(collection(db, "profiles"), where("slug", "==", profileIdOrSlug));
+              const querySnapshot = await getDocs(q);
+              if (!querySnapshot.empty) {
+                profileData = querySnapshot.docs[0].data();
+              }
+            }
+            
+            if (profileData) {
+              const name = profileData.name || "A Professional";
+              const titleTag = profileData.title || profileData.position || "Digital Portfolio";
+              const bio = profileData.bio || profileData.description || "Digital Connect professional profile.";
+              
+              const pageTitle = `${name} | ${titleTag} - Vibecard`;
+              const pageDescription = `${bio.substring(0, 160)}${bio.length > 160 ? '...' : ''} Check my digital business Vibecard by Digital Connect.`;
+              const pageImage = profileData.photoUrl || profileData.avatarUrl || "/logo.png";
+              
+              title = pageTitle;
+              description = pageDescription;
+              image = pageImage;
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching profile for meta tags:", e);
+        }
+      }
+      
+      // Replace placeholders
+      html = html.replace(/__PAGE_TITLE__/g, title)
+                 .replace(/__PAGE_DESCRIPTION__/g, description)
+                 .replace(/__PAGE_IMAGE__/g, image);
+      
+      res.send(html);
     });
   }
 
