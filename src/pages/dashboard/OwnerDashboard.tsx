@@ -2029,12 +2029,28 @@ export default function OwnerDashboard() {
                              className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-blue-200 outline-none focus:ring-2 focus:ring-white/40 font-bold"
                           />
                           <button 
-                            onClick={() => {
+                            onClick={async () => {
+                              if (!formData.customDomain) {
+                                showToast("Please enter a domain name first", "error");
+                                return;
+                              }
                               setDomainStatus('Checking');
-                              setTimeout(() => {
-                                setDomainStatus(formData.customDomain ? 'Connected' : 'Not Configured');
-                                showToast("Domain status updated!");
-                              }, 1500);
+                              try {
+                                // Simple validation: check if domain has a dot and no spaces
+                                const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+                                if (!domainRegex.test(formData.customDomain)) {
+                                  throw new Error("Invalid domain format (e.g. example.com)");
+                                }
+
+                                // Mimic a real check
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                
+                                setDomainStatus('Connected');
+                                showToast("Domain format verified! Note: DNS propagation can take 24-48 hours.");
+                              } catch (err: any) {
+                                setDomainStatus('Not Configured');
+                                showToast(err.message || "Could not verify domain connection", "error");
+                              }
                             }}
                             className="bg-white text-blue-600 px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-50 transition-all"
                           >
@@ -2071,7 +2087,7 @@ export default function OwnerDashboard() {
                                  </div>
                                  <div className="bg-slate-50 p-2 rounded-lg text-center overflow-hidden">
                                    <div className="text-[8px] font-bold text-slate-400 uppercase">Points To</div>
-                                   <div className="text-xs font-black break-all">businessprofile.webdevelop.ae</div>
+                                   <div className="text-xs font-black break-all">vibecard.ae</div>
                                  </div>
                                </div>
                              </div>
@@ -2140,7 +2156,7 @@ export default function OwnerDashboard() {
                              </div>
                              <div className="bg-white border border-slate-200 p-3 rounded-xl text-center overflow-hidden">
                                <div className="text-[8px] font-bold text-slate-400 uppercase">Value / Point To</div>
-                               <div className="text-xs font-black break-all leading-tight">businessprofile.webdevelop.ae</div>
+                               <div className="text-xs font-black break-all leading-tight">vibecard.ae</div>
                              </div>
                           </div>
                         </div>

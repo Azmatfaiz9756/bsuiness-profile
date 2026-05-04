@@ -56,7 +56,6 @@ export default function App() {
       const mainDomains = [
         'localhost', 
         '127.0.0.1', 
-        'businessprofile.webdevelop.ae',
         'vibecard.ae',
         'vibedigitalconnect.com',
         'ais-dev-pn2tu27zkvta4z3zy6bt5q-406651789755.europe-west1.run.app',
