@@ -65,16 +65,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, pla
       }
     } catch (err: any) {
       console.error("Payment error:", err);
-      // Simulate success for demo
-      setTimeout(() => {
-        setSuccess(true);
-        setProfiles(prev => prev.map(p => p.ownerId === user.uid ? { ...p, plan: plan.name } : p));
-        setTimeout(() => {
-          onClose();
-          setSuccess(false);
-          setLoading(false);
-        }, 2000);
-      }, 1500);
+      alert(err.message || 'Payment operation failed. Please check your config.');
+      setLoading(false);
     }
   };
 
