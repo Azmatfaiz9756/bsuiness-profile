@@ -465,12 +465,16 @@ async function startServer() {
       const indexPath = path.join(distPath, 'index.html');
       let html = fs.readFileSync(indexPath, 'utf8');
       
+      const protocol = req.get('x-forwarded-proto') || req.protocol;
+      const host = req.get('x-forwarded-host') || req.get('host') || 'vibecard.ae';
+      const baseUrl = `${protocol}://${host}`;
+      
       const urlPath = req.path;
       const isProfile = urlPath.startsWith('/profile/');
       
       let title = "Vibecard | Digital Business Card";
       let description = "Elevated networking via smart digital business cards. Check my digital business Vibecard.";
-      let image = "/logo.png";
+      let image = `${baseUrl}/logo.png`;
       
       if (isProfile) {
         try {
@@ -496,13 +500,11 @@ async function startServer() {
               const titleTag = profileData.title || profileData.position || "Digital Portfolio";
               const bio = profileData.bio || profileData.description || "Digital Connect professional profile.";
               
-              const pageTitle = `${name} | ${titleTag} - Vibecard`;
-              const pageDescription = `${bio.substring(0, 160)}${bio.length > 160 ? '...' : ''} Check my digital business Vibecard by Digital Connect.`;
-              const pageImage = profileData.photoUrl || profileData.avatarUrl || "/logo.png";
+              title = `${name} | ${titleTag} - Vibecard`;
+              description = `${bio.substring(0, 160)}${bio.length > 160 ? '...' : ''} Check my digital business Vibecard by Digital Connect.`;
               
-              title = pageTitle;
-              description = pageDescription;
-              image = pageImage;
+              const rawImage = profileData.photoUrl || profileData.avatarUrl;
+              image = rawImage ? (rawImage.startsWith('http') ? rawImage : `${baseUrl}${rawImage}`) : `${baseUrl}/logo.png`;
             }
           }
         } catch (e) {
