@@ -121,6 +121,11 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    match /cards/{cardId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /settings/{doc} {
       allow read: if true;
       allow write: if isAdmin();

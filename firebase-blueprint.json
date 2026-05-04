@@ -45,6 +45,19 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["ownerId", "clientName", "clientEmail"]
+    },
+    "Card": {
+      "title": "NFC Card Stock",
+      "description": "Pre-printed cards with dynamic redirect serials",
+      "type": "object",
+      "properties": {
+        "serial": { "type": "string" },
+        "dynamicUrl": { "type": "string" },
+        "profileId": { "type": "string" },
+        "status": { "type": "string", "enum": ["Stock", "Active", "Blocked"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["serial", "status"]
     }
   },
   "firestore": {
@@ -59,6 +72,10 @@
     "/appointments/{appointmentId}": {
       "schema": "Appointment",
       "description": "Booking records"
+    },
+    "/cards/{cardId}": {
+      "schema": "Card",
+      "description": "Inventory management for NFC cards"
     }
   }
 }

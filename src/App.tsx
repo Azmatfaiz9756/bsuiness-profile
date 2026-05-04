@@ -22,6 +22,7 @@ import AdminSettings from './pages/admin/Settings';
 import AdminReferrals from './pages/admin/Referrals';
 import AdminDirectory from './pages/admin/Directory';
 import AdminLeads from './pages/admin/Leads';
+import AdminCards from './pages/admin/Cards';
 import BannerSettings from './pages/admin/BannerSettings';
 import AdminJobs from './pages/admin/AdminJobs';
 
@@ -41,6 +42,7 @@ import TermsConditions from './pages/frontend/TermsConditions';
 import ContactUs from './pages/frontend/ContactUs';
 import FeaturesDetail from './pages/frontend/FeaturesDetail';
 import FullProfile from './pages/profile/FullProfile';
+import RedirectHandler from './pages/RedirectHandler';
 
 import AdminDNSHelp from './pages/admin/DNSHelp';
 import OwnerDashboard from './pages/dashboard/OwnerDashboard';
@@ -152,13 +154,18 @@ export default function App() {
               <Route path="wallets" element={<AdminWallets />} />
               <Route path="referrals" element={<AdminReferrals />} />
               <Route path="directory" element={<AdminDirectory />} />
+              <Route path="cards" element={<AdminCards />} />
               <Route path="super-agent" element={<div className="h-[calc(100vh-64px)] w-full"><LiveAgentPanel profileId="platform" /></div>} />
               <Route path="dns-help" element={<AdminDNSHelp />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
+            {/* QR Redirect Handler */}
+            <Route path="/q/:serial" element={<RedirectHandler />} />
+
             {/* Independent Profile View Route */}
             <Route path="/profile/:id" element={<FullProfile />} />
+            <Route path="/:id" element={<FullProfile />} />
 
             {/* Hidden Demo Seeder */}
             <Route path="/seed-demo" element={<SeedDemo />} />

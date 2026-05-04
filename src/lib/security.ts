@@ -1,4 +1,3 @@
-import firebaseConfig from '../firebase-applet-config.json';
 import { getAuth } from 'firebase/auth';
 
 enum OperationType {

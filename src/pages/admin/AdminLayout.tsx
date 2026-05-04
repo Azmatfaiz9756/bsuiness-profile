@@ -146,6 +146,9 @@ export const AdminLayout = () => {
             </Link>
 
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1 mt-6">SYSTEM</div>
+            <Link onClick={closeMenu} to="/admin/cards" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/cards')}`}>
+               <Archive size={18} /> Card Stock (QR)
+            </Link>
             <Link onClick={closeMenu} to="/admin/dns-help" className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive('/admin/dns-help')}`}>
                <Globe size={18} /> DNS / Domains
             </Link>
