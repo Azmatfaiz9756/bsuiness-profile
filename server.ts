@@ -382,51 +382,37 @@ async function startServer() {
 
       const genAI = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
-      // Ensure model name has 'models/' prefix if missing, which some versions of the SDK require
-      let targetModel = model || "gemini-1.5-flash";
-      if (!targetModel.startsWith('models/')) {
-        targetModel = `models/${targetModel}`;
-      }
+      
+      // Use the standard SDK pattern for @google/genai
+      const targetModelName = model || "gemini-1.5-flash";
+      const genModel = genAI.getGenerativeModel({ 
+        model: targetModelName,
+        generationConfig: {
+          maxOutputTokens: 512,
+          temperature: 0.1,
+          ...config
+        }
+      });
       
       let response;
-      const callGenerate = async (mName: string) => {
-        // Try multiple access patterns common in different @google/genai versions
-        if (typeof (genAI as any).models?.generateContent === 'function') {
-           return await (genAI as any).models.generateContent({
-             model: mName,
-             contents: contents,
-             config: { ...config, maxOutputTokens: 512, temperature: 0.1 }
-           });
-        } else if (typeof (genAI as any).generateContent === 'function') {
-           return await (genAI as any).generateContent({
-             model: mName,
-             contents: contents,
-             config: { ...config, maxOutputTokens: 512, temperature: 0.1 }
-           });
-        }
-        throw new Error("SDK Method generateContent not found or incompatible");
-      };
-
       try {
-        response = await callGenerate(targetModel);
+        const result = await genModel.generateContent({ contents });
+        response = result.response;
       } catch (err: any) {
-        console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModel} failed: ${err.message}`);
-        // Fallback to standard model
-        const fallback = "models/gemini-1.5-flash";
-        if (targetModel !== fallback) {
-           console.log(`[Gemini Proxy][${requestId}] Falling back to ${fallback}`);
-           response = await callGenerate(fallback);
+        console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModelName} failed: ${err.message}`);
+        // Fallback to absolute standard name if the provided one failed
+        if (targetModelName !== "gemini-1.5-flash") {
+           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-1.5-flash`);
+           const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+           const result = await fallbackModel.generateContent({ contents });
+           response = result.response;
         } else {
            throw err;
         }
       }
 
-      // Handle text extraction (property vs method)
-      let responseText = "";
-      if (response) {
-        if (typeof response.text === 'function') responseText = response.text();
-        else responseText = response.text || "";
-      }
+      // Handle text extraction correctly from response object
+      const responseText = response.text();
 
       res.json({
         text: responseText,
