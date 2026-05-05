@@ -170,7 +170,7 @@ Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.p
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-3-flash-preview';
+      const modelName = 'gemini-1.5-flash';
       const systemInstruction = profile.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [

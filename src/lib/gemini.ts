@@ -12,22 +12,21 @@ export class ProxyGoogleGenAI {
 
   models = {
     generateContent: async (args: any) => {
-      // Use relative path by default.
-      // In development, this hits the Express server which proxies to Gemini.
-      const apiUrl = import.meta.env.VITE_API_URL || '';
+      // Use absolute URL from origin to ensure it hits the right place regardless of path depth
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const apiUrl = import.meta.env.VITE_API_URL || origin;
+      
       const headers: Record<string, string> = { 
         'Content-Type': 'application/json'
       };
       
       if (this.apiKey) {
-        // If profile has a custom key, pass it. 
-        // Note: The server-side proxy handles the actual request to Google.
         headers['Authorization'] = `Bearer ${this.apiKey}`;
       }
       
-      const endpoint = apiUrl 
-        ? `${apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl}/api/gemini/generateContent` 
-        : `/api/gemini/generateContent`;
+      // Ensure no double slashes and correct path
+      const baseApiUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+      const endpoint = `${baseApiUrl}/api/gemini/generateContent`;
       
       try {
         console.log(`[ProxyGoogleGenAI] Fetching from: ${endpoint}`);
@@ -40,21 +39,18 @@ export class ProxyGoogleGenAI {
         const contentType = resp.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
           const text = await resp.text();
-          console.error(`[ProxyGoogleGenAI] Non-JSON response from server: ${text.substring(0, 100)}`);
-          throw new Error('Server returned an invalid response (not JSON). Please check server logs.');
+          console.error(`[ProxyGoogleGenAI] Non-JSON response (Status ${resp.status}):`, text.substring(0, 200));
+          throw new Error(`Server returned invalid response (${resp.status}). If you are on a personal domain, ensure /api/ routes are correctly forwarded to the backend.`);
         }
 
         const data = await resp.json();
         if (!resp.ok) {
-          console.error('[ProxyGoogleGenAI] Error response:', data);
-          throw new Error(data.error || data.message || 'AI generation failed');
+          console.error('[ProxyGoogleGenAI] API Error:', data);
+          throw new Error(data.error || data.message || `AI Error (${resp.status})`);
         }
         return data;
       } catch (error: any) {
-        console.error('[ProxyGoogleGenAI] Fetch error:', error);
-        if (error.message === 'Failed to fetch') {
-          throw new Error('Connection to AI server failed. Please check if the server is running and accessible.');
-        }
+        console.error('[ProxyGoogleGenAI] Request failed:', error);
         throw error;
       }
     }

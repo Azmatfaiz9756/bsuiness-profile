@@ -505,7 +505,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
       }));
 
       // Use recommended model
-      const modelName = 'gemini-3-flash-preview';
+      const modelName = 'gemini-1.5-flash';
       const systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [

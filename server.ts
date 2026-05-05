@@ -39,6 +39,14 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+  // Global request logger to debug routing on custom domains
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      console.log(`[API Request] ${req.method} ${req.path} - Host: ${req.get('host')}`);
+    }
+    next();
+  });
+
   // Stripe setup
   let stripeClient: Stripe | null = null;
   const getStripe = () => {
@@ -344,15 +352,16 @@ async function startServer() {
 
   // Google Gemini AI Endpoint
   app.post(["/api/gemini/generateContent", "/api/gemini/generateContent/"], async (req, res) => {
+    const requestId = Math.random().toString(36).substring(7);
+    console.log(`[Gemini Proxy][${requestId}] Handling request for ${req.path}`);
+    
     try {
       let clientApiKey = req.headers.authorization?.split(' ')[1];
       if (clientApiKey) clientApiKey = clientApiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
       
-      let serverKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
-      let viteKey = process.env.VITE_GEMINI_API_KEY ? process.env.VITE_GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
+      const serverKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
+      const viteKey = process.env.VITE_GEMINI_API_KEY ? process.env.VITE_GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
       
-      // Determine the best key: client key (if valid-ish), then server key, then vite key.
-      // We avoid using placeholders like 'AIzaSy...' from .env.example
       const isPlaceholder = (k?: string) => !k || k.includes('AIzaSy...') || k === 'MY_GEMINI_API_KEY';
       
       let apiKey = clientApiKey;
@@ -360,85 +369,56 @@ async function startServer() {
       if (isPlaceholder(apiKey)) apiKey = viteKey;
       
       if (!apiKey || isPlaceholder(apiKey)) {
-        console.error("[Gemini] API Key is empty or missing in environment variables.");
-        return res.status(500).json({ error: "Gemini API key not configured on server. Please use Admin Settings to set your key." });
+        console.error(`[Gemini Proxy][${requestId}] No valid API Key found.`);
+        return res.status(400).json({ error: "Gemini API key not configured on server." });
       }
 
       const genAI = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
-      
-      let targetModel = model || "gemini-3.1-flash-lite-preview";
-      console.log(`[Gemini Proxy] Request: ${targetModel}`);
+      let targetModel = model || "gemini-1.5-flash";
       
       let response;
       try {
-        response = await genAI.models.generateContent({
-          model: targetModel,
-          contents: contents,
-          config: {
-            ...config,
-            maxOutputTokens: 200,
-            temperature: 0.1,
-            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
-          }
-        });
-      } catch (err: any) {
-        if (targetModel === "gemini-3.1-flash-lite-preview") {
-          console.warn("[Gemini] lite model failed, falling back to gemini-3-flash-preview");
-          targetModel = "gemini-3-flash-preview";
-          response = await genAI.models.generateContent({
+        // Robust check for generator function on new SDK
+        const models = (genAI as any).models;
+        if (models && typeof models.generateContent === 'function') {
+          response = await models.generateContent({
             model: targetModel,
             contents: contents,
-            config: {
-              ...config,
-              maxOutputTokens: 256,
-              temperature: 0.1,
-              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
-            }
-          });
-        } else if (targetModel === "gemini-3-flash-preview") {
-          console.warn("[Gemini] gemini-3-flash-preview failed, falling back to gemini-flash-latest");
-          targetModel = "gemini-flash-latest";
-          response = await genAI.models.generateContent({
-            model: targetModel,
-            contents: contents,
-            config: {
-              ...config,
-              maxOutputTokens: 256,
-              temperature: 0.1
-            }
+            config: { ...config, maxOutputTokens: 512, temperature: 0.1 },
           });
         } else {
-          throw err;
+          throw new Error("SDK Method models.generateContent not found");
+        }
+      } catch (err: any) {
+        console.warn(`[Gemini Proxy][${requestId}] Request failed: ${err.message}`);
+        if (targetModel !== "gemini-1.5-flash") {
+           targetModel = "gemini-1.5-flash";
+           console.log(`[Gemini Proxy][${requestId}] Falling back to ${targetModel}`);
+           response = await (genAI as any).models.generateContent({
+             model: targetModel,
+             contents: contents,
+             config: { ...config, maxOutputTokens: 512, temperature: 0.1 }
+           });
+        } else {
+           throw err;
         }
       }
 
-      const responseText = response.text || "";
-      const functionCalls = response.functionCalls;
+      // Handle text extraction (property vs method)
+      let responseText = "";
+      if (response) {
+        if (typeof response.text === 'function') responseText = response.text();
+        else responseText = response.text || "";
+      }
 
       res.json({
         text: responseText,
-        functionCalls: functionCalls,
-        candidates: response.candidates
+        candidates: response?.candidates || []
       });
     } catch (error: any) {
-      console.error("Gemini server error:", error);
-      let errorMsg = error.message || "Failed to generate AI response";
-      // Try to parse the JSON error from Google to make it cleaner
-      try {
-        if (errorMsg.includes('{') && errorMsg.includes('}')) {
-          const jsonMatch = errorMsg.match(/\{.*\}/s);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.error && parsed.error.message) {
-              errorMsg = parsed.error.message;
-            } else if (parsed.message) {
-              errorMsg = parsed.message;
-            }
-          }
-        }
-      } catch (e) {}
-      res.status(500).json({ error: errorMsg });
+      console.error(`[Gemini Proxy][${requestId}] Error:`, error);
+      res.status(500).json({ error: error.message || "AI Error" });
     }
   });
 
