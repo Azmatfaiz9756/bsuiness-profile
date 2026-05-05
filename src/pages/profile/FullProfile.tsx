@@ -37,7 +37,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     return () => {
       document.body.style.overscrollBehaviorY = originalStyle;
     };
-  }, []);
+  }, [id]);
 
   // Fetch from Firebase
   useEffect(() => {

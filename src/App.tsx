@@ -48,6 +48,8 @@ import AdminDNSHelp from './pages/admin/DNSHelp';
 import OwnerDashboard from './pages/dashboard/OwnerDashboard';
 import SeedDemo from './pages/SeedDemo';
 
+import ScrollToTop from './components/ScrollToTop';
+
 export default function App() {
   const [domainProfileId, setDomainProfileId] = useState<string | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(true);
@@ -121,6 +123,7 @@ export default function App() {
       <AppProvider>
         <Toaster position="top-center" />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Frontend Website Routes */}
             <Route path="/" element={<FrontendLayout />}>

@@ -67,6 +67,19 @@ export default function ClassicModern({
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
   const [activeTab, setActiveTab] = useState('home');
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (tabId === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const element = document.getElementById(`${tabId}-section`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
   const [userRating, setUserRating] = useState(0);
   const [isRatingSubmitted, setIsRatingSubmitted] = useState(false);
   const [showFollowModal, setShowFollowModal] = useState(false);
@@ -164,7 +177,7 @@ export default function ClassicModern({
 
   const SectionContainer = ({ icon, title, children, id }: any) => {
     return (
-      <div id={id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+      <div id={id ? `${id}-section` : undefined} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: themeVars.primary }}>
           {icon}
           {title}
@@ -398,9 +411,6 @@ export default function ClassicModern({
               >
                 <source src={profile.bannerVideo} type="video/mp4" />
               </video>
-              <div style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '50%', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-              </div>
             </div>
           )}
   
@@ -998,95 +1008,9 @@ export default function ClassicModern({
         </div>
 
         <div style={{ padding: '20px', paddingBottom: 100 }}>
-          {activeTab === 'home' && (
-            <>
-              {profile.address && (
-                <div style={{ marginBottom: 12 }}>
-                  <div
-                    style={{
-                      background: "linear-gradient(135deg, #1e293b, #0f172a)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "#fff",
-                      padding: "24px 20px",
-                      borderRadius: 24,
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 16,
-                      marginBottom: 12,
-                      boxShadow: "0 20px 40px -10px rgba(15,23,42,0.3)",
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
-                    <div style={{ 
-                      background: 'rgba(255,255,255,0.1)', 
-                      backdropFilter: 'blur(4px)',
-                      padding: 12,
-                      borderRadius: 16,
-                      color: '#60a5fa'
-                    }}>
-                      <MapPin size={24} />
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      <div style={{ fontSize: 10, fontWeight: 900, color: "#60a5fa", textTransform: "uppercase", letterSpacing: 2 }}>Office Location</div>
-                      <div style={{ fontSize: 16, lineHeight: 1.6, color: "#f8fafc", fontWeight: 700 }}>
-                        {profile.address}
-                      </div>
-                    </div>
-                  </div>
-                  <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(profile.address)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{
-                      width: "100%",
-                      background: "linear-gradient(to right, #000, #1e293b)",
-                      color: "#fff",
-                      padding: "16px",
-                      borderRadius: 16,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 10,
-                      textDecoration: "none",
-                      boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
-                      fontSize: 14,
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    <MapPin size={20} /> Open Navigation
-                  </a>
-                </div>
-              )}
-              <div style={{ marginBottom: 16 }}>
-                <button
-                  onClick={handleSave}
-                  style={{
-                    width: "100%",
-                    background: "#2563eb",
-                    color: "#fff",
-                    padding: "12px",
-                    borderRadius: 12,
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    fontSize: 13,
-                    boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
-                  }}
-                >
-                  <UserPlus size={16} /> Save Contact
-                </button>
-              </div>
-              <SectionContainer
-                title="Contact & Location"
+          <div id="home-section">
+            <SectionContainer
+              title="Contact & Location"
               icon={<PhoneCall size={18} />}
             >
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1385,11 +1309,11 @@ export default function ClassicModern({
               )}
             </div>
           </SectionContainer>
-          </>
-          )}
+        </div>
 
-          {activeTab === 'services' && hasServices && (
-            <SectionContainer title="Services" icon={<Sparkles size={18} />}>
+        {hasServices && (
+          <div id="services-section">
+            <SectionContainer title="Services" icon={<Sparkles size={18} />} id="services">
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {profile.services && profile.services.length > 0 ? (
                 profile.services.map((svc: any, i: number) => (
@@ -1669,10 +1593,12 @@ export default function ClassicModern({
               )}
             </div>
           </SectionContainer>
-          )}
+        </div>
+        )}
 
-          {activeTab === 'jobs' && profileJobs.length > 0 && (
-            <SectionContainer title="Career Opportunities" icon={<Briefcase size={18} />}>
+        {profileJobs.length > 0 && (
+          <div id="jobs-section">
+            <SectionContainer title="Career Opportunities" icon={<Briefcase size={18} />} id="jobs">
               {applyingJob ? (
                 <div style={{ padding: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -1712,10 +1638,11 @@ export default function ClassicModern({
                 </div>
               )}
             </SectionContainer>
+          </div>
           )}
 
-          {activeTab === 'inquiry' && (
-            <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
+          <div id="inquiry-section">
+            <SectionContainer title="Send Inquiry" icon={<Mail size={18} />} id="inquiry">
             <div
               style={{
                 background: "#fff",
@@ -1781,7 +1708,7 @@ export default function ClassicModern({
               </button>
             </div>
           </SectionContainer>
-          )}
+        </div>
 
           {activeTab === 'wallet' && !profile.plan?.includes("Enterprise") && (
             <SectionContainer title="Wallet" icon={<Wallet size={18} />}>
@@ -2416,7 +2343,7 @@ export default function ClassicModern({
           {navItems.map((item) => (
             <button 
               key={item.id} 
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => handleTabChange(item.id)}
               style={{ 
                 background: 'transparent', 
                 border: 'none', 

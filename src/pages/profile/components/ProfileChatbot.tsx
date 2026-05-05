@@ -15,6 +15,27 @@ const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
 export default function ProfileChatbot({ profile }: { profile: any }) {
   const { user } = useAppContext();
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 480);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 480);
+      setViewportHeight(window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, []);
   const [messages, setMessages] = useState<{role: 'user' | 'model', content: string}[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -657,14 +678,17 @@ Assist visitors with inquiries about the business, services, and contact informa
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 20, opacity: 0, scale: 0.95 }}
             style={{
-              width: window.innerWidth < 480 ? 'calc(100vw - 40px)' : 350, 
-              height: window.innerHeight < 600 ? '70vh' : 500, 
-              bottom: window.innerWidth < 480 ? 100 : 20,
-              right: 20,
-              background: '#fff', borderRadius: 20, 
+              width: isMobile ? '100%' : 350, 
+              height: isMobile ? `${viewportHeight}px` : (window.innerHeight < 600 ? '70vh' : 500), 
+              bottom: 0,
+              right: 0,
+              top: isMobile ? 0 : 'auto',
+              background: '#fff', 
+              borderRadius: isMobile ? 0 : 20, 
               boxShadow: '0 12px 40px rgba(0,0,0,0.2)', display: 'flex', 
-              flexDirection: 'column', overflow: 'hidden', border: '1px solid #e2e8f0',
-              position: 'fixed'
+              flexDirection: 'column', overflow: 'hidden', border: isMobile ? 'none' : '1px solid #e2e8f0',
+              position: 'fixed',
+              zIndex: 10000
             }}
           >
             <div style={{ background: '#2563eb', color: '#fff', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
