@@ -508,7 +508,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
     try {
       // Use recommended model
-      const modelName = 'gemini-1.5-flash';
+      const modelName = 'gemini-3-flash-preview';
       let systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
       
       // Final tight safety truncation for the system instruction to prevent 413 on strict proxies

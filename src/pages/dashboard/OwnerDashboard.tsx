@@ -177,7 +177,7 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-1.5-flash';
+      const modelName = 'gemini-3-flash-preview';
       const systemInstruction = profile.aiPrompt || getPrompt(selectedLang);
 
       const chatContents = [

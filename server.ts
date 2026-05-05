@@ -381,38 +381,58 @@ async function startServer() {
       }
 
       const genAI = new GoogleGenAI({ apiKey });
-      const { model, contents, config } = req.body;
+      const { model, contents, config, systemInstruction: topLevelSysInst } = req.body;
       
-      // Use the standard SDK pattern for @google/genai
-      const targetModelName = model || "gemini-1.5-flash";
-      const genModel = genAI.getGenerativeModel({ 
-        model: targetModelName,
-        generationConfig: {
-          maxOutputTokens: 512,
-          temperature: 0.1,
-          ...config
-        }
-      });
+      // Some frontends might send systemInstruction inside config
+      const systemInstruction = topLevelSysInst || config?.systemInstruction;
+      const generationConfig = { ...config };
+      // Delete from generationConfig so we don't duplicate or have type issues if we move it
+      if (generationConfig.systemInstruction) delete generationConfig.systemInstruction;
+
+      // Recommended models according to gemini-api skill
+      const modelMapping: Record<string, string> = {
+        'gemini-1.5-flash': 'gemini-3-flash-preview',
+        'gemini-1.5-pro': 'gemini-3.1-pro-preview'
+      };
+      
+      let targetModelName = model || "gemini-3-flash-preview";
+      if (modelMapping[targetModelName]) {
+        targetModelName = modelMapping[targetModelName];
+      }
       
       let response;
       try {
-        const result = await genModel.generateContent({ contents });
-        response = result.response;
+        response = await (genAI.models as any).generateContent({
+          model: targetModelName,
+          contents: contents,
+          config: {
+            systemInstruction: systemInstruction,
+            maxOutputTokens: 1024,
+            temperature: 0.2,
+            ...generationConfig
+          }
+        });
       } catch (err: any) {
         console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModelName} failed: ${err.message}`);
-        // Fallback to absolute standard name if the provided one failed
-        if (targetModelName !== "gemini-1.5-flash") {
-           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-1.5-flash`);
-           const fallbackModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-           const result = await fallbackModel.generateContent({ contents });
-           response = result.response;
+        if (targetModelName !== "gemini-3-flash-preview") {
+           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-3-flash-preview`);
+           response = await (genAI.models as any).generateContent({
+             model: "gemini-3-flash-preview",
+             contents: contents,
+             config: {
+               systemInstruction: systemInstruction,
+               maxOutputTokens: 1024,
+               temperature: 0.2,
+               ...generationConfig
+             }
+           });
         } else {
            throw err;
         }
       }
 
-      // Handle text extraction correctly from response object
-      const responseText = response.text();
+      // In @google/genai, response is often the model response directly OR contains a text() method
+      const responseText = typeof response.text === 'function' ? response.text() : (response.text || "");
 
       res.json({
         text: responseText,
