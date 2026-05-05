@@ -178,6 +178,7 @@ export default function MinimalClean({
           margin: "0 auto",
           minHeight: "100vh",
           position: "relative",
+          overscrollBehaviorY: "contain",
         }}
       >
         {(profile.bannerVideo || profile.bannerUrl) && (

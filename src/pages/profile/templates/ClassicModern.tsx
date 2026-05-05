@@ -302,6 +302,7 @@ export default function ClassicModern({
           position: "relative",
           boxShadow: "0 0 20px rgba(0,0,0,0.05)",
           overflow: "hidden",
+          overscrollBehaviorY: "contain",
         }}
       >
         {/* Animated Background Icons based on Profession */}
@@ -342,11 +343,11 @@ export default function ClassicModern({
                 ref={iframeRef}
                 style={{
                   width: '100%',
-                  height: '100%',
-                  transform: 'scale(1.5)',
+                  height: '180%',
+                  marginTop: '-30%',
                   pointerEvents: 'none'
                 }}
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
                 frameBorder="0"
                 allow="autoplay; encrypted-media"
               ></iframe>

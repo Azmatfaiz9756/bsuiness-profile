@@ -172,6 +172,7 @@ export default function ExecutiveDark({
           position: "relative",
           borderLeft: "1px solid #222",
           borderRight: "1px solid #222",
+          overscrollBehaviorY: "contain",
         }}
       >
         {(profile.bannerVideo || profile.bannerUrl) && (
