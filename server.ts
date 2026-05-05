@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import express from "express";
 import compression from "compression";
 import cors from "cors";
@@ -343,7 +343,7 @@ async function startServer() {
   });
 
   // Google Gemini AI Endpoint
-  app.post("/api/gemini/generateContent", async (req, res) => {
+  app.post(["/api/gemini/generateContent", "/api/gemini/generateContent/"], async (req, res) => {
     try {
       let clientApiKey = req.headers.authorization?.split(' ')[1];
       if (clientApiKey) clientApiKey = clientApiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
@@ -367,8 +367,8 @@ async function startServer() {
       const genAI = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
       
-      let targetModel = model || "gemini-3-flash-preview";
-      console.log(`[Gemini] GenerateContent called. Model: ${targetModel}`);
+      let targetModel = model || "gemini-3.1-flash-lite-preview";
+      console.log(`[Gemini Proxy] Request: ${targetModel}`);
       
       let response;
       try {
@@ -377,20 +377,34 @@ async function startServer() {
           contents: contents,
           config: {
             ...config,
-            maxOutputTokens: 400,
-            temperature: 0.1
+            maxOutputTokens: 200,
+            temperature: 0.1,
+            thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL }
           }
         });
       } catch (err: any) {
-        if (targetModel === "gemini-3-flash-preview") {
-          console.warn("[Gemini] gemini-3-flash-preview failed, falling back to gemini-1.5-flash");
-          targetModel = "gemini-1.5-flash";
+        if (targetModel === "gemini-3.1-flash-lite-preview") {
+          console.warn("[Gemini] lite model failed, falling back to gemini-3-flash-preview");
+          targetModel = "gemini-3-flash-preview";
           response = await genAI.models.generateContent({
             model: targetModel,
             contents: contents,
             config: {
               ...config,
-              maxOutputTokens: 400,
+              maxOutputTokens: 256,
+              temperature: 0.1,
+              thinkingConfig: { thinkingLevel: ThinkingLevel.LOW }
+            }
+          });
+        } else if (targetModel === "gemini-3-flash-preview") {
+          console.warn("[Gemini] gemini-3-flash-preview failed, falling back to gemini-flash-latest");
+          targetModel = "gemini-flash-latest";
+          response = await genAI.models.generateContent({
+            model: targetModel,
+            contents: contents,
+            config: {
+              ...config,
+              maxOutputTokens: 256,
               temperature: 0.1
             }
           });
