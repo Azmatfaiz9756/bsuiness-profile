@@ -128,47 +128,56 @@ const AdminCards: React.FC = () => {
   };
 
   const downloadQR = (serial: string) => {
+    const card = cards.find(c => c.serial === serial);
+    if (!card) return;
+
     const svg = document.getElementById(`qr-${serial}`);
     if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
+
+    // Create a high-res version of the QR code
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
-    const logoImg = new Image();
     
-    const triggerDownload = () => {
-      if (!ctx) return;
-      const pngFile = canvas.toDataURL("image/png");
-      const downloadLink = document.createElement("a");
-      downloadLink.download = `QR_${serial}.png`;
-      downloadLink.href = pngFile;
-      downloadLink.click();
-    };
+    // Configure colors for white-on-black (inverted)
+    const clonedSvg = svg.cloneNode(true) as SVGSVGElement;
+    clonedSvg.setAttribute("width", "1000");
+    clonedSvg.setAttribute("height", "1000");
+    
+    // Modify SVG colors directly for the inverted look
+    const rects = clonedSvg.querySelectorAll('rect');
+    rects.forEach((rect: any) => {
+      const fill = rect.getAttribute('fill')?.toLowerCase();
+      if (fill === '#ffffff' || fill === 'white') {
+        rect.setAttribute('fill', '#000000'); // Background to black
+      } else {
+        rect.setAttribute('fill', '#FFFFFF'); // Modules to white
+      }
+    });
 
+    const svgData = new XMLSerializer().serializeToString(clonedSvg);
+    
     img.onload = () => {
-      const qrSize = img.width;
-      const padding = 60;
-      canvas.width = qrSize + (padding * 2);
-      canvas.height = qrSize + 160;
+      const size = 1000;
+      canvas.width = size;
+      canvas.height = size;
       
       if (ctx) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, padding, padding);
-        
+        // Fill background black first
         ctx.fillStyle = "black";
-        ctx.font = "bold 28px Inter, Arial, sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(`SERIAL: ${serial}`, canvas.width / 2, canvas.height - 40);
+        ctx.fillRect(0, 0, size, size);
         
-        ctx.font = "500 16px Inter, Arial, sans-serif";
-        ctx.fillStyle = "#64748b";
-        ctx.fillText("VIBE DIGITAL CONNECT", canvas.width / 2, padding / 2 + 10);
+        // Draw the inverted QR code
+        ctx.drawImage(img, 0, 0, size, size);
         
-        triggerDownload();
+        const pngFile = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.download = `VIBE_PRINT_QR_${serial}.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
       }
     };
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   };
 
   const filteredCards = cards.filter(c => 
