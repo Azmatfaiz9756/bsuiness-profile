@@ -49,7 +49,7 @@ async function startServer() {
   // Global request logger to debug routing on custom domains
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/')) {
-      console.log(`[API Request] ${req.method} ${req.path} - Host: ${req.get('host')}`);
+      console.log(`[API Request] ${req.method} ${req.path} - Host: ${req.get('host')} - Origin: ${req.get('origin')}`);
     }
     next();
   });
@@ -382,31 +382,40 @@ async function startServer() {
 
       const genAI = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
+      // Ensure model name has 'models/' prefix if missing, which some versions of the SDK require
       let targetModel = model || "gemini-1.5-flash";
+      if (!targetModel.startsWith('models/')) {
+        targetModel = `models/${targetModel}`;
+      }
       
       let response;
-      try {
-        // Robust check for generator function on new SDK
-        const models = (genAI as any).models;
-        if (models && typeof models.generateContent === 'function') {
-          response = await models.generateContent({
-            model: targetModel,
-            contents: contents,
-            config: { ...config, maxOutputTokens: 512, temperature: 0.1 },
-          });
-        } else {
-          throw new Error("SDK Method models.generateContent not found");
-        }
-      } catch (err: any) {
-        console.warn(`[Gemini Proxy][${requestId}] Request failed: ${err.message}`);
-        if (targetModel !== "gemini-1.5-flash") {
-           targetModel = "gemini-1.5-flash";
-           console.log(`[Gemini Proxy][${requestId}] Falling back to ${targetModel}`);
-           response = await (genAI as any).models.generateContent({
-             model: targetModel,
+      const callGenerate = async (mName: string) => {
+        // Try multiple access patterns common in different @google/genai versions
+        if (typeof (genAI as any).models?.generateContent === 'function') {
+           return await (genAI as any).models.generateContent({
+             model: mName,
              contents: contents,
              config: { ...config, maxOutputTokens: 512, temperature: 0.1 }
            });
+        } else if (typeof (genAI as any).generateContent === 'function') {
+           return await (genAI as any).generateContent({
+             model: mName,
+             contents: contents,
+             config: { ...config, maxOutputTokens: 512, temperature: 0.1 }
+           });
+        }
+        throw new Error("SDK Method generateContent not found or incompatible");
+      };
+
+      try {
+        response = await callGenerate(targetModel);
+      } catch (err: any) {
+        console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModel} failed: ${err.message}`);
+        // Fallback to standard model
+        const fallback = "models/gemini-1.5-flash";
+        if (targetModel !== fallback) {
+           console.log(`[Gemini Proxy][${requestId}] Falling back to ${fallback}`);
+           response = await callGenerate(fallback);
         } else {
            throw err;
         }
@@ -425,7 +434,12 @@ async function startServer() {
       });
     } catch (error: any) {
       console.error(`[Gemini Proxy][${requestId}] Error:`, error);
-      res.status(500).json({ error: error.message || "AI Error" });
+      // Clean up error message for frontend
+      let msg = error.message || "AI Error";
+      if (msg.includes("models/") && msg.includes("not found")) {
+        msg = "Model not found or API key restricted. Falling back...";
+      }
+      res.status(500).json({ error: msg });
     }
   });
 

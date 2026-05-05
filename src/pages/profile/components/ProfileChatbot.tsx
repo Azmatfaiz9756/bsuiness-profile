@@ -70,10 +70,10 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
     let stockContext = "";
     if (profile?.stockSyncEnabled && stockData) {
       // Truncate stock data to prevent 413 errors while still providing context
-      const truncatedStock = stockData.length > 5000 ? stockData.substring(0, 5000) + "... [Truncated]" : stockData;
+      const truncatedStock = stockData.length > 3000 ? stockData.substring(0, 3000) + "... [Truncated]" : stockData;
       stockContext = `
 IMPORTANT - REAL-TIME STOCK/INVENTORY DATA:
-The following is warehouse stock and pricing information (first 5k chars):
+The following is warehouse stock and pricing information (first 3k chars):
 ${truncatedStock}
 
 If a user asks about a product not listed above, say you don't have information about its current stock but can take an inquiry.
@@ -507,17 +507,26 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
     setLoading(true);
 
     try {
-      const history = messages.map(msg => ({
+      // Use recommended model
+      const modelName = 'gemini-1.5-flash';
+      let systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
+      
+      // Final safety truncation for the system instruction to prevent 413
+      if (systemInstruction.length > 12000) {
+        systemInstruction = systemInstruction.substring(0, 12000) + "... [Prompt Truncated]";
+      }
+
+      // Limit history to keep request body small
+      const historyLimit = 15;
+      const recentMessages = messages.slice(-historyLimit);
+
+      const processedHistory = recentMessages.map(msg => ({
         role: msg.role === 'model' ? ('model' as const) : ('user' as const),
         parts: [{ text: msg.content }]
       }));
 
-      // Use recommended model
-      const modelName = 'gemini-1.5-flash';
-      const systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
-
       const chatContents = [
-        ...history,
+        ...processedHistory,
         { role: 'user', parts: [{ text: textToSend }] }
       ];
 
