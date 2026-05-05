@@ -8,6 +8,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Share2, Download } from 'lucide-react';
+import SEO from '../../components/SEO';
 
 interface FullProfileProps {
   forcedId?: string;
@@ -38,6 +39,22 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       document.body.style.overscrollBehaviorY = originalStyle;
     };
   }, [id]);
+
+  // JSON-LD Schema for SEO
+  const schemaMarkup = profile ? {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": profile.name,
+    "jobTitle": profile.title,
+    "worksFor": {
+      "@type": "Organization",
+      "name": profile.company
+    },
+    "description": profile.bio,
+    "image": profile.photo,
+    "url": window.location.href,
+    "sameAs": profile.socialLinks?.map((l: any) => l.url) || []
+  } : null;
 
   // Fetch from Firebase
   useEffect(() => {
@@ -126,31 +143,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     fetchProfile();
   }, [id, profiles]);
 
-  // Inject SEO metadata specifically for this profile on mount
-  useEffect(() => {
-    if (profile && profile.seo) {
-      document.title = profile.seo.title || `${profile.name} | ${profile.company} | DBC Member`;
-
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.setAttribute('name', 'description');
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.setAttribute('content', profile.seo.desc || '');
-
-      let metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (!metaKeywords) {
-        metaKeywords = document.createElement('meta');
-        metaKeywords.setAttribute('name', 'keywords');
-        document.head.appendChild(metaKeywords);
-      }
-      metaKeywords.setAttribute('content', profile.seo.keywords || '');
-    } else if (profile) {
-      document.title = `${profile.name} | ${profile.company} | DBC Member`;
-    }
-  }, [profile]);
-
   if (loading) {
     return (
       <div style={{ 
@@ -190,6 +182,18 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
   return (
     <>
+      <SEO 
+        title={`${profile.name} | ${profile.company} | Digital Business Card`}
+        description={profile.bio || `View ${profile.name}'s professional profile on Vibecard.ae. Connect, scan, and save contact details.`}
+        keywords={`${profile.name}, ${profile.company}, ${profile.title}, digital business card, UAE business`}
+        image={profile.photo || "/logo.png"}
+        url={window.location.href}
+      />
+      {schemaMarkup && (
+        <script type="application/ld+json">
+          {JSON.stringify(schemaMarkup)}
+        </script>
+      )}
       {isPreview && (
         <div className="sticky top-0 z-50 bg-slate-900 px-3 py-2.5 flex flex-wrap gap-2 items-center border-b-2 border-slate-800 shadow-md">
            <span className="text-[10px] font-bold text-slate-400 tracking-widest mr-2 uppercase">Preview Theme</span>

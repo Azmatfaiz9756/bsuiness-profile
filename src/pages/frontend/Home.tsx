@@ -35,6 +35,7 @@ import { db } from "../../firebase";
 
 import ProfileChatbot from "../profile/components/ProfileChatbot";
 import { maskProfileForDirectory } from "../../lib/privacy";
+import SEO from "../../components/SEO";
 
 function ROISummary() {
   return (
@@ -651,6 +652,73 @@ function WorkflowSection() {
   );
 }
 
+function TemplateShowcase() {
+  const templates = [
+    {
+      id: 'classic',
+      name: 'Classic Modern',
+      desc: 'Clean, light, and professional template for modern businesses.',
+      image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
+      badge: 'POPULAR'
+    },
+    {
+      id: 'executive',
+      name: 'Executive Dark',
+      desc: 'Elegant dark mode design with gold accents for a premium feel.',
+      image: 'https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?w=800&q=80',
+      badge: 'PREMIUM'
+    },
+    {
+      id: 'minimal',
+      name: 'Minimal Clean',
+      desc: 'Focused on clarity and whitespace for a minimalist aesthetic.',
+      image: 'https://images.unsplash.com/photo-1451187530220-4c23ba3e0c60?w=800&q=80',
+      badge: 'NEW'
+    }
+  ];
+
+  return (
+    <div className="py-24 bg-slate-50 border-y border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-[10px] font-black tracking-widest uppercase mb-4">
+            <LayoutGrid size={14} /> Design Your First Impression
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight uppercase">Professional Templates</h2>
+          <p className="text-slate-500 font-medium max-w-2xl mx-auto">Choose from our hand-crafted collection of premium digital business card designs.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {templates.map((tpl, i) => (
+            <motion.div 
+               key={i}
+               initial={{ opacity: 0, y: 20 }}
+               whileInView={{ opacity: 1, y: 0 }}
+               transition={{ delay: i * 0.1 }}
+               viewport={{ once: true }}
+               className="group bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden hover:shadow-2xl transition-all duration-500"
+            >
+               <div className="aspect-[4/5] overflow-hidden relative">
+                  <img src={tpl.image} alt={tpl.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-6 right-6">
+                     <span className="bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-black px-3 py-1 rounded-full shadow-lg border border-white/20">
+                        {tpl.badge}
+                     </span>
+                  </div>
+               </div>
+               <div className="p-8 text-center">
+                  <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">{tpl.name}</h3>
+                  <p className="text-slate-500 text-xs font-medium leading-relaxed">{tpl.desc}</p>
+               </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FrontendHome() {
   const { user, setIsLoginModalOpen, profiles: staticProfiles, selectedCountry } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
@@ -762,19 +830,12 @@ export default function FrontendHome() {
 
   return (
     <div className="bg-slate-50 min-h-screen pb-16 font-sans overflow-x-hidden">
-      <Helmet>
-        <title>VIBE Digital Connect | Haadi Global Ventures Fze LLC</title>
-        <meta name="description" content="Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR. Join thousands of professionals and brands in the official directory." />
-        <meta name="keywords" content="digital business card, networking, AI, NFC card, professional profile, DBC network, business cards" />
-        <meta property="og:title" content="VIBE Digital Connect | Haadi Global Ventures Fze LLC" />
-        <meta property="og:description" content="Share your contact info, social links, and portfolio with a single tap using our NFC-enabled smart cards." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://vibedigitalconnect.com" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="VIBE Digital Connect | Haadi Global Ventures Fze LLC" />
-        <meta name="twitter:description" content="Direct access to thousands of verified professionals. Start your search now." />
-        <link rel="canonical" href="https://vibedigitalconnect.com" />
-      </Helmet>
+      <SEO 
+        title="VIBE Digital Connect | Smart NFC Business Cards UAE"
+        description="Elevate your networking with VIBE Digital Connect. No apps, no paper. Just seamless digital profile exchange via NFC or QR for professionals in the UAE."
+        keywords="digital business card Dubai, NFC business card UAE, smart networking, professional directory, digital business cards"
+        url="https://vibecard.ae"
+      />
 
       {/* Limited Offer Banner */}
       <div className="bg-blue-600 text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden">
@@ -799,6 +860,9 @@ export default function FrontendHome() {
 
       {/* Promotional Showcase */}
       <PromotionalShowcase />
+      
+      {/* Templates Showcase */}
+      <TemplateShowcase />
       
       {/* How it Works */}
       <WorkflowSection />

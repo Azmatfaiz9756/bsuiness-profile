@@ -41,11 +41,119 @@ service cloud.firestore {
     }
 
     function isValidProfile(data) {
+      return isValidProfileCore(data) && isValidProfileSecondary(data) && isValidProfilePermissions(data);
+    }
+
+    function isValidProfileCore(data) {
       return isValidId(data.ownerId) &&
-             data.ownerId == request.auth.uid &&
              data.name is string && data.name.size() <= 100 &&
+             (!data.keys().contains('id') || data.id is string) &&
              (!data.keys().contains('quickPayAmount') || data.quickPayAmount is number) &&
-             (!data.keys().contains('quickPayCurrency') || data.quickPayCurrency in ['AED', 'USD', 'INR']);
+             (!data.keys().contains('quickPayCurrency') || data.quickPayCurrency in ['AED', 'USD', 'INR']) &&
+             (!data.keys().contains('bankName') || (data.bankName is string && data.bankName.size() <= 100)) &&
+             (!data.keys().contains('accountName') || (data.accountName is string && data.accountName.size() <= 100)) &&
+             (!data.keys().contains('accountNumber') || (data.accountNumber is string && data.accountNumber.size() <= 100)) &&
+             (!data.keys().contains('iban') || (data.iban is string && data.iban.size() <= 100)) &&
+             (!data.keys().contains('swiftCode') || (data.swiftCode is string && data.swiftCode.size() <= 50)) &&
+             (!data.keys().contains('ifscCode') || (data.ifscCode is string && data.ifscCode.size() <= 50)) &&
+             (!data.keys().contains('bankAccounts') || data.bankAccounts is list) &&
+             (!data.keys().contains('walletBalance') || data.walletBalance is number) &&
+             (!data.keys().contains('fakeFollowers') || data.fakeFollowers is number) &&
+             (!data.keys().contains('views') || data.views is number) &&
+             (!data.keys().contains('services') || data.services is list) &&
+             (!data.keys().contains('socials') || data.socials is map) &&
+             (!data.keys().contains('testimonials') || data.testimonials is list) &&
+             (!data.keys().contains('faqs') || data.faqs is list) &&
+             (!data.keys().contains('gallery') || data.gallery is list) &&
+             (!data.keys().contains('videos') || data.videos is list) &&
+             (!data.keys().contains('customButtons') || data.customButtons is list) &&
+             (!data.keys().contains('seo') || data.seo is map) &&
+             (!data.keys().contains('hours') || data.hours is map) &&
+             (!data.keys().contains('team') || data.team is list) &&
+             (!data.keys().contains('jobOpenings') || data.jobOpenings is list) &&
+             (!data.keys().contains('paymentLinks') || data.paymentLinks is list) &&
+             (!data.keys().contains('products') || data.products is list) &&
+             (!data.keys().contains('directoryHiddenFields') || data.directoryHiddenFields is list) &&
+             (!data.keys().contains('availabilityStatus') || data.availabilityStatus is string) &&
+             (!data.keys().contains('lastStatusUpdate') || data.lastStatusUpdate is string) &&
+             (!data.keys().contains('directoryVisibility') || data.directoryVisibility is string) &&
+             (!data.keys().contains('templateId') || data.templateId is string) &&
+             (!data.keys().contains('template') || data.template is string) &&
+             (!data.keys().contains('plan') || data.plan is string) &&
+             (!data.keys().contains('status') || data.status is string) &&
+             (!data.keys().contains('isSubProfile') || data.isSubProfile is bool) &&
+             (!data.keys().contains('companyId') || data.companyId is string) &&
+             (!data.keys().contains('referralCount') || data.referralCount is number);
+    }
+
+    function isValidProfileSecondary(data) {
+      return (!data.keys().contains('referralPending') || data.referralPending is number) &&
+             (!data.keys().contains('referralEarnings') || data.referralEarnings is number) &&
+             (!data.keys().contains('hideReferral') || data.hideReferral is bool) &&
+             (!data.keys().contains('teamMembers') || data.teamMembers is list) &&
+             (!data.keys().contains('mapLink') || data.mapLink is string) &&
+             (!data.keys().contains('crmProvider') || data.crmProvider is string) &&
+             (!data.keys().contains('aiApiKey') || data.aiApiKey is string) &&
+             (!data.keys().contains('aiPrompt') || data.aiPrompt is string) &&
+             (!data.keys().contains('stockSyncEnabled') || data.stockSyncEnabled is bool) &&
+             (!data.keys().contains('stockSourceType') || data.stockSourceType is string) &&
+             (!data.keys().contains('showStockPrice') || data.showStockPrice is bool) &&
+             (!data.keys().contains('stockSourceUrl') || data.stockSourceUrl is string) &&
+             (!data.keys().contains('stockManualData') || data.stockManualData is string) &&
+             (!data.keys().contains('referredBy') || data.referredBy is string) &&
+             (!data.keys().contains('vCardUrl') || data.vCardUrl is string) &&
+             (!data.keys().contains('qrUrl') || data.qrUrl is string) &&
+             (!data.keys().contains('nfcUrl') || data.nfcUrl is string) &&
+             (!data.keys().contains('createdAt') || data.createdAt is string) &&
+             (!data.keys().contains('bannerVideo') || data.bannerVideo is string) &&
+             (!data.keys().contains('bannerVideoUrl') || data.bannerVideoUrl is string) &&
+             (!data.keys().contains('bannerUrl') || data.bannerUrl is string) &&
+             (!data.keys().contains('photoUrl') || data.photoUrl is string) &&
+             (!data.keys().contains('photoURL') || data.photoURL is string) &&
+             (!data.keys().contains('themeColor') || data.themeColor is string) &&
+             (!data.keys().contains('isPrivate') || data.isPrivate is bool) &&
+             (!data.keys().contains('profileViews') || data.profileViews is number) &&
+             (!data.keys().contains('active') || data.active is bool) &&
+             (!data.keys().contains('profession') || data.profession is string) &&
+             (!data.keys().contains('skills') || data.skills is list) &&
+             (!data.keys().contains('location') || data.location is string) &&
+             (!data.keys().contains('city') || data.city is string) &&
+             (!data.keys().contains('country') || data.country is string) &&
+             (!data.keys().contains('category') || data.category is string) &&
+             (!data.keys().contains('announcement') || data.announcement is string) &&
+             (!data.keys().contains('customDomain') || data.customDomain is string) &&
+             (!data.keys().contains('featured') || data.featured is bool) &&
+             (!data.keys().contains('slug') || data.slug is string) &&
+             (!data.keys().contains('meetingUrl') || data.meetingUrl is string) &&
+             (!data.keys().contains('documentUrl') || data.documentUrl is string) &&
+             (!data.keys().contains('documentButtonText') || data.documentButtonText is string) &&
+             (!data.keys().contains('bio') || data.bio is string) &&
+             (!data.keys().contains('title') || data.title is string) &&
+             (!data.keys().contains('company') || data.company is string) &&
+             (!data.keys().contains('phone') || data.phone is string) &&
+             (!data.keys().contains('whatsapp') || data.whatsapp is string) &&
+             (!data.keys().contains('email') || data.email is string) &&
+             (!data.keys().contains('website') || data.website is string) &&
+             (!data.keys().contains('address') || data.address is string) &&
+             (!data.keys().contains('updatedAt') || (data.updatedAt is string || data.updatedAt is number)) &&
+             (!data.keys().contains('isDb') || data.isDb is bool) &&
+             (!data.keys().contains('role') || data.role is string) &&
+             (!data.keys().contains('avatar') || data.avatar is string) &&
+             (!data.keys().contains('isVerified') || data.isVerified is bool) &&
+             (!data.keys().contains('socialLinks') || data.socialLinks is list);
+    }
+
+    function isValidProfilePermissions(data) {
+      return (!data.keys().contains('allowAnalytics') || data.allowAnalytics is bool) &&
+             (!data.keys().contains('allowAiChat') || data.allowAiChat is bool) &&
+             (!data.keys().contains('allowLiveAgent') || data.allowLiveAgent is bool) &&
+             (!data.keys().contains('allowStock') || data.allowStock is bool) &&
+             (!data.keys().contains('allowProfileEdit') || data.allowProfileEdit is bool) &&
+             (!data.keys().contains('allowLeadsAccess') || data.allowLeadsAccess is bool);
+    }
+
+    function isProfileOwner(docId, existingData) {
+      return isOwner(docId) || (isSignedIn() && existingData.ownerId == request.auth.uid);
     }
 
     function isValidAppointment(data) {
@@ -73,25 +181,37 @@ service cloud.firestore {
 
     match /profiles/{docId} {
       allow read: if true;
-      allow create: if isOwner(docId) && isValidProfile(incoming());
+      allow create: if (isOwner(docId) || isAdmin()) && isValidProfile(incoming()) && (isAdmin() || incoming().ownerId == request.auth.uid);
       allow update: if 
+        // Action: Admin Overrule
+        isAdmin() ||
         // Action: Increment Views (Public)
         (incoming().diff(existing()).affectedKeys().hasOnly(['views']) && 
          (incoming().views == existing().get('views', 0) + 1)) ||
         // Action: Content Update (Owner/Admin)
-        ((isOwner(docId) || isAdmin()) && 
+        ((isProfileOwner(docId, existing())) && 
          isValidProfile(incoming()) &&
-         incoming().ownerId == existing().ownerId &&
+         (incoming().ownerId == existing().ownerId) &&
          incoming().diff(existing()).affectedKeys().hasOnly([
-           'name', 'bio', 'photoURL', 'whatsapp', 'quickPayAmount', 
+           'name', 'bio', 'photoURL', 'photoUrl', 'whatsapp', 'quickPayAmount', 
            'quickPayCurrency', 'templateId', 'updatedAt', 'services', 
            'socials', 'testimonials', 'faqs', 'gallery', 'videos',
            'meetingUrl', 'documentUrl', 'documentButtonText', 'customButtons',
            'views', 'slug', 'title', 'company', 'location', 'phone', 'email', 
            'website', 'address', 'seo', 'template', 'active', 'profession', 'skills',
-           'bannerUrl', 'bannerVideo', 'themeColor', 'isPrivate', 'profileViews'
+           'bannerUrl', 'bannerVideo', 'themeColor', 'isPrivate', 'profileViews',
+           'bankName', 'accountName', 'accountNumber', 'iban', 'swiftCode', 'ifscCode', 'bankAccounts',
+           'country', 'city', 'category', 'announcement', 'bannerVideoUrl', 'customDomain', 
+           'featured', 'walletBalance', 'fakeFollowers', 'availabilityStatus', 'lastStatusUpdate',
+           'directoryVisibility', 'directoryHiddenFields', 'hours', 'team', 'jobOpenings', 'paymentLinks',
+           'hideReferral', 'teamMembers', 'companyId', 'referralCount', 'referralPending', 'referralEarnings',
+           'plan', 'status', 'isSubProfile', 'mapLink', 'isDb', 'crmProvider', 'aiApiKey', 'aiPrompt',
+           'stockSyncEnabled', 'stockSourceType', 'showStockPrice', 'stockSourceUrl', 'stockManualData',
+           'products', 'referredBy', 'vCardUrl', 'qrUrl', 'nfcUrl', 'createdAt', 'id', 'ownerId',
+           'allowAnalytics', 'allowAiChat', 'allowLiveAgent', 'allowStock', 'allowProfileEdit', 'allowLeadsAccess',
+           'role', 'avatar', 'isVerified', 'socialLinks'
          ]));
-      allow delete: if isOwner(docId) || isAdmin();
+      allow delete: if isProfileOwner(docId, existing()) || isAdmin();
     }
 
     match /appointments/{appId} {

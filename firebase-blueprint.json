@@ -26,6 +26,12 @@
         "whatsapp": { "type": "string" },
         "quickPayAmount": { "type": "number" },
         "quickPayCurrency": { "type": "string", "enum": ["AED", "USD", "INR"] },
+        "bankName": { "type": "string" },
+        "accountName": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "iban": { "type": "string" },
+        "swiftCode": { "type": "string" },
+        "ifscCode": { "type": "string" },
         "templateId": { "type": "string" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },

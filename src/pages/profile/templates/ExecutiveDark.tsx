@@ -32,7 +32,9 @@ import {
   Share2,
   Bird,
   Volume2,
-  VolumeX
+  VolumeX,
+  Building,
+  BadgeCheck
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -47,6 +49,7 @@ import {
 import AppointmentBooking from "../components/AppointmentBooking";
 import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
+import AddToHomeScreen from "../../../components/AddToHomeScreen";
 
 export default function ExecutiveDark({
   profile,
@@ -58,8 +61,23 @@ export default function ExecutiveDark({
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
+  const [activeTab, setActiveTab] = useState('home');
+  const isOwner = user?.uid === profile.uid;
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navItems = [
+    { id: 'home', label: 'Home', icon: <Contact2 size={18} />, show: true },
+    { id: 'services', label: 'Services', icon: <Globe size={18} />, show: profile.services && profile.services.length > 0 },
+    { id: 'shop', label: 'Store', icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
+    { id: 'bank', label: 'Bank', icon: <Building size={18} />, show: (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName },
+    { id: 'inquiry', label: 'Inquiry', icon: <Mail size={18} />, show: true },
+  ].filter(item => item.show);
 
   const toggleAudio = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -206,49 +224,92 @@ export default function ExecutiveDark({
                   : profile.bannerVideo.split('/').pop()?.split('?')[0];
                 
                 return (
-                  <div 
-                    onClick={toggleAudio}
-                    style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '240%',
-                      height: '240%',
-                      transform: 'translate(-50%, -50%)',
-                      pointerEvents: 'none'
-                    }}>
-                      <iframe
-                        ref={iframeRef}
+                    <div 
+                      onClick={toggleAudio}
+                      style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: '240%',
+                        height: '240%',
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                      }}>
+                        <iframe
+                          ref={iframeRef}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                          }}
+                          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
+                          frameBorder="0"
+                          allow="autoplay; encrypted-media"
+                        ></iframe>
+                      </div>
+                      <div
                         style={{
-                          width: '100%',
-                          height: '100%',
+                          position: 'absolute',
+                          bottom: 20,
+                          right: 20,
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: 'rgba(0,0,0,0.5)',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          backdropFilter: 'blur(4px)'
                         }}
-                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
-                        frameBorder="0"
-                        allow="autoplay; encrypted-media"
-                      ></iframe>
+                      >
+                        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                      </div>
                     </div>
-                  </div>
                 );
               })()
             ) : profile.bannerVideo ? (
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                style={{
-                  position: "absolute",
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  opacity: 0.8,
-                }}
+              <div 
+                onClick={() => setIsMuted(prev => !prev)}
+                style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
               >
-                <source src={profile.bannerVideo} type="video/mp4" />
-              </video>
+                <video
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  style={{
+                    position: "absolute",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    opacity: 0.8,
+                  }}
+                >
+                  <source src={profile.bannerVideo} type="video/mp4" />
+                </video>
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 20,
+                    right: 20,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.5)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                    backdropFilter: 'blur(4px)'
+                  }}
+                >
+                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </div>
+              </div>
             ) : (
               <img 
                 src={profile.bannerUrl} 
@@ -327,13 +388,10 @@ export default function ExecutiveDark({
               profile.plan === "Pro" ||
               profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
-                <img 
-                  src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
-                  alt="Verified" 
-                  width={24} 
-                  height={24} 
-                  style={{ transform: "scaleX(-1)" }} 
-                />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#1D9BF0"/>
+                  <path d="M8 12L11 15L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </span>
             )}
           </h1>
@@ -364,7 +422,9 @@ export default function ExecutiveDark({
              <span style={{ fontSize: 11, fontWeight: 700, color: "#ccc", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
           </div>
 
-          {profile.bio && (
+          {activeTab === 'home' && (
+            <>
+              {profile.bio && (
             <div
               style={{
                 fontSize: 13,
@@ -707,13 +767,15 @@ export default function ExecutiveDark({
                 </a>
               ))}
           </div>
+          </>)}
         </div>
 
         <div style={{ padding: "0 20px 20px" }}>
-          <SectionContainer
-            title="About & Contact"
-            icon={<Contact size={18} />}
-          >
+          {activeTab === 'home' && (
+            <SectionContainer
+              title="About & Contact"
+              icon={<Contact size={18} />}
+            >
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <a
                 href={`tel:${profile.phone}`}
@@ -920,7 +982,8 @@ export default function ExecutiveDark({
               )}
             </div>
           </SectionContainer>
-          {profile.services && profile.services.length > 0 && (
+          )}
+          {(activeTab === 'home' || activeTab === 'services') && profile.services && profile.services.length > 0 && (
             <SectionContainer title="Services" icon={<Globe size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {profile.services.map((svc: any, i: number) => (
@@ -960,8 +1023,8 @@ export default function ExecutiveDark({
                   </div>
                 ))}
 
-                {profile.gallery && profile.gallery.length > 0 && (
-                  <div style={{ marginTop: 12 }}>
+                {activeTab === 'home' && profile.gallery && profile.gallery.length > 0 && (
+            <div style={{ marginTop: 12 }}>
                     <div
                       style={{
                         fontSize: 14,
@@ -1040,8 +1103,8 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          {profile.products && profile.products.length > 0 && (
-            <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
+          {(activeTab === 'home' || activeTab === 'shop') && profile.products && profile.products.length > 0 && (
+            <SectionContainer title="Products" icon={<ShoppingBag size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {profile.products.map((prod: any, i: number) => (
                   <div
@@ -1136,130 +1199,7 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          {!profile.plan?.includes("Enterprise") && profile.bankAccounts && profile.bankAccounts.length > 0 && (
-            <SectionContainer title="Payments" icon={<Wallet size={18} />}>
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 16 }}
-              >
-
-                {profile.bankAccounts && profile.bankAccounts.length > 0 && (
-                  <div
-                    style={{
-                      background: "#1a1a1a",
-                      border: "1px solid #2a2a2a",
-                      borderRadius: 8,
-                      padding: 20,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: "#b45309",
-                        marginBottom: 16,
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
-                    >
-                      Bank Details
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 16,
-                      }}
-                    >
-                      {profile.bankAccounts.map((acc: any, i: number) => (
-                        <div
-                          key={i}
-                          style={{
-                            background: "#111",
-                            border: "1px solid #222",
-                            padding: 16,
-                            borderRadius: 8,
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 15,
-                              fontWeight: 700,
-                              color: "#eee",
-                            }}
-                          >
-                            {acc.bankName} - {acc.country}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#aaa",
-                              marginTop: 4,
-                            }}
-                          >
-                            Account: {acc.accountName}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 14,
-                              fontFamily: "monospace",
-                              fontWeight: 600,
-                              color: "#fff",
-                              marginTop: 8,
-                              background: "#222",
-                              padding: "6px 10px",
-                              borderRadius: 6,
-                            }}
-                          >
-                            {acc.accountNumber}
-                          </div>
-                          {acc.iban && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#aaa",
-                                marginTop: 8,
-                              }}
-                            >
-                              <strong>IBAN:</strong> {acc.iban}
-                            </div>
-                          )}
-                          {acc.swift && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#aaa",
-                                marginTop: 4,
-                              }}
-                            >
-                              <strong>SWIFT:</strong> {acc.swift}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {!profile.paymentLinks?.length &&
-                  !profile.bankAccounts?.length ? null : (
-                    <div
-                      style={{
-                        background: "#1a1a1a",
-                        border: "1px solid #2a2a2a",
-                        borderRadius: 8,
-                        padding: 20,
-                        color: "#fff",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div style={{ color: "#666", fontSize: 14 }}>
-                        Secured Payment Gateway Enabled
-                      </div>
-                    </div>
-                  )}
-              </div>
-            </SectionContainer>
-          )}
-          {profile.testimonials && profile.testimonials.length > 0 && (
+          {activeTab === 'home' && profile.testimonials && profile.testimonials.length > 0 && (
             <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {profile.testimonials.map((test: any, i: number) => (
@@ -1305,7 +1245,7 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          {profile.faqs && profile.faqs.length > 0 && (
+          {activeTab === 'home' && profile.faqs && profile.faqs.length > 0 && (
             <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {profile.faqs.map((faq: any, i: number) => (
@@ -1338,7 +1278,8 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
+          {activeTab === 'inquiry' && (
+            <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
             <div
               style={{
                 background: "#111",
@@ -1417,12 +1358,51 @@ export default function ExecutiveDark({
               </button>
             </div>
           </SectionContainer>
-          {!profile.plan?.includes("Enterprise") && (
+          )}
+          {(activeTab === 'home' || activeTab === 'bank') && (
             <SectionContainer
-              title="Business Details"
+              title={isOwner ? "Wallet & Platform" : "Platform Details"}
               icon={<Wallet size={18} />}
             >
             <div>
+              {isOwner && (
+                <div
+                  style={{
+                    background: "#1a1a2e",
+                    padding: 24,
+                    borderRadius: 8,
+                    color: "#fff",
+                    marginBottom: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "rgba(255,255,255,0.5)",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    WALLET BALANCE
+                  </div>
+                  <div style={{ fontSize: 32, fontWeight: 900 }}>AED 340</div>
+                  <button
+                    style={{
+                      width: "100%",
+                      background: "#b45309",
+                      color: "#fff",
+                      border: "none",
+                      padding: 10,
+                      borderRadius: 4,
+                      marginTop: 16,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Top Up
+                  </button>
+                </div>
+              )}
               <div
                 style={{
                   background: "#1a1a1a",
@@ -1442,7 +1422,7 @@ export default function ExecutiveDark({
                     marginBottom: 8,
                   }}
                 >
-                  DBC MEMBER ID
+                  PROFILE ID
                 </div>
                 <div
                   style={{
@@ -1455,7 +1435,7 @@ export default function ExecutiveDark({
                   {profile.id}
                 </div>
               </div>
-              {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+              {(activeTab === 'home' || activeTab === 'bank') && profile.bankAccounts && profile.bankAccounts.length > 0 && (
                 <div
                   style={{
                     background: "#1a1a1a",
@@ -1475,45 +1455,94 @@ export default function ExecutiveDark({
                     <div
                       key={i}
                       style={{
-                        marginBottom:
-                          i < profile.bankAccounts.length - 1 ? 16 : 0,
+                        background: "#121212",
+                        padding: 20,
+                        borderRadius: 16,
+                        border: "1px solid #333",
+                        marginBottom: i < profile.bankAccounts.length - 1 ? 16 : 0,
                       }}
                     >
                       <div
                         style={{
-                          fontSize: 11,
-                          color: "#b45309",
-                          textTransform: "uppercase",
-                          letterSpacing: 1,
-                          marginBottom: 4,
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: "#fef3c7",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          marginBottom: 16,
+                          borderBottom: "1px solid #222",
+                          paddingBottom: 12
                         }}
                       >
-                        {acc.bankName} - {acc.country}
+                        <Building size={18} className="text-amber-200" />
+                        {acc.bankName}
                       </div>
-                      {acc.accountNumber && (
-                        <div
-                          style={{
-                            fontSize: 14,
-                            fontFamily: "monospace",
-                            color: "#ccc",
-                            marginBottom: 2,
-                          }}
-                        >
-                          A/C: {acc.accountNumber}
+
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Account Holder</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{acc.accountName}</div>
+                      </div>
+
+                      <div style={{ marginBottom: 16 }}>
+                         <div style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Account Number</div>
+                         <div 
+                           onClick={() => {
+                             navigator.clipboard.writeText(acc.accountNumber);
+                             alert("Account Number copied!");
+                           }}
+                           style={{ 
+                             fontSize: 16, 
+                             fontWeight: 800, 
+                             color: "#fef3c7", 
+                             background: "#0a0a0a", 
+                             padding: "12px", 
+                             borderRadius: 8, 
+                             textAlign: "center",
+                             fontFamily: "monospace",
+                             cursor: "pointer",
+                             border: "1px solid #333"
+                           }}
+                         >
+                           {acc.accountNumber}
+                         </div>
+                      </div>
+
+                      {acc.iban && (
+                        <div style={{ marginBottom: 16 }}>
+                           <div style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>IBAN</div>
+                           <div 
+                             onClick={() => {
+                               navigator.clipboard.writeText(acc.iban);
+                               alert("IBAN copied!");
+                             }}
+                             style={{ 
+                               fontSize: 12, 
+                               fontWeight: 700, 
+                               color: "#ccc", 
+                               wordBreak: "break-all",
+                               background: "#0a0a0a",
+                               padding: "12px",
+                               borderRadius: 8,
+                               fontFamily: "monospace",
+                               cursor: "pointer",
+                               border: "1px solid #333"
+                             }}
+                           >
+                             {acc.iban}
+                           </div>
                         </div>
                       )}
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontFamily: "monospace",
-                          color: "#ccc",
-                          marginBottom: 2,
-                        }}
-                      >
-                        IBAN: {acc.iban}
-                      </div>
-                      <div style={{ fontSize: 12, color: "#888" }}>
-                        SWIFT: {acc.swift} | Name: {acc.accountName}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <div style={{ background: "#0a0a0a", padding: "8px", borderRadius: 4 }}>
+                          <div style={{ fontSize: 9, color: "#666", textTransform: "uppercase" }}>Country</div>
+                          <div style={{ fontSize: 12, color: "#ccc" }}>{acc.country || 'UAE'}</div>
+                        </div>
+                        <div style={{ background: "#0a0a0a", padding: "8px", borderRadius: 4 }}>
+                          <div style={{ fontSize: 9, color: "#666", textTransform: "uppercase" }}>SWIFT</div>
+                          <div style={{ fontSize: 12, color: "#ccc" }}>{acc.swift || 'N/A'}</div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1873,8 +1902,45 @@ export default function ExecutiveDark({
             Get My Free Card
           </Link>
         </div>
+        
+        <div style={{
+          position: 'sticky',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: '#000',
+          borderTop: '1px solid #333',
+          display: 'flex',
+          justifyContent: 'space-around',
+          padding: '12px 0',
+          zIndex: 100,
+          boxShadow: '0 -4px 15px rgba(0,0,0,0.8)'
+        }}>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => handleTabChange(item.id)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: activeTab === item.id ? '#fef3c7' : '#666',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                transform: activeTab === item.id ? 'scale(1.1)' : 'scale(1)'
+              }}
+            >
+              {React.cloneElement(item.icon as React.ReactElement, { size: 18, color: activeTab === item.id ? '#fef3c7' : '#666' })}
+              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{item.id === 'home' ? 'Profile' : item.label}</span>
+            </button>
+          ))}
+        </div>
 
         <ProfileChatbot profile={profile} />
+        <AddToHomeScreen profileName={profile.name} />
       </div>
     </div>
   );

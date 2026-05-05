@@ -13,6 +13,7 @@ import { PaymentModal } from '../../components/PaymentModal';
 import { ImageUploadCrop } from '../../components/ImageUploadCrop';
 import AnimatedLogo from '../../components/AnimatedLogo';
 
+
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
 
 function DashboardChatTester({ profile }: { profile: any }) {
@@ -561,6 +562,18 @@ export default function OwnerDashboard() {
   };
 
   useEffect(() => {
+    // Verify Firestore Connection on mount
+    const testConn = async () => {
+      try {
+        const { getDocFromServer, doc } = await import('firebase/firestore');
+        await getDocFromServer(doc(db, 'test', 'connection'));
+        console.log('Firestore connection verified');
+      } catch (e: any) {
+        console.warn('Firestore connection test failed:', e.message);
+      }
+    };
+    testConn();
+
     if (!user) {
       if (!authLoading) setLoading(false);
       return;
@@ -613,6 +626,7 @@ export default function OwnerDashboard() {
             referralPending: 0,
             referralEarnings: 0,
             role: 'Admin',
+            isVerified: true,
             companyId: user.uid,
             teamMembers: [],
             seo: { title: '', desc: '', keywords: '' },
@@ -623,6 +637,7 @@ export default function OwnerDashboard() {
               whatsapp: '971501234567',
               instagram: 'janedoe'
             },
+            socialLinks: [],
             services: [
               { name: 'Digital Strategy', desc: 'Comprehensive digital transformation planning', price: 'AED 500', priceType: 'Hourly' },
               { name: '1-to-1 Consultation', desc: 'Direct strategy session', price: 'AED 1500', priceType: 'Fixed' }
@@ -807,7 +822,21 @@ export default function OwnerDashboard() {
         updatedAt: new Date().toISOString()
       };
 
-      await setDoc(doc(db, 'profiles', targetId), savePayload, { merge: true });
+      try {
+        await setDoc(doc(db, 'profiles', targetId), savePayload, { merge: true });
+      } catch (firestoreErr: any) {
+        const errInfo = {
+          error: firestoreErr?.message || String(firestoreErr),
+          code: firestoreErr?.code,
+          operation: 'setDoc',
+          path: `profiles/${targetId}`,
+          authUid: auth.currentUser?.uid,
+          authEmail: auth.currentUser?.email,
+          payloadKeys: Object.keys(savePayload)
+        };
+        console.error('Firestore Permission Error Details:', JSON.stringify(errInfo, null, 2));
+        throw firestoreErr;
+      }
       
       if (!editingSubProfileId) {
         setProfile(formData); // keep main profile in sync if editing main
@@ -1302,6 +1331,14 @@ export default function OwnerDashboard() {
                       />
                       {emailError && <span className="text-[10px] text-red-500 font-bold mt-1 uppercase">{emailError}</span>}
                     </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mobile Number</label>
+                      <input type="text" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971 50 123 4567" />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number</label>
+                      <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971 50 123 4567" />
+                    </div>
                     <div className="flex flex-col gap-1.5 md:col-span-2">
                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bio {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
@@ -1396,6 +1433,22 @@ export default function OwnerDashboard() {
                         )}
                       </div>
                     </div>
+                    {user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com' && (
+                      <div className="flex flex-col gap-1.5 mt-4">
+                        <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100">
+                          <div>
+                            <p className="text-xs font-black text-blue-800 uppercase tracking-widest">Verification Status (Admin Only)</p>
+                            <p className="text-[10px] text-blue-600 font-bold uppercase mt-0.5">Show blue checkmark on profile</p>
+                          </div>
+                          <button 
+                            onClick={() => setFormData({...formData, isVerified: !formData.isVerified})}
+                            className={`w-12 h-6 rounded-full relative transition-all ${formData.isVerified ? 'bg-blue-600' : 'bg-slate-300'}`}
+                          >
+                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.isVerified ? 'left-7' : 'left-1'}`} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1478,6 +1531,62 @@ export default function OwnerDashboard() {
                               <input type="text" value={formData.socials?.[network] || ''} onChange={e => setFormData({...formData, socials: {...(formData.socials || {}), [network]: e.target.value}})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder={`${network} username/link...`} />
                             </div>
                         ))}
+                     </div>
+
+                     <div className="mt-4 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div className="flex items-center justify-between mb-4">
+                           <div>
+                              <h4 className="text-sm font-black text-slate-800 m-0">Custom Social Links</h4>
+                              <p className="text-[10px] text-slate-500 m-0 mt-1 uppercase tracking-wider font-bold">Add additional links (Portfolio, etc.)</p>
+                           </div>
+                           <button 
+                             onClick={() => {
+                               const links = formData.socialLinks || [];
+                               setFormData({...formData, socialLinks: [...links, { label: '', url: '' }]});
+                             }}
+                             className="text-blue-600 hover:bg-blue-100 p-2 rounded-lg transition-all"
+                           >
+                              <Plus size={18} />
+                           </button>
+                        </div>
+                        <div className="space-y-3">
+                           {(formData.socialLinks || []).map((link: any, idx: number) => (
+                             <div key={idx} className="flex gap-2 items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                               <input 
+                                 value={link.label} 
+                                 onChange={e => {
+                                   const next = [...formData.socialLinks];
+                                   next[idx] = { ...next[idx], label: e.target.value };
+                                   setFormData({...formData, socialLinks: next});
+                                 }}
+                                 placeholder="Label" 
+                                 className="w-1/3 text-xs font-bold p-2 bg-slate-50 rounded focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                               />
+                               <input 
+                                 value={link.url} 
+                                 onChange={e => {
+                                   const next = [...formData.socialLinks];
+                                   next[idx] = { ...next[idx], url: e.target.value };
+                                   setFormData({...formData, socialLinks: next});
+                                 }}
+                                 placeholder="URL" 
+                                 className="flex-1 text-xs p-2 bg-slate-50 rounded focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                               />
+                               <button 
+                                 onClick={() => {
+                                   const next = formData.socialLinks.filter((_: any, i: number) => i !== idx);
+                                   setFormData({...formData, socialLinks: next});
+                                 }}
+                                 className="text-red-400 hover:text-red-600 p-1 transition-colors"
+                               >
+                                 <X size={14} />
+                               </button>
+                             </div>
+                           ))}
+                           {(formData.socialLinks || []).length === 0 && (
+                             <p className="text-[10px] text-slate-400 italic text-center py-2">No custom links added yet.</p>
+                           )}
+                        </div>
                      </div>
 
                     <div className="mt-8 p-6 bg-slate-50 rounded-2xl border border-slate-200">
@@ -1599,7 +1708,47 @@ export default function OwnerDashboard() {
                         </div>
                      </div>
 
-                     {/* Services Section */}
+                      {/* Bank Details Section */}
+                      <div className="p-6 md:p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm mb-6">
+                        <div className="flex items-center gap-3 mb-6">
+                           <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                             <Building size={24} className="text-slate-600" />
+                           </div>
+                           <div>
+                             <h3 className="m-0 text-xl font-black tracking-tight uppercase text-slate-900">Bank Account Details</h3>
+                             <p className="text-slate-500 text-[10px] font-bold m-0 uppercase tracking-widest opacity-80">Manual Transfer Information</p>
+                           </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bank Name</label>
+                             <input type="text" value={formData.bankName || ''} onChange={e => setFormData({...formData, bankName: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Emirates NBD" />
+                           </div>
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Holder Name</label>
+                             <input type="text" value={formData.accountName || ''} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. John Doe" />
+                           </div>
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Number</label>
+                             <input type="text" value={formData.accountNumber || ''} onChange={e => setFormData({...formData, accountNumber: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 123456789" />
+                           </div>
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IBAN</label>
+                             <input type="text" value={formData.iban || ''} onChange={e => setFormData({...formData, iban: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. AE123456..." />
+                           </div>
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Swift Code / BIC</label>
+                             <input type="text" value={formData.swiftCode || ''} onChange={e => setFormData({...formData, swiftCode: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. EBIZAEAXXX" />
+                           </div>
+                           <div className="flex flex-col gap-1.5">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IFSC Code / Routing</label>
+                             <input type="text" value={formData.ifscCode || ''} onChange={e => setFormData({...formData, ifscCode: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. HDFC0001234" />
+                           </div>
+                        </div>
+                      </div>
+
+                      {/* Services Section */}
                      <div className="flex flex-col gap-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1811,17 +1960,23 @@ export default function OwnerDashboard() {
                       
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                         <div onClick={() => setFormData({...formData, template: 'classic'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'classic' || !formData.template ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                          <div className="bg-slate-200 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
+                          <div className="bg-slate-200 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=400&q=80" alt="Classic Modern" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                          </div>
                           <div className="font-bold text-slate-900">Classic Modern</div>
                         </div>
                         <div onClick={() => setFormData({...formData, template: 'executive'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'executive' ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-slate-900 hover:bg-slate-800'}`}>
                           <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg">PREMIUM</div>
-                          <div className="bg-slate-800 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
+                          <div className="bg-slate-800 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?w=400&q=80" alt="Executive Dark" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                          </div>
                           <div className={`font-bold ${formData.template === 'executive' ? 'text-blue-700' : 'text-white'}`}>Executive Dark</div>
                         </div>
                         <div onClick={() => setFormData({...formData, template: 'minimal'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'minimal' ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                           <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg">PREMIUM</div>
-                          <div className="border border-slate-100 aspect-[4/3] rounded-xl mb-4 shadow-inner"></div>
+                          <div className="border border-slate-100 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1451187530220-4c23ba3e0c60?w=400&q=80" alt="Minimal Clean" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                          </div>
                           <div className="font-bold text-slate-900">Minimal Clean</div>
                         </div>
                       </div>

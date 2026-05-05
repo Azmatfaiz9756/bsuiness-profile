@@ -39,7 +39,9 @@ import {
   Bird,
   Briefcase,
   Volume2,
-  VolumeX
+  VolumeX,
+  Building,
+  BadgeCheck
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -55,6 +57,7 @@ import {
 import AppointmentBooking from "../components/AppointmentBooking";
 import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
+import AddToHomeScreen from "../../../components/AddToHomeScreen";
 
 export default function ClassicModern({
   profile,
@@ -67,6 +70,7 @@ export default function ClassicModern({
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
   const [activeTab, setActiveTab] = useState('home');
+  const isOwner = user?.uid === profile.uid;
   const contentRef = useRef<HTMLDivElement>(null);
 
   const handleTabChange = (tabId: string) => {
@@ -165,12 +169,13 @@ export default function ClassicModern({
   const hasProducts = profile.products && profile.products.length > 0;
   const hasTestimonials = profile.testimonials && profile.testimonials.length > 0;
   const hasFaqs = profile.faqs && profile.faqs.length > 0;
-  const hasPayments = (profile.paymentLinks && profile.paymentLinks.length > 0) || (profile.bankAccounts && profile.bankAccounts.length > 0);
+  const hasPayments = (profile.paymentLinks && profile.paymentLinks.length > 0) || (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName;
 
   const navItems = [
     { id: 'home', label: 'Home', icon: <Contact2 size={20} />, show: true },
     { id: 'services', label: 'Services', icon: <Sparkles size={20} />, show: profile.services && profile.services.length > 0 },
     { id: 'shop', label: 'Store', icon: <ShoppingBag size={20} />, show: profile.products && profile.products.length > 0 },
+    { id: 'bank', label: 'Bank', icon: <Building size={20} />, show: hasPayments },
     { id: 'jobs', label: 'Hiring', icon: <Briefcase size={20} />, show: profileJobs.length > 0 },
     { id: 'inquiry', label: 'Inquiry', icon: <Mail size={20} />, show: true }
   ].filter(item => item.show);
@@ -371,6 +376,25 @@ export default function ClassicModern({
                   allow="autoplay; encrypted-media"
                 ></iframe>
               </div>
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  right: 20,
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.5)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10,
+                  backdropFilter: 'blur(4px)'
+                }}
+              >
+                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </div>
             </div>
           ) : profile.bannerUrl && !profile.bannerVideo && (
             <img 
@@ -387,19 +411,13 @@ export default function ClassicModern({
           )}
           {profile.bannerVideo && !videoId && (
             <div 
-              onClick={(e) => {
-                const video = e.currentTarget.querySelector('video');
-                if (video) {
-                  video.muted = !video.muted;
-                  setIsMuted(video.muted);
-                }
-              }}
-              style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer' }}
+              onClick={() => setIsMuted(prev => !prev)}
+              style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
             >
               <video
                 autoPlay
                 loop
-                muted
+                muted={isMuted}
                 playsInline
                 style={{
                   position: "absolute",
@@ -411,6 +429,25 @@ export default function ClassicModern({
               >
                 <source src={profile.bannerVideo} type="video/mp4" />
               </video>
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  right: 20,
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.5)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 10,
+                  backdropFilter: 'blur(4px)'
+                }}
+              >
+                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              </div>
             </div>
           )}
   
@@ -485,13 +522,10 @@ export default function ClassicModern({
               profile.plan === "Pro" ||
               profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
-                <img 
-                  src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
-                  alt="Verified" 
-                  width={24} 
-                  height={24} 
-                  style={{ transform: "scaleX(-1)" }} 
-                />
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#1D9BF0"/>
+                  <path d="M8 12L11 15L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </span>
             )}
           </h1>
@@ -964,7 +998,7 @@ export default function ClassicModern({
 
         {/* Main Content Area */}
         <div style={{ padding: '0 20px', marginTop: 10 }}>
-          {activeTab === 'wallet' && (
+          {(activeTab === 'wallet' || activeTab === 'bank') && (
             <div style={{ marginBottom: 20 }}>
               <div
                 style={{
@@ -989,7 +1023,7 @@ export default function ClassicModern({
                       letterSpacing: 1,
                     }}
                   >
-                    DBC MEMBER ID
+                    PROFILE ID
                   </div>
                   <div
                     style={{
@@ -1311,7 +1345,7 @@ export default function ClassicModern({
           </SectionContainer>
         </div>
 
-        {hasServices && (
+        {(activeTab === 'home' || activeTab === 'services') && hasServices && (
           <div id="services-section">
             <SectionContainer title="Services" icon={<Sparkles size={18} />} id="services">
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -1596,7 +1630,7 @@ export default function ClassicModern({
         </div>
         )}
 
-        {profileJobs.length > 0 && (
+        {(activeTab === 'home' || activeTab === 'jobs') && profileJobs.length > 0 && (
           <div id="jobs-section">
             <SectionContainer title="Career Opportunities" icon={<Briefcase size={18} />} id="jobs">
               {applyingJob ? (
@@ -1641,6 +1675,7 @@ export default function ClassicModern({
           </div>
           )}
 
+          {(activeTab === 'home' || activeTab === 'inquiry') && (
           <div id="inquiry-section">
             <SectionContainer title="Send Inquiry" icon={<Mail size={18} />} id="inquiry">
             <div
@@ -1709,8 +1744,9 @@ export default function ClassicModern({
             </div>
           </SectionContainer>
         </div>
+        )}
 
-          {activeTab === 'wallet' && !profile.plan?.includes("Enterprise") && (
+          {(activeTab === 'wallet' || (activeTab === 'bank' && isOwner)) && (
             <SectionContainer title="Wallet" icon={<Wallet size={18} />}>
             <>
               <div
@@ -1748,85 +1784,11 @@ export default function ClassicModern({
                   Top Up
                 </button>
               </div>
-
-              {profile.bankAccounts && profile.bankAccounts.length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#1f2937",
-                      marginBottom: 10,
-                      textAlign: "left",
-                    }}
-                  >
-                    Bank Details
-                  </div>
-                  {profile.bankAccounts.map((acc: any, i: number) => (
-                    <div
-                      key={i}
-                      style={{
-                        background: "#fff",
-                        border: "1px solid #e5e7eb",
-                        padding: 16,
-                        borderRadius: 12,
-                        marginBottom: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginBottom: 8,
-                        }}
-                      >
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>
-                          {acc.bankName}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 12,
-                            color: "#1a56db",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {acc.country}
-                        </span>
-                      </div>
-                      {acc.accountNumber && (
-                        <div
-                          style={{
-                            fontSize: 14,
-                            color: "#4b5563",
-                            fontFamily: "monospace",
-                            marginBottom: 4,
-                          }}
-                        >
-                          A/C: {acc.accountNumber}
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          fontSize: 14,
-                          color: "#4b5563",
-                          fontFamily: "monospace",
-                          marginBottom: 4,
-                        }}
-                      >
-                        IBAN: {acc.iban}
-                      </div>
-                      <div style={{ fontSize: 12, color: "#6b7280" }}>
-                        SWIFT: {acc.swift} • Name: {acc.accountName}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </>
           </SectionContainer>
           )}
 
-          {activeTab === 'shop' && hasProducts && (
+          {(activeTab === 'home' || activeTab === 'shop') && hasProducts && (
             <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {profile.products && profile.products.length > 0 ? (
@@ -1978,8 +1940,8 @@ export default function ClassicModern({
           </SectionContainer>
           )}
 
-          {activeTab === 'wallet' && hasPayments && !profile.plan?.includes("Enterprise") && (
-            <SectionContainer title="Payments" icon={<Wallet size={18} />}>
+          {(activeTab === 'home' || activeTab === 'bank' || activeTab === 'wallet') && hasPayments && (
+            <SectionContainer id="bank-section" title="Bank Details" icon={<Building size={18} />}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
@@ -2085,7 +2047,7 @@ export default function ClassicModern({
                   </div>
                 )}
 
-                {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+                {profile.bankAccounts && profile.bankAccounts.length > 0 ? (
                   <div
                     style={{
                       background: "#fff",
@@ -2117,68 +2079,115 @@ export default function ClassicModern({
                         <div
                           key={i}
                           style={{
-                            background: "#f8fafc",
-                            padding: 16,
-                            borderRadius: 12,
+                            background: "#ffffff",
+                            padding: 20,
+                            borderRadius: 20,
+                            border: "1px solid #e5e7eb",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"
                           }}
                         >
                           <div
                             style={{
-                              fontSize: 15,
-                              fontWeight: 700,
-                              color: "#1f2937",
+                              fontSize: 16,
+                              fontWeight: 800,
+                              color: "#1e3a8a",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 10,
+                              marginBottom: 16,
+                              borderBottom: "1px solid #f1f5f9",
+                              paddingBottom: 12
                             }}
                           >
-                            {acc.bankName} - {acc.country}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <Building size={20} className="text-blue-600" />
+                              {acc.bankName}
+                            </div>
+                            <span style={{ fontSize: 12, color: "#2563eb", fontWeight: 700 }}>{acc.country || 'UAE'}</span>
                           </div>
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: "#4b5563",
-                              marginTop: 4,
-                            }}
-                          >
-                            Account: {acc.accountName}
+                          
+                          <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Account Name</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{acc.accountName}</div>
                           </div>
-                          <div
-                            style={{
-                              fontSize: 14,
-                              fontFamily: "monospace",
-                              fontWeight: 600,
-                              color: "#1f2937",
-                              marginTop: 8,
-                              background: "#e2e8f0",
-                              padding: "6px 10px",
-                              borderRadius: 6,
-                            }}
-                          >
-                            {acc.accountNumber}
+
+                          <div style={{ marginBottom: 16 }}>
+                             <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Account Number</div>
+                             <div 
+                               onClick={() => {
+                                 navigator.clipboard.writeText(acc.accountNumber);
+                                 alert("Account Number copied!");
+                               }}
+                               style={{ 
+                                 fontSize: 16, 
+                                 fontWeight: 800, 
+                                 color: "#2563eb", 
+                                 background: "#f8fafc", 
+                                 padding: "12px", 
+                                 borderRadius: 8, 
+                                 textAlign: "center",
+                                 fontFamily: "monospace",
+                                 cursor: "pointer",
+                                 border: "1px solid #e2e8f0"
+                               }}
+                             >
+                               {acc.accountNumber}
+                             </div>
                           </div>
+
                           {acc.iban && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#4b5563",
-                                marginTop: 8,
-                              }}
-                            >
-                              <strong>IBAN:</strong> {acc.iban}
+                            <div style={{ marginBottom: 16 }}>
+                               <div style={{ fontSize: 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>IBAN</div>
+                               <div 
+                                 onClick={() => {
+                                   navigator.clipboard.writeText(acc.iban);
+                                   alert("IBAN copied!");
+                                 }}
+                                 style={{ 
+                                   fontSize: 13, 
+                                   fontWeight: 700, 
+                                   color: "#1e293b", 
+                                   wordBreak: "break-all",
+                                   background: "#f8fafc",
+                                   padding: "12px",
+                                   borderRadius: 8,
+                                   fontFamily: "monospace",
+                                   cursor: "pointer",
+                                   border: "1px solid #e2e8f0"
+                                 }}
+                               >
+                                 {acc.iban}
+                               </div>
                             </div>
                           )}
-                          {acc.swift && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#4b5563",
-                                marginTop: 4,
-                              }}
-                            >
-                              <strong>SWIFT:</strong> {acc.swift}
+
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            <div style={{ background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                              <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>SWIFT</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{acc.swift || 'N/A'}</div>
                             </div>
-                          )}
+                            <div style={{ background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                              <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Country</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{acc.country || 'UAE'}</div>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 16,
+                      padding: 20,
+                      color: "#6b7280",
+                      textAlign: "center",
+                    }}
+                  >
+                    No banking details provided
                   </div>
                 )}
                 {!profile.paymentLinks?.length &&
@@ -2796,6 +2805,7 @@ export default function ClassicModern({
         </div>
 
         <ProfileChatbot profile={profile} />
+        <AddToHomeScreen profileName={profile.name} />
 
         {/* Connect Modal */}
         <AnimatePresence>

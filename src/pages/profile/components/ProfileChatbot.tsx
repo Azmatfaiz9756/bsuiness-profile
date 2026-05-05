@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Bot, X, Briefcase, Languages, Trash2, CalendarCheck, UserPlus, Headset } from 'lucide-react';
 import { motion, AnimatePresence } from "motion/react";
+import { ProxyGoogleGenAI } from '../../../lib/gemini';
 import { db } from '../../../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { CHAT_LANGUAGES } from "../../../lib/languages";
 import { useAppContext } from "../../../context/AppContext";
-import { ProxyGoogleGenAI } from '../../../lib/gemini';
 
-
-
-// Types corresponding to GoogleGenAI
 const Type = { STRING: 'STRING', OBJECT: 'OBJECT', ARRAY: 'ARRAY' };
 
 export default function ProfileChatbot({ profile }: { profile: any }) {
@@ -157,7 +154,8 @@ Full Profile Context:
 - Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
 - Socials: ${JSON.stringify(profile?.socials || {})}
 
-Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.`;
+Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.
+Keep your responses helpful but very concise for maximum speed.`;
   };
 
   // Fetch Stock Data if enabled

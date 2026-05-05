@@ -30,7 +30,11 @@ import {
   Share2,
   Bird,
   Volume2,
-  VolumeX
+  VolumeX,
+  Building,
+  BadgeCheck,
+  Contact2,
+  Sparkles
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -45,6 +49,7 @@ import {
 import AppointmentBooking from "../components/AppointmentBooking";
 import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
+import AddToHomeScreen from "../../../components/AddToHomeScreen";
 
 export default function MinimalClean({
   profile,
@@ -54,11 +59,22 @@ export default function MinimalClean({
   onExit: () => void;
 }) {
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
-  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string | null>('home');
+  const isOwner = user?.uid === profile.uid;
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const hasPayments = (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName;
+
+  const navItems = [
+    { id: 'home', label: 'Home', icon: <Contact2 size={18} />, show: true },
+    { id: 'services', label: 'Services', icon: <Sparkles size={18} />, show: profile.services && profile.services.length > 0 },
+    { id: 'shop', label: 'Store', icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
+    { id: 'bank', label: 'Bank', icon: <Building size={18} />, show: hasPayments },
+    { id: 'inquiry', label: 'Inquiry', icon: <Mail size={18} />, show: true }
+  ].filter(item => item.show);
 
   const toggleAudio = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -210,45 +226,87 @@ export default function MinimalClean({
                 const videoId = profile.bannerVideo.includes('v=') 
                   ? profile.bannerVideo.split('v=')[1]?.split('&')[0]
                   : profile.bannerVideo.split('/').pop()?.split('?')[0];
-                
                 return (
-                  <div 
-                    onClick={toggleAudio}
-                    style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '240%',
-                      height: '240%',
-                      transform: 'translate(-50%, -50%)',
-                      pointerEvents: 'none'
-                    }}>
-                      <iframe
-                        ref={iframeRef}
+                      <div 
+                      onClick={toggleAudio}
+                      style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
+                    >
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: '240%',
+                        height: '240%',
+                        transform: 'translate(-50%, -50%)',
+                        pointerEvents: 'none'
+                      }}>
+                        <iframe
+                          ref={iframeRef}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                          }}
+                          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
+                          frameBorder="0"
+                          allow="autoplay; encrypted-media"
+                        ></iframe>
+                      </div>
+                      <div
                         style={{
-                          width: '100%',
-                          height: '100%',
+                          position: 'absolute',
+                          bottom: 20,
+                          right: 20,
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: 'rgba(0,0,0,0.5)',
+                          color: '#fff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          backdropFilter: 'blur(4px)'
                         }}
-                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
-                        frameBorder="0"
-                        allow="autoplay; encrypted-media"
-                      ></iframe>
+                      >
+                        {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                      </div>
                     </div>
-                  </div>
                 );
               })()
             ) : profile.bannerVideo ? (
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              <div 
+                onClick={() => setIsMuted(prev => !prev)}
+                style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
               >
-                <source src={profile.bannerVideo} type="video/mp4" />
-              </video>
+                <video
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                >
+                  <source src={profile.bannerVideo} type="video/mp4" />
+                </video>
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 20,
+                    right: 20,
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.5)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 10,
+                    backdropFilter: 'blur(4px)'
+                  }}
+                >
+                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </div>
+              </div>
             ) : (
               <img 
                 src={profile.bannerUrl} 
@@ -319,13 +377,11 @@ export default function MinimalClean({
               profile.plan === "Pro" ||
               profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
-                <img 
-                  src="https://api.iconify.design/game-icons:eagle-emblem.svg?color=%231da1f2" 
-                  alt="Verified" 
-                  width={24} 
-                  height={24} 
-                  style={{ transform: "scaleX(-1)" }} 
-                />
+                <BadgeCheck size={24} color="#2563eb" fill="#2563eb" />
+                <style>{`
+                  .lucide-badge-check path:nth-child(1) { fill: #2563eb; }
+                  .lucide-badge-check path:nth-child(2) { stroke: white; }
+                `}</style>
               </span>
             )}
           </h1>
@@ -341,7 +397,9 @@ export default function MinimalClean({
              <span style={{ fontSize: 12, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
           </div>
 
-          {profile.bio && (
+          {activeTab === 'home' && (
+            <>
+              {profile.bio && (
             <div
               style={{
                 fontSize: 15,
@@ -541,6 +599,7 @@ export default function MinimalClean({
               <UserPlus size={18} /> Save Contact
             </button>
           </div>
+          </>)}
         </div>
 
         <div
@@ -858,7 +917,7 @@ export default function MinimalClean({
             </div>
           </div>
 
-          {profile.hours && Object.keys(profile.hours).length > 0 && (
+          {activeTab === 'home' && profile.hours && Object.keys(profile.hours).length > 0 && (
             <AccordionItem id="hours" title="Business Hours">
               <div
                 style={{
@@ -906,7 +965,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {profile.services && profile.services.length > 0 && (
+          {(activeTab === 'home' || activeTab === 'services') && profile.services && profile.services.length > 0 && (
             <AccordionItem id="services" title="Services">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -951,7 +1010,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {profile.products && profile.products.length > 0 && (
+          {(activeTab === 'home' || activeTab === 'shop') && profile.products && profile.products.length > 0 && (
             <AccordionItem id="shop" title="Products">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
@@ -1053,7 +1112,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {((profile.gallery && profile.gallery.length > 0) ||
+          {activeTab === 'home' && ((profile.gallery && profile.gallery.length > 0) ||
             (profile.videos && profile.videos.length > 0)) && (
             <AccordionItem id="media" title="Media">
               <div
@@ -1122,7 +1181,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {profile.testimonials && profile.testimonials.length > 0 && (
+          {activeTab === 'home' && profile.testimonials && profile.testimonials.length > 0 && (
             <AccordionItem id="reviews" title="Reviews">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
@@ -1197,123 +1256,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {profile.bankAccounts && profile.bankAccounts.length > 0 && (
-            <AccordionItem id="payments" title="Bank Accounts">
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 16 }}
-              >
-                <div
-                  style={{
-                    border: "1px solid #e4e4e7",
-                    borderRadius: 16,
-                    padding: 20,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: "#09090b",
-                      marginBottom: 16,
-                    }}
-                  >
-                    Bank Transfers
-                  </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 16,
-                      }}
-                    >
-                      {profile.bankAccounts.map((acc: any, i: number) => (
-                        <div
-                          key={i}
-                          style={{
-                            paddingBottom:
-                              i !== profile.bankAccounts.length - 1 ? 16 : 0,
-                            borderBottom:
-                              i !== profile.bankAccounts.length - 1
-                                ? "1px solid #e4e4e7"
-                                : "none",
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 15,
-                              fontWeight: 700,
-                              color: "#09090b",
-                            }}
-                          >
-                            {acc.bankName}
-                          </div>
-                          <div style={{ fontSize: 13, color: "#a1a1aa" }}>
-                            {acc.country}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 14,
-                              color: "#52525b",
-                              marginTop: 8,
-                            }}
-                          >
-                            Account:{" "}
-                            <span style={{ fontWeight: 600, color: "#09090b" }}>
-                              {acc.accountName}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 14,
-                              fontFamily: "monospace",
-                              fontWeight: 600,
-                              color: "#09090b",
-                              marginTop: 4,
-                            }}
-                          >
-                            {acc.accountNumber}
-                          </div>
-                          {acc.iban && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#52525b",
-                                marginTop: 4,
-                              }}
-                            >
-                              IBAN:{" "}
-                              <span
-                                style={{ fontWeight: 600, color: "#09090b" }}
-                              >
-                                {acc.iban}
-                              </span>
-                            </div>
-                          )}
-                          {acc.swift && (
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: "#52525b",
-                                marginTop: 4,
-                              }}
-                            >
-                              SWIFT:{" "}
-                              <span
-                                style={{ fontWeight: 600, color: "#09090b" }}
-                              >
-                                {acc.swift}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-              </div>
-            </AccordionItem>
-          )}
-
-          {profile.faqs && profile.faqs.length > 0 && (
+          {activeTab === 'home' && profile.faqs && profile.faqs.length > 0 && (
             <AccordionItem id="faq" title="FAQ">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -1351,6 +1294,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
+          {activeTab === 'inquiry' && (
           <AccordionItem id="inquiry" title="Inquiry">
             <div
               style={{
@@ -1421,7 +1365,9 @@ export default function MinimalClean({
               </button>
             </div>
           </AccordionItem>
+          )}
 
+          {(activeTab === 'home' || activeTab === 'bank') && (
           <AccordionItem id="platform" title="Platform Details">
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div>
@@ -1435,7 +1381,7 @@ export default function MinimalClean({
                     marginBottom: 12,
                   }}
                 >
-                  Platform ID
+                  PROFILE ID
                 </div>
                 <div
                   style={{
@@ -1453,22 +1399,54 @@ export default function MinimalClean({
                   >
                     {profile.id}
                   </span>
-                  <span
-                    style={{
-                      background: "#e4e4e7",
-                      padding: "4px 8px",
-                      borderRadius: 6,
-                      fontSize: 12,
-                      color: "#52525b",
-                    }}
-                  >
-                    Verified
-                  </span>
+            {(profile.isVerified ||
+              profile.plan === "Pro" ||
+              profile.plan?.includes("Enterprise")) && (
+              <span style={{ display: "inline-flex", marginLeft: 4 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#1D9BF0"/>
+                  <path d="M8 12L11 15L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
+            )}
                 </div>
               </div>
+            </div>
+          </AccordionItem>
+          )}
 
+          {(activeTab === 'home' || activeTab === 'bank') && (
               <div>
-                {profile.bankAccounts && profile.bankAccounts.length > 0 && (
+                {isOwner && (
+                  <div
+                    style={{
+                      background: "#18181b",
+                      padding: 24,
+                      borderRadius: 16,
+                      color: "#fff",
+                      marginBottom: 24
+                    }}
+                  >
+                    <div style={{ fontSize: 12, color: "#a1a1aa", letterSpacing: 1, fontWeight: 700 }}>WALLET BALANCE</div>
+                    <div style={{ fontSize: 32, fontWeight: 900, marginTop: 4 }}>AED 340</div>
+                    <button
+                      style={{
+                        width: "100%",
+                        background: "#fff",
+                        color: "#000",
+                        border: "none",
+                        padding: 12,
+                        borderRadius: 8,
+                        marginTop: 16,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      View Wallet
+                    </button>
+                  </div>
+                )}
+                {((profile.bankAccounts && profile.bankAccounts.length > 0) || (profile.bankName || profile.accountNumber)) && (
                   <div
                     style={{
                       fontSize: 12,
@@ -1485,66 +1463,206 @@ export default function MinimalClean({
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 12 }}
                 >
+                  {profile.bankName && (
+                    <div
+                      style={{
+                        border: "1px solid #e4e4e7",
+                        padding: 20,
+                        borderRadius: 20,
+                        background: '#ffffff',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 16,
+                          alignItems: 'center',
+                          borderBottom: '1px solid #f4f4f5',
+                          paddingBottom: 12
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: "#09090b",
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10
+                          }}
+                        >
+                          <Building size={18} className="text-blue-600" />
+                          {profile.bankName}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#71717a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
+                         Holder
+                      </div>
+                      <div style={{ fontSize: 14, color: '#09090b', fontWeight: 700, marginBottom: 20 }}>
+                         {profile.accountName}
+                      </div>
+
+                      <div style={{ marginBottom: 20 }}>
+                        <div style={{ fontSize: 12, color: '#71717a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Account Number</div>
+                        <div
+                          onClick={() => {
+                            navigator.clipboard.writeText(profile.accountNumber);
+                            alert("Account Number copied!");
+                          }}
+                          style={{
+                            fontSize: 18,
+                            color: "#2563eb",
+                            fontWeight: 800,
+                            fontFamily: "'JetBrains Mono', monospace",
+                            background: '#f8fafc',
+                            padding: '16px',
+                            borderRadius: 12,
+                            border: '1px dashed #cbd5e1',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            letterSpacing: 2
+                          }}
+                        >
+                          {profile.accountNumber}
+                          <div style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 9, color: '#94a3b8' }}>COPY</div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+                        {profile.iban && (
+                           <div 
+                             onClick={() => {
+                               navigator.clipboard.writeText(profile.iban);
+                               alert("IBAN copied!");
+                             }}
+                             style={{ background: "#f8fafc", padding: "14px", borderRadius: 12, border: "1px solid #e2e8f0", cursor: "pointer" }}
+                           >
+                             <div style={{ fontSize: 10, fontWeight: 800, color: "#71717a", textTransform: "uppercase", display: 'flex', justifyContent: 'space-between' }}>
+                               IBAN <span>COPY</span>
+                             </div>
+                             <div style={{ fontSize: 13, fontWeight: 700, color: "#09090b", wordBreak: 'break-all', marginTop: 4, fontFamily: 'monospace' }}>{profile.iban}</div>
+                           </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 12 }}>
+                          {profile.swiftCode && (
+                            <div style={{ flex: 1, background: "#f8fafc", padding: "12px", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>SWIFT</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: "#09090b", marginTop: 4 }}>{profile.swiftCode}</div>
+                            </div>
+                          )}
+                          {profile.ifscCode && (
+                            <div style={{ flex: 1, background: "#f8fafc", padding: "12px", borderRadius: 12, border: "1px solid #e2e8f0" }}>
+                              <div style={{ fontSize: 10, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>Routing</div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: "#09090b", marginTop: 4 }}>{profile.ifscCode}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {profile.bankAccounts &&
                     profile.bankAccounts.map((acc: any, i: number) => (
                       <div
                         key={i}
                         style={{
                           border: "1px solid #e4e4e7",
-                          padding: 16,
-                          borderRadius: 12,
+                          padding: 20,
+                          borderRadius: 20,
+                          background: '#ffffff',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                         }}
                       >
                         <div
                           style={{
                             display: "flex",
                             justifyContent: "space-between",
-                            marginBottom: 8,
+                            marginBottom: 16,
+                            alignItems: 'center',
+                            borderBottom: '1px solid #f4f4f5',
+                            paddingBottom: 12
                           }}
                         >
                           <span
                             style={{
-                              fontSize: 14,
-                              fontWeight: 600,
+                              fontSize: 16,
+                              fontWeight: 800,
                               color: "#09090b",
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10
                             }}
                           >
+                            <Building size={18} className="text-blue-600" />
                             {acc.bankName}
                           </span>
                           <span
                             style={{
-                              fontSize: 12,
-                              color: "#52525b",
-                              fontWeight: 500,
+                              fontSize: 11,
+                              color: "#71717a",
+                              fontWeight: 700,
+                              textTransform: 'uppercase'
                             }}
                           >
                             {acc.country}
                           </span>
                         </div>
-                        {acc.accountNumber && (
+                        
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, color: '#71717a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Account Name</div>
+                          <div style={{ fontSize: 14, color: '#09090b', fontWeight: 700 }}>{acc.accountName}</div>
+                        </div>
+
+                        <div style={{ marginBottom: 16 }}>
+                          <div style={{ fontSize: 10, color: '#71717a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Account Number</div>
                           <div
+                            onClick={() => {
+                              navigator.clipboard.writeText(acc.accountNumber);
+                              alert("Account Number copied!");
+                            }}
                             style={{
-                              fontSize: 14,
-                              color: "#52525b",
+                              fontSize: 16,
+                              color: "#2563eb",
+                              fontWeight: 800,
                               fontFamily: "monospace",
-                              marginBottom: 4,
+                              background: '#f8fafc',
+                              padding: '12px',
+                              borderRadius: 8,
+                              border: '1px solid #e2e8f0',
+                              textAlign: 'center',
+                              cursor: 'pointer'
                             }}
                           >
-                            A/C: {acc.accountNumber}
+                            {acc.accountNumber}
+                          </div>
+                        </div>
+
+                        {acc.iban && (
+                          <div style={{ marginBottom: 16 }}>
+                             <div style={{ fontSize: 10, color: '#71717a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>IBAN</div>
+                             <div 
+                               onClick={() => {
+                                 navigator.clipboard.writeText(acc.iban);
+                                 alert("IBAN copied!");
+                               }}
+                               style={{ fontSize: 13, color: "#09090b", fontWeight: 700, fontFamily: "monospace", wordBreak: 'break-all', cursor: 'pointer', background: '#f8fafc', padding: '10px', borderRadius: 8, border: '1px solid #e2e8f0' }}
+                             >
+                               {acc.iban}
+                             </div>
                           </div>
                         )}
-                        <div
-                          style={{
-                            fontSize: 14,
-                            color: "#52525b",
-                            fontFamily: "monospace",
-                            marginBottom: 4,
-                          }}
-                        >
-                          IBAN: {acc.iban}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#a1a1aa" }}>
-                          SWIFT: {acc.swift} • Name: {acc.accountName}
+                        <div style={{ display: 'flex', gap: 12 }}>
+                          <div style={{ flex: 1, background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>Country</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#09090b", marginTop: 2 }}>{acc.country || 'UAE'}</div>
+                          </div>
+                          <div style={{ flex: 1, background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>SWIFT</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#09090b", marginTop: 2 }}>{acc.swift || 'N/A'}</div>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1641,9 +1759,7 @@ export default function MinimalClean({
                   </Link>
                 </div>
               </div>
-            </div>
-          </AccordionItem>
-        </div>
+          )}
 
         {/* Share Modal */}
         {showShareModal && (
@@ -1932,7 +2048,43 @@ export default function MinimalClean({
           </Link>
         </div>
 
+        <div style={{
+          position: 'sticky',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: '#fff',
+          borderTop: '1px solid #e4e4e7',
+          display: 'flex',
+          justifyContent: 'space-around',
+          padding: '10px 0',
+          zIndex: 100,
+          boxShadow: '0 -4px 10px rgba(0,0,0,0.05)'
+        }}>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: activeTab === item.id ? '#09090b' : '#a1a1aa',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+            >
+              {item.icon}
+              <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+
         <ProfileChatbot profile={profile} />
+        <AddToHomeScreen profileName={profile.name} />
+        </div>
       </div>
     </div>
   );

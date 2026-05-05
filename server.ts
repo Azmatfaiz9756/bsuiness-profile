@@ -1,12 +1,16 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
+import { GoogleGenAI } from "@google/genai";
 import express from "express";
+import compression from "compression";
 import cors from "cors";
 import path from "path";
 import Stripe from "stripe";
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import fs from 'fs';
+
+// ... (rest of the imports if any)
 
 // Initialize Firebase for server-side profile fetching
 const firebaseConfig = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), 'firebase-applet-config.json'), 'utf8'));
@@ -18,6 +22,7 @@ async function startServer() {
   app.set('trust proxy', true);
   const PORT = parseInt(process.env.PORT || "3000", 10);
   
+  app.use(compression());
   app.use(cors());
 
   // Redirect www to non-www
@@ -31,7 +36,8 @@ async function startServer() {
     next();
   });
 
-  app.use(express.json());
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
   // Stripe setup
   let stripeClient: Stripe | null = null;
@@ -55,7 +61,7 @@ async function startServer() {
   }
 
   // Admin ENV settings update
-  app.post("/api/admin/env", express.json(), async (req, res) => {
+  app.post("/api/admin/env", express.json({ limit: '50mb' }), async (req, res) => {
     try {
       const fs = await import('fs');
       const { STRIPE_SECRET_KEY, GEMINI_API_KEY } = req.body;
@@ -96,7 +102,7 @@ async function startServer() {
   // CRM Proxy and Key Management
   const CRM_KEYS_FILE = path.resolve(process.cwd(), 'crm-keys.json');
 
-  app.post("/api/crm/save", express.json(), async (req, res) => {
+  app.post("/api/crm/save", express.json({ limit: '50mb' }), async (req, res) => {
     try {
       const fs = await import('fs');
       const { profileId, crmProvider, zohoToken, zohoOrgId, crmEndpoint, crmSecret } = req.body;
@@ -339,16 +345,21 @@ async function startServer() {
   // Google Gemini AI Endpoint
   app.post("/api/gemini/generateContent", async (req, res) => {
     try {
-      const { GoogleGenAI } = await import("@google/genai");
       let clientApiKey = req.headers.authorization?.split(' ')[1];
       if (clientApiKey) clientApiKey = clientApiKey.split('#')[0].replace(/^["']|["']$/g, '').trim();
       
       let serverKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
       let viteKey = process.env.VITE_GEMINI_API_KEY ? process.env.VITE_GEMINI_API_KEY.split('#')[0].replace(/^["']|["']$/g, '').trim() : undefined;
       
-      let apiKey = [clientApiKey, serverKey, viteKey].find(k => k && k.startsWith('AIza')) || clientApiKey || serverKey || viteKey;
+      // Determine the best key: client key (if valid-ish), then server key, then vite key.
+      // We avoid using placeholders like 'AIzaSy...' from .env.example
+      const isPlaceholder = (k?: string) => !k || k.includes('AIzaSy...') || k === 'MY_GEMINI_API_KEY';
       
-      if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+      let apiKey = clientApiKey;
+      if (isPlaceholder(apiKey)) apiKey = serverKey;
+      if (isPlaceholder(apiKey)) apiKey = viteKey;
+      
+      if (!apiKey || isPlaceholder(apiKey)) {
         console.error("[Gemini] API Key is empty or missing in environment variables.");
         return res.status(500).json({ error: "Gemini API key not configured on server. Please use Admin Settings to set your key." });
       }
@@ -356,32 +367,35 @@ async function startServer() {
       const genAI = new GoogleGenAI({ apiKey });
       const { model, contents, config } = req.body;
       
-      console.log(`[Gemini] GenerateContent called. Model: ${model || 'gemini-1.5-flash'}`);
+      let targetModel = model || "gemini-3-flash-preview";
+      console.log(`[Gemini] GenerateContent called. Model: ${targetModel}`);
       
-      const response = await genAI.models.generateContent({
-        model: model || "gemini-1.5-flash",
-        contents: contents,
-        config: config
-      });
-
-      let text = "";
+      let response;
       try {
-        text = response.text || "";
-      } catch (e) {
-        // text can throw if there are only function calls or issues
-        const firstPart = response.candidates?.[0]?.content?.parts?.[0];
-        if (firstPart && 'text' in firstPart) {
-          text = (firstPart as any).text || "";
+        response = await genAI.models.generateContent({
+          model: targetModel,
+          contents: contents,
+          config: config
+        });
+      } catch (err: any) {
+        if (targetModel === "gemini-3-flash-preview") {
+          console.warn("[Gemini] gemini-3-flash-preview failed, falling back to gemini-1.5-flash");
+          targetModel = "gemini-1.5-flash";
+          response = await genAI.models.generateContent({
+            model: targetModel,
+            contents: contents,
+            config: config
+          });
+        } else {
+          throw err;
         }
       }
 
-      // Extract function calls if any
-      const functionCalls = response.candidates?.[0]?.content?.parts
-        ?.filter(part => !!part.functionCall)
-        ?.map(part => part.functionCall);
+      const responseText = response.text || "";
+      const functionCalls = response.functionCalls;
 
       res.json({
-        text: text,
+        text: responseText,
         functionCalls: functionCalls,
         candidates: response.candidates
       });
@@ -459,7 +473,11 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      maxAge: '1d',
+      etag: true,
+      lastModified: true
+    }));
     
     app.get('*', async (req, res) => {
       const indexPath = path.join(distPath, 'index.html');
