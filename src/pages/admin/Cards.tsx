@@ -136,52 +136,36 @@ const AdminCards: React.FC = () => {
     const img = new Image();
     const logoImg = new Image();
     
+    const triggerDownload = () => {
+      if (!ctx) return;
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `QR_${serial}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+
     img.onload = () => {
-      // Set sizes
       const qrSize = img.width;
       const padding = 60;
       canvas.width = qrSize + (padding * 2);
       canvas.height = qrSize + 160;
       
       if (ctx) {
-        // Draw background
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Draw QR code
         ctx.drawImage(img, padding, padding);
         
-        // Load and draw logo
-        logoImg.onload = () => {
-          const logoSize = qrSize * 0.22; // 22% of QR size
-          const logoX = padding + (qrSize / 2) - (logoSize / 2);
-          const logoY = padding + (qrSize / 2) - (logoSize / 2);
-          
-          // Logo Background (White square)
-          ctx.fillStyle = "white";
-          ctx.fillRect(logoX - 2, logoY - 2, logoSize + 4, logoSize + 4);
-          
-          // Draw logo
-          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-          
-          // Draw Serial Text
-          ctx.fillStyle = "black";
-          ctx.font = "bold 28px Inter, Arial, sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(`SERIAL: ${serial}`, canvas.width / 2, canvas.height - 40);
-          
-          // Draw Website text
-          ctx.font = "500 16px Inter, Arial, sans-serif";
-          ctx.fillStyle = "#64748b";
-          ctx.fillText("VIBE DIGITAL CONNECT", canvas.width / 2, padding / 2 + 10);
-
-          const pngFile = canvas.toDataURL("image/png");
-          const downloadLink = document.createElement("a");
-          downloadLink.download = `QR_${serial}.png`;
-          downloadLink.href = pngFile;
-          downloadLink.click();
-        };
-        logoImg.src = "/logo.png";
+        ctx.fillStyle = "black";
+        ctx.font = "bold 28px Inter, Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`SERIAL: ${serial}`, canvas.width / 2, canvas.height - 40);
+        
+        ctx.font = "500 16px Inter, Arial, sans-serif";
+        ctx.fillStyle = "#64748b";
+        ctx.fillText("VIBE DIGITAL CONNECT", canvas.width / 2, padding / 2 + 10);
+        
+        triggerDownload();
       }
     };
     img.src = "data:image/svg+xml;base64," + btoa(svgData);
@@ -251,12 +235,6 @@ const AdminCards: React.FC = () => {
                             size={60}
                             level="H"
                           />
-                          {/* Center Branding Logo */}
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-4 h-4 bg-white rounded-sm flex items-center justify-center p-[1px] shadow-sm">
-                              <img src="/logo.png" className="w-full h-full object-contain" alt="Vibe" />
-                            </div>
-                          </div>
                         </div>
                       </div>
                       <div>
