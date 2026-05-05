@@ -27,7 +27,7 @@ export class ProxyGoogleGenAI {
       
       const endpoint = apiUrl 
         ? `${apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl}/api/gemini/generateContent` 
-        : `/api/gemini/generateContent`;
+        : `${window.location.origin}/api/gemini/generateContent`;
       
       try {
         console.log(`[ProxyGoogleGenAI] Fetching from: ${endpoint}`);

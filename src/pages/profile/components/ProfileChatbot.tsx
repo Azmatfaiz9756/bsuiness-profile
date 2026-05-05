@@ -155,7 +155,7 @@ Full Profile Context:
 - Socials: ${JSON.stringify(profile?.socials || {})}
 
 Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.
-Keep your responses helpful but very concise for maximum speed.`;
+IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed. Always respond in ${lang?.label || langId}.`;
   };
 
   // Fetch Stock Data if enabled
@@ -630,8 +630,8 @@ Keep your responses helpful but very concise for maximum speed.`;
       } catch(e) {
         errorMsg = "Unparseable error object.";
       }
-      if (errorMsg.includes('API key not valid')) {
-         setMessages(prev => [...prev, { role: 'model', content: 'Connection Error: Invalid API Key on server. Please check environment configuration.' }]);
+      if (errorMsg.includes('API key not valid') || errorMsg.includes('Invalid API Key') || errorMsg.includes('Invalid key')) {
+         setMessages(prev => [...prev, { role: 'model', content: 'Connection Error: Invalid Gemini API Key. Please check the GEMINI_API_KEY on your server or dashboard settings.' }]);
       } else if (errorMsg.includes('Requested entity was not found') || errorMsg.includes('is not found')) {
          setMessages(prev => [...prev, { role: 'model', content: 'Model not found error. Please contact support.' }]);
       } else if (errorMsg.includes('PERMISSION_DENIED') || errorMsg.includes('Missing or insufficient permissions')) {

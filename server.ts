@@ -375,7 +375,11 @@ async function startServer() {
         response = await genAI.models.generateContent({
           model: targetModel,
           contents: contents,
-          config: config
+          config: {
+            ...config,
+            maxOutputTokens: 400,
+            temperature: 0.1
+          }
         });
       } catch (err: any) {
         if (targetModel === "gemini-3-flash-preview") {
@@ -384,7 +388,11 @@ async function startServer() {
           response = await genAI.models.generateContent({
             model: targetModel,
             contents: contents,
-            config: config
+            config: {
+              ...config,
+              maxOutputTokens: 400,
+              temperature: 0.1
+            }
           });
         } else {
           throw err;

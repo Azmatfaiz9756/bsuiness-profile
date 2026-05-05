@@ -658,21 +658,21 @@ function TemplateShowcase() {
       id: 'classic',
       name: 'Classic Modern',
       desc: 'Clean, light, and professional template for modern businesses.',
-      image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=80',
       badge: 'POPULAR'
     },
     {
       id: 'executive',
       name: 'Executive Dark',
       desc: 'Elegant dark mode design with gold accents for a premium feel.',
-      image: 'https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1579389083395-4507e9f4c307?w=800&q=80',
       badge: 'PREMIUM'
     },
     {
       id: 'minimal',
       name: 'Minimal Clean',
       desc: 'Focused on clarity and whitespace for a minimalist aesthetic.',
-      image: 'https://images.unsplash.com/photo-1451187530220-4c23ba3e0c60?w=800&q=80',
+      image: 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80',
       badge: 'NEW'
     }
   ];

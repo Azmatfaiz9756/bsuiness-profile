@@ -61,6 +61,8 @@ TRANSLATION FEATURES:
 ${translationInfo}
 ${stockContext}
 
+IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed. Always respond in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+
 SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
 - No formal Urdu: 'janab', 'khidmat', 'nawazish', 'bayan', 'ittefaq', 'naye daur', 'maharat', 'guftagu', 'faraham', 'jadid', 'mutabiq', 'silsile', 'lehja' - Yeh sab bilkul use na karein.
 - No formal Hindi/Sanskrit: 'vistar', 'mukhya', 'adhik', 'yogdaan', 'parinaam' - Yeh sab bhi delete na karein.
@@ -89,6 +91,8 @@ Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`;
 ${translationInfo}
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة خليجية بيضاء أو فصحى مهذبة).
 
+IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed.
+
 ${stockContext}
 
 السياق: ${profile?.bio}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`;
@@ -98,6 +102,8 @@ ${stockContext}
 ${translationInfo}
 Your tone should be helpful, clear, and professional. 
 You MUST communicate primarily in ${lang?.label || langId}.
+
+IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed.
 
 ${stockContext}
 
