@@ -37,12 +37,14 @@ function DashboardChatTester({ profile }: { profile: any }) {
   const getPrompt = (langId: string) => {
     let stockContext = "";
     if (profile?.stockSyncEnabled && stockData) {
+      // Truncate stock data to prevent 413 errors while still providing context
+      const truncatedStock = stockData.length > 5000 ? stockData.substring(0, 5000) + "... [Truncated]" : stockData;
       stockContext = `
 IMPORTANT - REAL-TIME STOCK/INVENTORY DATA:
-The following is current warehouse stock and pricing information. Use this to answer queries about availability and pricing:
-${stockData}
+The following is warehouse stock and pricing information (first 5k chars):
+${truncatedStock}
 
-If a user asks about a product not listed here, say you don't have information about its current stock but can take an inquiry.
+If a user asks about a product not listed above, say you don't have information about its current stock but can take an inquiry.
 ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above." : "Do NOT share numerical prices unless explicitly permitted by the user, just confirm availability."}
 `;
     }
@@ -55,8 +57,13 @@ TRANSLATION FEATURES:
 - If asked specifically to translate something, perform the translation accurately.
 `;
 
+    const truncate = (str: string, len: number) => {
+      if (!str) return 'N/A';
+      return str.length > len ? str.substring(0, len) + '...' : str;
+    };
+
     if (langId === 'hi') {
-      return `Aap ${profile.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+      return `Aap ${truncate(profile.name, 100)} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
 
 ${translationInfo}
 ${stockContext}
@@ -80,14 +87,14 @@ INKI JAGAH YE EK DUM SIMPLE WORDS USE KAREIN:
 Aapka andaaz bilkul friendly aur normal insaan jaisa hona chahiye, koi shayarana ya bohot formal baat nahi karni.
 
 Greeting Style:
-"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? Kya aap ${profile.name} sir se kisi khass topic pe baat-cheet karna chahte hain, ya humari company ${profile.company} ki services ke baare mein kuch jaanna chahte hain?"
+"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? Kya aap ${truncate(profile.name, 50)} sir se kisi khass topic pe baat-cheet karna chahte hain, ya humari company ${truncate(profile.company, 50)} ki services ke baare mein kuch jaanna chahte hain?"
 
-Context: Aap ${profile.name} (Work: ${profile.title} at ${profile.company}) ko represent karte hain.
-Bio: ${profile.bio}. Contact email: ${profile.email}. Phone: ${profile.phone}.`;
+Context: Aap ${truncate(profile.name, 100)} (Work: ${truncate(profile.title, 100)} at ${truncate(profile.company, 100)}) ko represent karte hain.
+Bio: ${truncate(profile.bio, 1000)}. Contact email: ${profile.email}. Phone: ${profile.phone}. WhatsApp: ${profile.whatsapp || profile.phone}.`;
     }
 
     if (langId === 'ar') {
-      return `أنت مساعد ذكي محترف لـ ${profile?.name} (المسمى الوظيفي: ${profile?.title} في ${profile?.company}).
+      return `أنت مساعد ذكي محترف لـ ${truncate(profile?.name, 100)} (المسمى الوظيفي: ${truncate(profile?.title, 100)} في ${truncate(profile?.company, 100)}).
 ${translationInfo}
 يجب أن يكون أسلوبك محترماً ولبقاً باللغة العربية (لهجة خليجية بيضاء أو فصحى مهذبة).
 
@@ -95,10 +102,10 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
 ${stockContext}
 
-السياق: ${profile?.bio}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`;
+السياق: ${truncate(profile?.bio, 1000)}. التواصل: البريد: ${profile?.email}, الهاتف: ${profile?.phone}.`;
     }
     const lang = CHAT_LANGUAGES.find(l => l.id === langId);
-    return `You are a professional AI business assistant for ${profile?.name} (Title: ${profile?.title} at ${profile?.company}).
+    return `You are a professional AI business assistant for ${truncate(profile?.name, 100)} (Title: ${truncate(profile?.title, 100)} at ${truncate(profile?.company, 100)}).
 ${translationInfo}
 Your tone should be helpful, clear, and professional. 
 You MUST communicate primarily in ${lang?.label || langId}.
@@ -107,7 +114,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
 ${stockContext}
 
-Context: ${profile?.bio}. Contact: Email: ${profile?.email}, Phone: ${profile?.phone}.`;
+Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Phone: ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}.`;
   };
 
   useEffect(() => {
@@ -1031,7 +1038,7 @@ export default function OwnerDashboard() {
               )}
                {canSeeAnalytics && (
                 <button onClick={() => setSidebarTab('marketing')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'marketing' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-                  <Megaphone size={18} /> <span className="flex-1 text-left tracking-tight">Broadcasting</span>
+                  <Megaphone size={18} /> <span className="flex-1 text-left tracking-tight">WhatsApp Marketing</span>
                 </button>
               )}
             </div>
@@ -2497,9 +2504,17 @@ export default function OwnerDashboard() {
                                <button className="p-2.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shadow-sm shadow-blue-600/5">
                                  <Mail size={18} />
                                </button>
-                               <button className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors shadow-sm shadow-emerald-600/5">
-                                 <Phone size={18} />
-                               </button>
+                               {apt.phone && (
+                                 <a 
+                                   href={`https://wa.me/${apt.phone.replace(/\D/g, '')}`}
+                                   target="_blank"
+                                   rel="noreferrer"
+                                   className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors shadow-sm shadow-emerald-600/5 flex items-center justify-center group/wa"
+                                   title="Chat on WhatsApp"
+                                 >
+                                   <MessageCircle size={18} className="group-hover/wa:scale-110 transition-transform" />
+                                 </a>
+                               )}
                             </div>
                          </div>
                        </div>

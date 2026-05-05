@@ -69,20 +69,27 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const getPrompt = (langId: string) => {
     let stockContext = "";
     if (profile?.stockSyncEnabled && stockData) {
+      // Truncate stock data to prevent 413 errors while still providing context
+      const truncatedStock = stockData.length > 5000 ? stockData.substring(0, 5000) + "... [Truncated]" : stockData;
       stockContext = `
 IMPORTANT - REAL-TIME STOCK/INVENTORY DATA:
-The following is current warehouse stock and pricing information. Use this to answer queries about availability and pricing:
-${stockData}
+The following is warehouse stock and pricing information (first 5k chars):
+${truncatedStock}
 
-If a user asks about a product not listed here, say you don't have information about its current stock but can take an inquiry.
+If a user asks about a product not listed above, say you don't have information about its current stock but can take an inquiry.
 ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above." : "Do NOT share numerical prices unless explicitly permitted by the user, just confirm availability."}
 `;
     }
 
+    const truncate = (str: string, len: number) => {
+      if (!str) return 'N/A';
+      return str.length > len ? str.substring(0, len) + '...' : str;
+    };
+
     const translationInfo = `
 TRANSLATION & LEAD GENERATION RULES:
 - You are a polyglot AI assistant. You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
-- BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}.
+- BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${truncate(profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; '), 1500)}.
 - PRICE POLICY: Do NOT provide specific prices or numerical cost estimates. If the user asks for price/cost, tell them you don't have the exact pricing but can take their details for a custom quote.
 - LEAD CAPTURE: Whenever a user asks about services, prices, or working with the business, you MUST ask for their Name and Mobile Number.
 - TOOL USAGE: Once you have the user's name and phone number (mobile), call the 'send_inquiry' tool to save it as a lead.
@@ -108,12 +115,12 @@ Greeting Style:
 "Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? ${profile?.name} sir ki services ya kisi inquiry ke liye main aapki help kar sakta hoon."
 
 Business Details:
-- Name: ${profile?.name}
-- Work: ${profile?.title}
-- Company: ${profile?.company}
-- Bio: ${profile?.bio}
-- Services: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}
-- Contact: Email ${profile?.email}, Phone ${profile?.phone}`;
+- Name: ${truncate(profile?.name, 100)}
+- Work: ${truncate(profile?.title, 100)}
+- Company: ${truncate(profile?.company, 100)}
+- Bio: ${truncate(profile?.bio, 1000)}
+- Services: ${truncate(profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; '), 1500)}
+- Contact: Email ${profile?.email}, Phone ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}`;
     }
     
     if (langId === 'ar') {
@@ -129,7 +136,7 @@ ${stockContext}
 - الشركة: ${profile?.company}
 - الخبرات: ${profile?.experience}
 - الخدمات: ${profile?.services?.map((s: any) => `${s.title}`).join('، ') || 'N/A'}
-- التواصل: ${profile?.email}, ${profile?.phone}
+- التواصل: ${profile?.email}, ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}
 
 ساعد الزوار في التعرف على الخدمات والتواصل.`;
     }
@@ -143,16 +150,17 @@ You MUST communicate primarily in ${lang?.label || langId}.
 ${stockContext}
 
 Full Profile Context:
-- Name: ${profile?.name}
-- Title: ${profile?.title}
-- Company: ${profile?.company}
-- Bio: ${profile?.bio}
-- Skills: ${profile?.skills?.join(', ') || 'N/A'}
-- Experience: ${profile?.experience}
-- Address: ${profile?.address}
-- Services: ${profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; ') || 'N/A'}
+- Name: ${truncate(profile?.name, 100)}
+- Title: ${truncate(profile?.title, 100)}
+- Company: ${truncate(profile?.company, 100)}
+- Bio: ${truncate(profile?.bio, 1000)}
+- Skills: ${truncate(profile?.skills?.join(', '), 500)}
+- Experience: ${truncate(profile?.experience, 1000)}
+- Address: ${truncate(profile?.address, 300)}
+- WhatsApp: ${profile?.whatsapp || profile?.phone}
+- Services: ${truncate(profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; '), 1500)}
 - Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
-- Socials: ${JSON.stringify(profile?.socials || {})}
+- Socials: ${JSON.stringify(profile?.socials || {}).substring(0, 500)}
 
 Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.
 IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed. Always respond in ${lang?.label || langId}.`;

@@ -25,6 +25,13 @@ async function startServer() {
   app.use(compression());
   app.use(cors());
 
+  // Static assets caching (1 year)
+  app.use(express.static(path.join(process.cwd(), 'dist'), {
+    maxAge: '1y',
+    etag: true,
+    lastModified: true,
+  }));
+
   // Redirect www to non-www
   app.use((req, res, next) => {
     const host = req.get('x-forwarded-host') || req.get('host') || '';
