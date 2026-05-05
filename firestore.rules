@@ -74,15 +74,23 @@ service cloud.firestore {
     match /profiles/{docId} {
       allow read: if true;
       allow create: if isOwner(docId) && isValidProfile(incoming());
-      allow update: if (isOwner(docId) || isAdmin()) && 
-                    isValidProfile(incoming()) &&
-                    incoming().ownerId == existing().ownerId &&
-                    incoming().diff(existing()).affectedKeys().hasOnly([
-                      'name', 'bio', 'photoURL', 'whatsapp', 'quickPayAmount', 
-                      'quickPayCurrency', 'templateId', 'updatedAt', 'services', 
-                      'socials', 'testimonials', 'faqs', 'gallery', 'videos',
-                      'meetingUrl', 'documentUrl', 'documentButtonText', 'customButtons'
-                    ]);
+      allow update: if 
+        // Action: Increment Views (Public)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['views']) && 
+         (incoming().views == existing().get('views', 0) + 1)) ||
+        // Action: Content Update (Owner/Admin)
+        ((isOwner(docId) || isAdmin()) && 
+         isValidProfile(incoming()) &&
+         incoming().ownerId == existing().ownerId &&
+         incoming().diff(existing()).affectedKeys().hasOnly([
+           'name', 'bio', 'photoURL', 'whatsapp', 'quickPayAmount', 
+           'quickPayCurrency', 'templateId', 'updatedAt', 'services', 
+           'socials', 'testimonials', 'faqs', 'gallery', 'videos',
+           'meetingUrl', 'documentUrl', 'documentButtonText', 'customButtons',
+           'views', 'slug', 'title', 'company', 'location', 'phone', 'email', 
+           'website', 'address', 'seo', 'template', 'active', 'profession', 'skills',
+           'bannerUrl', 'bannerVideo', 'themeColor', 'isPrivate', 'profileViews'
+         ]));
       allow delete: if isOwner(docId) || isAdmin();
     }
 

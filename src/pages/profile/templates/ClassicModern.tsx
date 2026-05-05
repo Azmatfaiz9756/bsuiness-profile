@@ -301,8 +301,7 @@ export default function ClassicModern({
           minHeight: "100vh",
           position: "relative",
           boxShadow: "0 0 20px rgba(0,0,0,0.05)",
-          overflow: "hidden",
-          overscrollBehaviorY: "contain",
+          overflowX: "hidden",
         }}
       >
         {/* Animated Background Icons based on Profession */}
@@ -319,7 +318,7 @@ export default function ClassicModern({
             background: profile.bannerVideo || profile.bannerUrl
               ? "#000"
               : themeVars.bg,
-            height: 180,
+            height: 220,
             position: "relative",
             borderBottomLeftRadius: 30,
             borderBottomRightRadius: 30,
@@ -337,22 +336,27 @@ export default function ClassicModern({
           {videoId ? (
             <div 
               onClick={toggleAudio}
-              style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer' }}
+              style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
             >
-              <iframe
-                ref={iframeRef}
-                style={{
-                  width: '100%',
-                  height: '180%',
-                  marginTop: '-30%',
-                  pointerEvents: 'none'
-                }}
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
-                frameBorder="0"
-                allow="autoplay; encrypted-media"
-              ></iframe>
-              <div style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '50%', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '240%', 
+                height: '240%',
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'none'
+              }}>
+                <iframe
+                  ref={iframeRef}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                  }}
+                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
+                  frameBorder="0"
+                  allow="autoplay; encrypted-media"
+                ></iframe>
               </div>
             </div>
           ) : profile.bannerUrl && !profile.bannerVideo && (

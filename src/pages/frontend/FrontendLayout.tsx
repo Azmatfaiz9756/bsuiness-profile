@@ -67,7 +67,7 @@ export const FrontendLayout = () => {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       
       {/* Promotion Banner */}
-      {!isShop && (
+      {!isShop && !isMobileMenuOpen && (
         <div className="bg-slate-900 text-white py-2.5 relative overflow-hidden border-b border-slate-800 shadow-xl">
           <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
           <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
@@ -176,14 +176,14 @@ export const FrontendLayout = () => {
 
           {/* Mobile Toggle Button */}
           <button className="md:hidden p-2 -mr-2 text-slate-600 shrink-0 select-none" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            <Menu size={24} />
           </button>
         </div>
       )}
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && !isShop && (
-        <div className="md:hidden fixed inset-0 top-[64px] bg-white z-[60] overflow-y-auto border-t border-slate-100 shadow-xl flex flex-col">
+        <div className="md:hidden fixed inset-0 top-[72px] bg-white z-[48] overflow-y-auto border-t border-slate-100 shadow-xl flex flex-col">
           <div className="flex flex-col p-4 gap-2">
             <Link onClick={closeMenu} to="/" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/')}`}>Directory</Link>
             <Link onClick={closeMenu} to="/templates" className={`p-3 rounded-lg text-base font-medium text-slate-700 ${isActive('/templates')}`}>Templates</Link>

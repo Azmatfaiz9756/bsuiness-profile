@@ -29,6 +29,16 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const [loading, setLoading] = useState(!initialProfile);
   const [showQR, setShowQR] = useState(false);
 
+  // Handle pull-to-refresh: disable on profile ONLY as requested
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const originalStyle = document.body.style.overscrollBehaviorY;
+    document.body.style.overscrollBehaviorY = 'none';
+    return () => {
+      document.body.style.overscrollBehaviorY = originalStyle;
+    };
+  }, []);
+
   // Fetch from Firebase
   useEffect(() => {
     const fetchProfile = async () => {

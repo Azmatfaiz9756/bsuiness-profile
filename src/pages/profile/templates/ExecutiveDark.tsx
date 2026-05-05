@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
@@ -30,7 +30,9 @@ import {
   Link as LinkIcon,
   UserPlus,
   Share2,
-  Bird
+  Bird,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -56,6 +58,19 @@ export default function ExecutiveDark({
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const toggleAudio = () => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      const command = isMuted ? 'unMute' : 'mute';
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: '' }),
+        '*'
+      );
+      setIsMuted(!isMuted);
+    }
+  };
 
   const shareUrl = user ? `${window.location.origin}${window.location.pathname}?ref=${user.uid}` : window.location.href.split('?')[0];
 
@@ -172,7 +187,6 @@ export default function ExecutiveDark({
           position: "relative",
           borderLeft: "1px solid #222",
           borderRight: "1px solid #222",
-          overscrollBehaviorY: "contain",
         }}
       >
         {(profile.bannerVideo || profile.bannerUrl) && (
@@ -185,7 +199,41 @@ export default function ExecutiveDark({
               zIndex: 0,
             }}
           >
-            {profile.bannerVideo ? (
+            {profile.bannerVideo?.includes('youtube.com') || profile.bannerVideo?.includes('youtu.be') ? (
+              (() => {
+                const videoId = profile.bannerVideo.includes('v=') 
+                  ? profile.bannerVideo.split('v=')[1]?.split('&')[0]
+                  : profile.bannerVideo.split('/').pop()?.split('?')[0];
+                
+                return (
+                  <div 
+                    onClick={toggleAudio}
+                    style={{ position: 'absolute', inset: 0, overflow: 'hidden', cursor: 'pointer', zIndex: 1 }}
+                  >
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '240%',
+                      height: '240%',
+                      transform: 'translate(-50%, -50%)',
+                      pointerEvents: 'none'
+                    }}>
+                      <iframe
+                        ref={iframeRef}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                        }}
+                        src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${videoId}`}
+                        frameBorder="0"
+                        allow="autoplay; encrypted-media"
+                      ></iframe>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : profile.bannerVideo ? (
               <video
                 autoPlay
                 loop

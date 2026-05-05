@@ -43,8 +43,6 @@
 }
 
 html, body {
-  overscroll-behavior-y: none;
-  touch-action: pan-x pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
