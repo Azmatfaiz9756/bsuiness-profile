@@ -192,8 +192,19 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && 
-                    (isAdmin() || incoming().diff(existing()).affectedKeys().hasOnly(['name', 'displayName', 'photoURL', 'lastLogin', 'email', 'phone', 'walletBalance', 'totalEarned', 'totalSpent', 'plan']));
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (
+        isAdmin() || (
+          // Owner can update these fields
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'displayName', 'photoURL', 'lastLogin', 'email', 'phone', 
+            'walletBalance', 'totalEarned', 'totalSpent', 'plan'
+          ]) &&
+          // Sensitive fields must NOT change
+          (!('role' in incoming()) || (incoming().role == existing().get('role', 'Owner'))) &&
+          (!('isSuperAdmin' in incoming()) || (incoming().isSuperAdmin == existing().get('isSuperAdmin', false))) &&
+          (!('id' in incoming()) || (incoming().id == existing().id))
+        )
+      );
     }
 
     match /join_notifications/{id} {

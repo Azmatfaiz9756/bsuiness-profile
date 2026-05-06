@@ -5,6 +5,8 @@ import { doc, getDoc, onSnapshot, collection, query, where, orderBy, limit } fro
 
 export const AppContext = createContext<any>(null);
 
+const SUPER_ADMINS = ['azmatfaiz9756@gmail.com', 'admin@example.com'];
+
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -16,6 +18,40 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [joinNotifications, setJoinNotifications] = useState<any[]>([]);
 
   useEffect(() => {
+    enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  // In production, we might want a toast too
+}
     const SUPER_ADMINS = ['azmatfaiz9756@gmail.com', 'admin@example.com'];
     const userEmail = user?.email?.toLowerCase() || '';
     if (user && SUPER_ADMINS.some(admin => admin.toLowerCase() === userEmail)) {
@@ -231,42 +267,56 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthLoading(false);
       
       if (u) {
+        const userEmail = u.email?.toLowerCase() || '';
+        const isAdmin = SUPER_ADMINS.some(admin => admin.toLowerCase() === userEmail);
+
         // Record join in Firestore for all methods (Gmail, Phone)
         import('firebase/firestore').then(async ({ doc, getDoc, setDoc, addDoc, collection, serverTimestamp }) => {
           const userDocRef = doc(db, 'users', u.uid);
-          const userDoc = await getDoc(userDocRef);
           
-          if (!userDoc.exists()) {
-            const initialData = {
-              email: u.email || '',
-              phone: u.phoneNumber || '',
-              displayName: u.displayName || '',
-              photoURL: u.photoURL || '',
-              createdAt: serverTimestamp(),
-              lastLogin: serverTimestamp(),
-              walletBalance: 0,
-              totalEarned: 0,
-              totalSpent: 0
-            };
-            await setDoc(userDocRef, initialData, { merge: true });
-
-            await addDoc(collection(db, 'join_notifications'), {
-              userId: u.uid,
-              userName: u.displayName || u.phoneNumber || 'New User',
-              userEmail: u.email || u.phoneNumber || '',
-              createdAt: serverTimestamp(),
-              plan: 'Free'
-            });
+          try {
+            const userDoc = await getDoc(userDocRef);
             
-            setUsersCount(prev => prev + 1);
-          } else {
-            const updateData = { 
-              lastLogin: serverTimestamp(),
-              // Sync email/phone if missing
-              ...(u.email && !userDoc.data()?.email ? { email: u.email } : {}),
-              ...(u.phoneNumber && !userDoc.data()?.phone ? { phone: u.phoneNumber } : {})
-            };
-            await setDoc(userDocRef, updateData, { merge: true });
+            if (!userDoc.exists()) {
+              const initialData = {
+                id: u.uid,
+                email: u.email || '',
+                phone: u.phoneNumber || '',
+                displayName: u.displayName || u.phoneNumber || 'New User',
+                name: u.displayName || u.phoneNumber || 'User',
+                photoURL: u.photoURL || '',
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+                walletBalance: 0,
+                totalEarned: 0,
+                totalSpent: 0,
+                plan: 'Free',
+                role: 'Owner',
+                isSuperAdmin: isAdmin
+              };
+              await setDoc(userDocRef, initialData);
+
+              await addDoc(collection(db, 'join_notifications'), {
+                userId: u.uid,
+                userName: u.displayName || u.phoneNumber || 'New User',
+                userEmail: u.email || u.phoneNumber || '',
+                createdAt: serverTimestamp(),
+                plan: 'Free'
+              }).catch(err => handleFirestoreError(err, OperationType.WRITE, 'join_notifications'));
+              
+              setUsersCount(prev => prev + 1);
+            } else {
+              const updateData = { 
+                lastLogin: serverTimestamp(),
+                // Sync email/phone if missing
+                ...(u.email && !userDoc.data()?.email ? { email: u.email } : {}),
+                ...(u.phoneNumber && !userDoc.data()?.phone ? { phone: u.phoneNumber } : {})
+              };
+              // Note: We don't update isSuperAdmin here to avoid permissions issues if user is not yet recognized as admin
+              await setDoc(userDocRef, updateData, { merge: true });
+            }
+          } catch (err) {
+            handleFirestoreError(err, OperationType.WRITE, `users/${u.uid}`);
           }
         });
 

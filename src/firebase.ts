@@ -17,39 +17,7 @@ export const googleProvider = new GoogleAuthProvider();
 export const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    // Check if user is new and record join
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userDocRef);
-
-    if (!userDoc.exists()) {
-      // Create user document
-      await setDoc(userDocRef, {
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        createdAt: serverTimestamp(),
-        lastLogin: serverTimestamp(),
-        walletBalance: 0
-      }, { merge: true });
-
-      // Add to join notifications for admin panel
-      await addDoc(collection(db, 'join_notifications'), {
-        userId: user.uid,
-        userName: user.displayName || 'New User',
-        userEmail: user.email,
-        createdAt: serverTimestamp(),
-        plan: 'Free' // Default plan
-      });
-    } else {
-      // Update last login
-      await setDoc(userDocRef, {
-        lastLogin: serverTimestamp()
-      }, { merge: true });
-    }
-
-    return user;
+    return result.user;
   } catch (error) {
     console.error('Login error', error);
     throw error;
