@@ -68,7 +68,7 @@ export const FrontendLayout = () => {
       
       {/* Promotion Banner */}
       {!isShop && !isMobileMenuOpen && siteSettings?.trialEnabled && (
-        <div className="text-white py-2.5 relative overflow-hidden border-b border-slate-800 shadow-xl" style={{ backgroundColor: siteSettings.bannerColor || '#0f172a' }}>
+        <div className="text-white py-2.5 relative overflow-hidden border-b border-slate-800 shadow-xl" style={{ backgroundColor: siteSettings?.bannerColor || '#0f172a' }}>
           <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#0f172a]/20 to-transparent z-10 pointer-events-none"></div>
           <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#0f172a]/20 to-transparent z-10 pointer-events-none"></div>
           
@@ -77,10 +77,10 @@ export const FrontendLayout = () => {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex items-center gap-12 px-6 font-sans">
                 <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white">
-                   {siteSettings.trialHeadline || `HURRY UP! GET ${siteSettings.trialMonths || 1} MONTH FREE TRIAL ON PRO VERSION`}
+                   {siteSettings?.trialHeadline || `HURRY UP! GET ${siteSettings?.trialMonths || 1} MONTH FREE TRIAL ON PRO VERSION`}
                 </span>
-                <Link to="/plans" className="text-[10px] md:text-xs font-black uppercase tracking-widest bg-white text-[#2563eb] px-4 py-1 rounded-full hover:bg-slate-100 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2" style={{ color: siteSettings.bannerColor || '#2563eb' }}>
-                  <Zap size={10} fill="currentColor" /> {siteSettings.trialBtnText || 'Claim Now'}
+                <Link to="/plans" className="text-[10px] md:text-xs font-black uppercase tracking-widest bg-white text-[#2563eb] px-4 py-1 rounded-full hover:bg-slate-100 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2" style={{ color: siteSettings?.bannerColor || '#2563eb' }}>
+                  <Zap size={10} fill="currentColor" /> {siteSettings?.trialBtnText || 'Claim Now'}
                 </Link>
                 <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white opacity-40">
                   <ShieldCheck size={14} className="shrink-0" /> 

@@ -119,6 +119,7 @@ function ROISummary() {
 }
 
 function HeroSection() {
+  const { siteSettings } = useAppContext();
   const titleWords = ["VIBE", "DIGITAL", "CONNECT."];
   const subTitleText = "Elevate your networking game. No apps, no paper. Just seamless digital profile exchange via NFC or QR.";
   const subTitleWords = subTitleText.split(" ");
@@ -257,7 +258,7 @@ function HeroSection() {
                   to="/plans"
                   className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-black py-4 px-10 rounded-2xl transition-all flex justify-center items-center text-base uppercase tracking-wider"
                 >
-                  Start {siteSettings.trialMonths || 1}-Month Trial
+                  Start {siteSettings?.trialMonths || 1}-Month Trial
                 </Link>
               )}
             </div>
@@ -722,7 +723,7 @@ function TemplateShowcase() {
 }
 
 export default function FrontendHome() {
-  const { user, setIsLoginModalOpen, profiles: staticProfiles, selectedCountry } = useAppContext();
+  const { user, setIsLoginModalOpen, profiles: staticProfiles, selectedCountry, siteSettings } = useAppContext();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Business Types");
   const [activeCity, setActiveCity] = useState("All Cities");
@@ -841,26 +842,32 @@ export default function FrontendHome() {
 
       {/* Limited Offer Banner */}
       {siteSettings?.trialEnabled && (
-        <div className="text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden" style={{ backgroundColor: siteSettings.bannerColor || '#2563eb' }}>
+        <div className="text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden" style={{ backgroundColor: siteSettings?.bannerColor || '#2563eb' }}>
           <motion.div 
             animate={{ scale: [1, 1.05, 1] }} 
             transition={{ duration: 1, repeat: Infinity }}
             className="bg-white px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
-            style={{ color: siteSettings.bannerColor || '#2563eb' }}
+            style={{ color: siteSettings?.bannerColor || '#2563eb' }}
           >
             Limited Offer
           </motion.div>
           <p className="text-sm font-black uppercase tracking-tight m-0">
-            {siteSettings.trialHeadline || `Hurry Up! Get ${siteSettings.trialMonths || 1} Month FREE Trial on PRO Version`}
+            {siteSettings?.trialHeadline || `Hurry Up! Get ${siteSettings?.trialMonths || 1} Month FREE Trial on PRO Version`}
           </p>
-          <Link to="/plans" className="text-white border border-white/40 hover:bg-white transition-all px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ '--hover-color': siteSettings.bannerColor || '#2563eb' } as any}>
-            {siteSettings.trialBtnText || 'Claim Now'}
+          <Link 
+            to="/plans" 
+            className="text-white border border-white/40 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+            onMouseEnter={(e) => {
+              (e.currentTarget as any).style.backgroundColor = 'white';
+              (e.currentTarget as any).style.color = siteSettings?.bannerColor || '#2563eb';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as any).style.backgroundColor = 'transparent';
+              (e.currentTarget as any).style.color = 'white';
+            }}
+          >
+            {siteSettings?.trialBtnText || 'Claim Now'}
           </Link>
-          <style>{`
-            a[style*="--hover-color"]:hover {
-              color: var(--hover-color) !important;
-            }
-          `}</style>
         </div>
       )}
 

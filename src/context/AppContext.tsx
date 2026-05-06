@@ -124,7 +124,13 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
       { id: 'premium', name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
       { id: 'enterprise', name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
-    ]
+    ],
+    trialEnabled: false,
+    trialMonths: 1,
+    trialPlans: ['Pro'],
+    bannerColor: '#2563eb',
+    trialHeadline: 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION',
+    trialBtnText: 'CLAIM NOW'
   });
 
   useEffect(() => {

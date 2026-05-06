@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp, Key } from 'lucide-react';
+import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp, Key, Sparkles } from 'lucide-react';
 import { db } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
