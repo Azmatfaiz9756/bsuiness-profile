@@ -783,7 +783,7 @@ export default function MinimalClean({
                   </span>
                 </a>
               )}
-              {profile.customButtons &&
+              {Array.isArray(profile.customButtons) &&
                 profile.customButtons.map((btn: any, index: number) => (
                   <a
                     key={index}
@@ -829,7 +829,7 @@ export default function MinimalClean({
 
               {profile.socials?.linkedin && (
                 <a
-                  href={`https://linkedin.com/in/${profile.socials.linkedin}`}
+                  href={`https://linkedin.com/in/${profile?.socials?.linkedin}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -853,7 +853,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.twitter && (
                 <a
-                  href={`https://twitter.com/${profile.socials.twitter}`}
+                  href={`https://twitter.com/${profile?.socials?.twitter}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -877,7 +877,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.instagram && (
                 <a
-                  href={`https://instagram.com/${profile.socials.instagram}`}
+                  href={`https://instagram.com/${profile?.socials?.instagram}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -901,7 +901,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.tiktok && (
                 <a
-                  href={`https://tiktok.com/${profile.socials.tiktok}`}
+                  href={`https://tiktok.com/${profile?.socials?.tiktok}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -925,7 +925,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.facebook && (
                 <a
-                  href={`https://facebook.com/${profile.socials.facebook}`}
+                  href={`https://facebook.com/${profile?.socials?.facebook}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -949,7 +949,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.youtube && (
                 <a
-                  href={`https://youtube.com/${profile.socials.youtube}`}
+                  href={`https://youtube.com/${profile?.socials?.youtube}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -971,6 +971,31 @@ export default function MinimalClean({
                   </span>
                 </a>
               )}
+              {Array.isArray(profile?.socialLinks) && profile.socialLinks.map((link: any, i: number) => (
+                <a
+                  key={`mlsl-${i}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: "none",
+                    color: "#09090b",
+                    fontSize: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <Link2 size={20} color="#71717a" /> {link.label || 'Link'}
+                  </span>
+                  <span style={{ color: "#a1a1aa" }}>
+                    <ArrowUpRight size={16} />
+                  </span>
+                </a>
+              ))}
             </div>
           </div>
 
@@ -1022,12 +1047,12 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {(activeTab === 'home' || activeTab === 'services') && profile.services && profile.services.length > 0 && (
+          {(activeTab === 'home' || activeTab === 'services') && Array.isArray(profile.services) && profile.services.length > 0 && (
             <AccordionItem id="services" title="Services">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
-                {profile.services.map((svc: any, i: number) => (
+              {Array.isArray(profile?.services) && profile.services.map((svc: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1067,12 +1092,12 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {(activeTab === 'home' || activeTab === 'shop') && profile.products && profile.products.length > 0 && (
+          {(activeTab === 'home' || activeTab === 'shop') && Array.isArray(profile.products) && profile.products.length > 0 && (
             <AccordionItem id="shop" title="Products">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
-                {profile.products.map((prod: any, i: number) => (
+              {Array.isArray(profile?.products) && profile.products.map((prod: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1177,9 +1202,8 @@ export default function MinimalClean({
               >
                 <div style={{ overflow: "hidden", paddingBottom: 16 }}>
                   <div className="gallery-slider-minimal">
-                    {profile.gallery &&
-                      [...profile.gallery, ...profile.gallery].map(
-                        (img: string, idx: number) => (
+                    {Array.isArray(profile?.gallery) && [...profile.gallery, ...profile.gallery].map(
+                      (img: string, idx: number) => (
                           <div
                             key={idx}
                             style={{
@@ -1205,45 +1229,44 @@ export default function MinimalClean({
                       )}
                   </div>
                 </div>
-                {profile.videos &&
-                  profile.videos.map((vid: string, idx: number) => (
-                    <div
-                      key={"v" + idx}
-                      style={{
-                        position: "relative",
-                        paddingBottom: "56.25%",
-                        height: 0,
-                        overflow: "hidden",
-                        borderRadius: 12,
-                        background: "#f4f4f5",
-                      }}
-                    >
-                      <iframe
-                        src={vid}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                        }}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title="YouTube Video"
-                      ></iframe>
-                    </div>
-                  ))}
+                    {Array.isArray(profile?.videos) && profile.videos.map((vid: string, idx: number) => (
+                        <div
+                          key={"v" + idx}
+                          style={{
+                            position: "relative",
+                            paddingBottom: "56.25%",
+                            height: 0,
+                            overflow: "hidden",
+                            borderRadius: 12,
+                            background: "#f4f4f5",
+                          }}
+                        >
+                          <iframe
+                            src={vid}
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                            }}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title="YouTube Video"
+                          ></iframe>
+                        </div>
+                      ))}
               </div>
             </AccordionItem>
           )}
 
-          {activeTab === 'home' && profile.testimonials && profile.testimonials.length > 0 && (
+          {activeTab === 'home' && Array.isArray(profile.testimonials) && profile.testimonials.length > 0 && (
             <AccordionItem id="reviews" title="Reviews">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
-                {profile.testimonials.map((test: any, i: number) => (
+              {Array.isArray(profile?.testimonials) && profile.testimonials.map((test: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1313,12 +1336,12 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {activeTab === 'home' && profile.faqs && profile.faqs.length > 0 && (
+          {activeTab === 'home' && Array.isArray(profile.faqs) && profile.faqs.length > 0 && (
             <AccordionItem id="faq" title="FAQ">
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
-                {profile.faqs.map((faq: any, i: number) => (
+              {Array.isArray(profile?.faqs) && profile.faqs.map((faq: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1550,8 +1573,7 @@ export default function MinimalClean({
                     </div>
                   )}
 
-                  {profile.bankAccounts &&
-                    profile.bankAccounts.map((acc: any, i: number) => (
+                  {Array.isArray(profile?.bankAccounts) && profile.bankAccounts.map((acc: any, i: number) => (
                       <div
                         key={i}
                         style={{

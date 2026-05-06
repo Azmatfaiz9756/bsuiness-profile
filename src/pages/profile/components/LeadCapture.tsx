@@ -59,7 +59,7 @@ export default function LeadCapture({ profile }: { profile: any }) {
               ) : (
                 <>
                   <h3 className="text-xl font-extrabold text-slate-900 mb-1">Exchange Contact</h3>
-                  <p className="text-sm text-slate-500 mb-6 font-medium">Share your details with {profile.name.split(' ')[0]}</p>
+                  <p className="text-sm text-slate-500 mb-6 font-medium">Share your details with {String(profile?.name || 'User').split(' ')[0]}</p>
 
                   <div className="flex flex-col gap-4">
                     <div>

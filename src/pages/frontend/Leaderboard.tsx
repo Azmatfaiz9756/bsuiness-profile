@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, TrendingUp, Medal, Star, Flame, Sparkles, User, Briefcase, ExternalLink, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../../context/AppContext';
 import { maskProfileForDirectory } from '../../lib/privacy';
 import { Link } from 'react-router-dom';

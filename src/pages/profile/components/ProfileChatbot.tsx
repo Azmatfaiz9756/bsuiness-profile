@@ -89,7 +89,7 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
     const translationInfo = `
 TRANSLATION & LEAD GENERATION RULES:
 - You are a polyglot AI assistant. You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
-- BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${truncate(profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; '), 1500)}.
+- BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}.
 - PRICE POLICY: Do NOT provide specific prices or numerical cost estimates. If the user asks for price/cost, tell them you don't have the exact pricing but can take their details for a custom quote.
 - LEAD CAPTURE: Whenever a user asks about services, prices, or working with the business, you MUST ask for their Name and Mobile Number.
 - TOOL USAGE: Once you have the user's name and phone number (mobile), call the 'send_inquiry' tool to save it as a lead.
@@ -119,7 +119,7 @@ Business Details:
 - Work: ${truncate(profile?.title, 100)}
 - Company: ${truncate(profile?.company, 100)}
 - Bio: ${truncate(profile?.bio, 1000)}
-- Services: ${truncate(profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; '), 1500)}
+- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}
 - Contact: Email ${profile?.email}, Phone ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}`;
     }
     
@@ -135,7 +135,7 @@ ${stockContext}
 - المسمى الوظيفي: ${profile?.title}
 - الشركة: ${profile?.company}
 - الخبرات: ${profile?.experience}
-- الخدمات: ${profile?.services?.map((s: any) => `${s.title}`).join('، ') || 'N/A'}
+- الخدمات: ${Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}`).join('، ') : 'N/A'}
 - التواصل: ${profile?.email}, ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}
 
 ساعد الزوار في التعرف على الخدمات والتواصل.`;
@@ -154,11 +154,11 @@ Full Profile Context:
 - Title: ${truncate(profile?.title, 100)}
 - Company: ${truncate(profile?.company, 100)}
 - Bio: ${truncate(profile?.bio, 1000)}
-- Skills: ${truncate(profile?.skills?.join(', '), 500)}
+- Skills: ${truncate(Array.isArray(profile?.skills) ? profile.skills.join(', ') : 'N/A', 500)}
 - Experience: ${truncate(profile?.experience, 1000)}
 - Address: ${truncate(profile?.address, 300)}
 - WhatsApp: ${profile?.whatsapp || profile?.phone}
-- Services: ${truncate(profile?.services?.map((s: any) => `${s.title}: ${s.description}`).join('; '), 1500)}
+- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}
 - Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
 - Socials: ${JSON.stringify(profile?.socials || {}).substring(0, 500)}
 

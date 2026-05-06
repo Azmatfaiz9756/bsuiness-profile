@@ -6,47 +6,56 @@ import { Zap, ShieldCheck } from "lucide-react";
 
 export function PromotionBanner() {
   const { siteSettings } = useAppContext();
+  const [currentSlide, setCurrentSlide] = useState(0);
   
   const defaultSlides = [
     { id: 'trial', headline: 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION', btnText: 'CLAIM NOW', link: '/plans', color: '#2563eb' },
     { id: 'bonus', headline: 'WELCOME BONUS! JOIN NOW & GET 10 AED IN YOUR WALLET', btnText: 'JOIN NOW', link: '/', color: '#059669' }
   ];
   
-  const slides = siteSettings?.promotionSlides?.length > 0 
+  const slides = Array.isArray(siteSettings?.promotionSlides) && siteSettings.promotionSlides.length > 0 
     ? siteSettings.promotionSlides 
     : defaultSlides;
 
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
   if (!slides || slides.length === 0) return null;
 
-  // For the marquee effect, we join all headlines
-  const marqueeText = slides.map(s => s.headline).join(" • ");
-  const activeSlide = slides[0]; // Use first slide's color and link as primary
+  const activeSlide = slides[currentSlide];
+
+  if (!activeSlide) return null;
 
   return (
-    <div className="relative z-40 overflow-hidden py-2" style={{ backgroundColor: activeSlide.color || '#0f172a' }}>
-      <div className="flex items-center">
-        <motion.div 
-          animate={{ x: ["0%", "-50%"] }} 
-          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-          className="flex items-center whitespace-nowrap w-max"
-        >
-          {/* Duplicate exactly once for smooth infinite scroll with -50% */}
-          {[1, 2].map((i) => (
-            <div key={i} className="flex items-center gap-10 pr-10">
-              {slides.map((s: any, idx: number) => (
-                <div key={`${i}-${idx}`} className="flex items-center gap-4 text-white">
-                  <div className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border border-white/20">
-                    {s.btnText || 'OFFER'}
-                  </div>
-                  <Link to={s.link || "/plans"} className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] hover:underline transition-all">
-                    {s.headline}
-                  </Link>
-                  <Zap size={10} fill="currentColor" className="text-amber-400" />
-                </div>
-              ))}
+    <div className="relative z-50 overflow-hidden py-3 shadow-lg transition-colors duration-500" style={{ backgroundColor: activeSlide.color || '#0f172a' }}>
+      <div className="max-w-7xl mx-auto px-4">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={currentSlide}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="flex items-center justify-center gap-4 text-white text-center"
+          >
+            <div className="hidden sm:block bg-white/20 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border border-white/30 backdrop-blur-sm">
+              {activeSlide.btnText || 'LIMITED OFFER'}
             </div>
-          ))}
-        </motion.div>
+            <Link to={activeSlide.link || "/plans"} className="text-xs md:text-sm font-black uppercase tracking-wider hover:text-white/80 transition-colors flex items-center gap-2">
+              <Zap size={14} fill="currentColor" className="text-amber-400 animate-pulse" />
+              {activeSlide.headline}
+              <Zap size={14} fill="currentColor" className="text-amber-400 animate-pulse" />
+            </Link>
+            <Link to={activeSlide.link || "/plans"} className="bg-white text-slate-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-opacity-90 transition-all">
+              {activeSlide.btnText || 'CLAIM'}
+            </Link>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

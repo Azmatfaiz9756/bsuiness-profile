@@ -14,11 +14,12 @@ const sampleProfiles = [
     website: "https://nexus-innovations.demo",
     bio: "Visionary tech leader with 15+ years experience building scalable enterprise software solutions and driving digital transformation for globally recognized brands.",
     location: "San Francisco, CA",
-    socialLinks: {
-      linkedin: "https://linkedin.com",
-      twitter: "https://twitter.com",
-      github: "https://github.com"
+    socials: {
+      linkedin: "alex-sterling-demo",
+      twitter: "alexsterling",
+      github: "alexsterling"
     },
+    socialLinks: [],
     themeColor: "#2563eb",
     template: "executive",
     services: [
@@ -40,11 +41,12 @@ const sampleProfiles = [
     website: "https://studioaura.demo",
     bio: "Award-winning creative director specializing in brand identity, typography, and immersive digital experiences that captivate and convert.",
     location: "Milan, Italy",
-    socialLinks: {
-      instagram: "https://instagram.com",
-      behance: "https://behance.net",
-      dribbble: "https://dribbble.com"
+    socials: {
+      instagram: "mia.aura",
+      behance: "miarossi",
+      dribbble: "miarossi"
     },
+    socialLinks: [],
     themeColor: "#ec4899",
     template: "minimal",
     services: [
@@ -66,11 +68,12 @@ const sampleProfiles = [
     website: "https://chenestates.demo",
     bio: "Top 1% producer dedicated to connecting extraordinary clients with exceptional properties in the world's most desirable neighborhoods.",
     location: "New York, NY",
-    socialLinks: {
-      linkedin: "https://linkedin.com",
-      instagram: "https://instagram.com",
-      facebook: "https://facebook.com"
+    socials: {
+      linkedin: "jameschen",
+      instagram: "jameschen.estates",
+      facebook: "jameschen.realtor"
     },
+    socialLinks: [],
     themeColor: "#b45309",
     template: "classic",
     services: [
@@ -92,11 +95,12 @@ const sampleProfiles = [
     website: "https://peakperformance.demo",
     bio: "Certified strength and conditioning specialist helping high performers build resilience, optimize health, and achieve peak physical condition.",
     location: "Austin, TX",
-    socialLinks: {
-      instagram: "https://instagram.com",
-      youtube: "https://youtube.com",
-      tiktok: "https://tiktok.com"
+    socials: {
+      instagram: "sarahfitness",
+      youtube: "sarahjenkinsfit",
+      tiktok: "sarahjenkinsfit"
     },
+    socialLinks: [],
     themeColor: "#ef4444",
     template: "minimal",
     services: [
@@ -118,11 +122,12 @@ const sampleProfiles = [
     website: "https://culinaryalchemy.demo",
     bio: "Michelin-trained chef bringing avant-garde techniques and global flavors to exclusive private dining experiences and curated events.",
     location: "Miami, FL",
-    socialLinks: {
-      instagram: "https://instagram.com",
-      youtube: "https://youtube.com",
-      facebook: "https://facebook.com"
+    socials: {
+      instagram: "diegoalvarez.chef",
+      youtube: "culinaryalchemy",
+      facebook: "chef.diego"
     },
+    socialLinks: [],
     themeColor: "#f59e0b",
     template: "classic",
     services: [

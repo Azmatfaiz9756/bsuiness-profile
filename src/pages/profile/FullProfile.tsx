@@ -9,6 +9,7 @@ import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Share2, Download, MessageCircle } from 'lucide-react';
 import SEO from '../../components/SEO';
+import { PromotionBanner } from '../../components/PromotionBanner';
 
 interface FullProfileProps {
   forcedId?: string;
@@ -53,7 +54,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     "description": profile.bio,
     "image": profile.photo,
     "url": window.location.href,
-    "sameAs": profile.socialLinks?.map((l: any) => l.url) || []
+    "sameAs": Array.isArray(profile.socialLinks) ? profile.socialLinks.map((l: any) => l.url) : []
   } : null;
 
   // Fetch from Firebase
@@ -182,6 +183,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
   return (
     <>
+      <PromotionBanner />
       <SEO 
         title={`${profile.name} | ${profile.company} | Digital Business Card`}
         description={profile.bio || `View ${profile.name}'s professional profile on Vibecard.ae. Connect, scan, and save contact details.`}

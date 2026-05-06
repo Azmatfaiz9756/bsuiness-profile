@@ -16,7 +16,7 @@ export const FrontendLayout = () => {
   const isActive = (path: string) => location.pathname === path ? 'active bg-slate-100' : '';
   
   const isShop = location.pathname === '/shop';
-  const showBanner = !isShop && !isMobileMenuOpen && (siteSettings?.trialEnabled || (siteSettings?.promotionSlides?.length > 0));
+  const showBanner = !isShop && !isMobileMenuOpen;
 
   const [currentLang, setCurrentLang] = useState(user?.language || 'en');
 

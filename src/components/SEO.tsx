@@ -18,7 +18,7 @@ export default function SEO({
   url = "https://vibecard.ae",
   type = "website"
 }: SEOProps) {
-  const siteTitle = title.includes("Vibecard.ae") ? title : `${title} | Vibecard.ae`;
+  const siteTitle = (title || "").includes("Vibecard.ae") ? (title || "") : `${title || "Vibecard.ae"} | Vibecard.ae`;
 
   return (
     <Helmet>

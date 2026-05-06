@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import QRCode from "react-qr-code";
 import { db } from "../../../firebase";
@@ -305,10 +305,14 @@ export default function ClassicModern({
             display: flex;
             gap: 10px;
             width: max-content;
-            animation: slide 15s linear infinite;
+            animation: gallery-slide 20s linear infinite;
           }
           .gallery-slider:hover {
             animation-play-state: paused;
+          }
+          @keyframes gallery-slide {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
           }
         `}
       </style>
@@ -627,9 +631,9 @@ export default function ClassicModern({
                 flexWrap: "wrap",
               }}
             >
-              {profile.socials.linkedin && (
+              {profile?.socials?.linkedin && (
                 <a
-                  href={`https://linkedin.com/in/${profile.socials.linkedin}`}
+                  href={`https://linkedin.com/in/${profile?.socials?.linkedin}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -647,9 +651,9 @@ export default function ClassicModern({
                   <FaLinkedin size={18} />
                 </a>
               )}
-              {profile.socials.twitter && (
+              {profile?.socials?.twitter && (
                 <a
-                  href={`https://twitter.com/${profile.socials.twitter}`}
+                  href={`https://twitter.com/${profile?.socials?.twitter}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -667,9 +671,9 @@ export default function ClassicModern({
                   <FaTwitter size={18} />
                 </a>
               )}
-              {profile.socials.instagram && (
+              {profile?.socials?.instagram && (
                 <a
-                  href={`https://instagram.com/${profile.socials.instagram}`}
+                  href={`https://instagram.com/${profile?.socials?.instagram}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -687,9 +691,9 @@ export default function ClassicModern({
                   <FaInstagram size={18} />
                 </a>
               )}
-              {profile.socials.tiktok && (
+              {profile?.socials?.tiktok && (
                 <a
-                  href={`https://tiktok.com/${profile.socials.tiktok}`}
+                  href={`https://tiktok.com/${profile?.socials?.tiktok}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -707,9 +711,9 @@ export default function ClassicModern({
                   <FaTiktok size={18} />
                 </a>
               )}
-              {profile.socials.facebook && (
+              {profile?.socials?.facebook && (
                 <a
-                  href={`https://facebook.com/${profile.socials.facebook}`}
+                  href={`https://facebook.com/${profile?.socials?.facebook}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -727,9 +731,9 @@ export default function ClassicModern({
                   <FaFacebook size={18} />
                 </a>
               )}
-              {profile.socials.youtube && (
+              {profile?.socials?.youtube && (
                 <a
-                  href={`https://youtube.com/${profile.socials.youtube}`}
+                  href={`https://youtube.com/${profile?.socials?.youtube}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -747,9 +751,9 @@ export default function ClassicModern({
                   <FaYoutube size={18} />
                 </a>
               )}
-              {profile.socials.github && (
+              {profile?.socials?.github && (
                 <a
-                  href={`https://github.com/${profile.socials.github}`}
+                  href={`https://github.com/${profile?.socials?.github}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -767,6 +771,28 @@ export default function ClassicModern({
                   <FaGithub size={18} />
                 </a>
               )}
+              {Array.isArray(profile?.socialLinks) && profile.socialLinks.map((link: any, i: number) => (
+                <a
+                  key={`sl-${i}`}
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={link.label}
+                  style={{
+                    width: 36,
+                    height: 36,
+                    background: "#f3f4f6",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    textDecoration: "none",
+                    color: "#4b5563",
+                  }}
+                >
+                  <Link2 size={18} />
+                </a>
+              ))}
             </div>
           )}
 
@@ -990,7 +1016,7 @@ export default function ClassicModern({
                 {profile.documentButtonText || "Download Document"}
               </a>
             )}
-            {profile.customButtons &&
+            {Array.isArray(profile?.customButtons) &&
               profile.customButtons.map((btn: any, index: number) => (
                 <a
                   key={index}
@@ -1461,7 +1487,7 @@ export default function ClassicModern({
           <div id="services-section">
             <SectionContainer title="Services" icon={<Sparkles size={18} />} id="services">
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.services && profile.services.length > 0 ? (
+              {Array.isArray(profile?.services) && profile.services.length > 0 ? (
                 profile.services.map((svc: any, i: number) => (
                   <div
                     key={i}
@@ -1517,7 +1543,7 @@ export default function ClassicModern({
                 </div>
               )}
 
-              {profile.gallery && profile.gallery.length > 0 && (
+              {profile?.gallery && profile.gallery.length > 0 && (
                 <div style={{ marginTop: 12 }}>
                   <div
                     style={{
@@ -1532,7 +1558,7 @@ export default function ClassicModern({
                   </div>
                   <div style={{ overflow: "hidden", paddingBottom: 10 }}>
                     <div className="gallery-slider">
-                      {[...profile.gallery, ...profile.gallery].map(
+                      {Array.isArray(profile?.gallery) && [...profile.gallery, ...profile.gallery].map(
                         (img: string, idx: number) => (
                           <div
                             key={idx}
@@ -1559,7 +1585,7 @@ export default function ClassicModern({
                       )}
                     </div>
                   </div>
-                  {profile.videos &&
+                  {Array.isArray(profile?.videos) &&
                     profile.videos.map((vid: string, idx: number) => (
                       <div
                         key={"v" + idx}
@@ -1592,7 +1618,7 @@ export default function ClassicModern({
                 </div>
               )}
 
-              {profile.team && profile.team.length > 0 && (
+              {profile?.team && profile.team.length > 0 && (
                 <div style={{ marginTop: 8 }}>
                   <h3
                     style={{
@@ -1610,7 +1636,7 @@ export default function ClassicModern({
                       gap: 10,
                     }}
                   >
-                    {profile.team.map((member: any, i: number) => (
+                    {Array.isArray(profile?.team) && profile.team.map((member: any, i: number) => (
                       <div
                         key={`tm-${i}`}
                         style={{
@@ -1700,7 +1726,7 @@ export default function ClassicModern({
                       gap: 10,
                     }}
                   >
-                    {profile.testimonials.map((test: any, i: number) => (
+                    {Array.isArray(profile?.testimonials) && profile.testimonials.map((test: any, i: number) => (
                       <div
                         key={`ts-${i}`}
                         style={{
@@ -1764,7 +1790,7 @@ export default function ClassicModern({
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {profileJobs.map((job: any) => (
+                  {Array.isArray(profileJobs) && profileJobs.map((job: any) => (
                     <div key={job.id} style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: 16, background: '#f8fafc' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                         <h4 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>{job.title}</h4>
@@ -1834,7 +1860,7 @@ export default function ClassicModern({
           {(activeTab === 'home' || activeTab === 'shop') && hasProducts && (
             <SectionContainer title="Store" icon={<ShoppingBag size={18} />}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.products && profile.products.length > 0 ? (
+              {Array.isArray(profile?.products) && profile.products.length > 0 ? (
                 profile.products.map((prod: any, i: number) => (
                   <div
                     key={i}
@@ -1948,7 +1974,7 @@ export default function ClassicModern({
           {activeTab === 'home' && hasFaqs && (
             <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {profile.faqs.map((faq: any, i: number) => (
+              {Array.isArray(profile?.faqs) && profile.faqs.map((faq: any, i: number) => (
                 <div
                   key={i}
                   style={{
@@ -2016,7 +2042,7 @@ export default function ClassicModern({
                         gap: 12,
                       }}
                     >
-                      {profile.paymentLinks.map((link: any, i: number) => (
+                      {Array.isArray(profile?.paymentLinks) && profile.paymentLinks.map((link: any, i: number) => (
                         <div
                           key={`pl-${i}`}
                           style={{
@@ -2118,7 +2144,7 @@ export default function ClassicModern({
                         gap: 16,
                       }}
                     >
-                      {profile.bankAccounts.map((acc: any, i: number) => (
+                      {Array.isArray(profile?.bankAccounts) && profile.bankAccounts.map((acc: any, i: number) => (
                         <div
                           key={i}
                           style={{
@@ -2325,7 +2351,7 @@ export default function ClassicModern({
           {activeTab === 'home' && hasTestimonials && (
             <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {profile.testimonials.map((test: any, i: number) => (
+                {Array.isArray(profile.testimonials) && profile.testimonials.map((test: any, i: number) => (
                   <div
                     key={i}
                     style={{
