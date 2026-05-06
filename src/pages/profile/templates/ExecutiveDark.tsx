@@ -126,7 +126,9 @@ export default function ExecutiveDark({
   };
 
   const handleSave = () => {
-    const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL:${profile.phone}\nEMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
+    let vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}${profile.name2 ? ' & ' + profile.name2 : ''}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL;TYPE=CELL:${profile.phone}\n`;
+    if (profile.phone2) vcard += `TEL;TYPE=CELL:${profile.phone2}\n`;
+    vcard += `EMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
     const blob = new Blob([vcard], { type: "text/vcard" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -786,13 +788,116 @@ export default function ExecutiveDark({
                       marginBottom: 4,
                     }}
                   >
-                    Mobile
+                    {profile.name2 ? profile.name.split(' ')[0] : 'Mobile'}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
                     {profile.phone}
                   </div>
                 </div>
               </a>
+              {profile.phone2 && (
+                <a
+                  href={`tel:${profile.phone2}`}
+                  style={{
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    paddingBottom: 16,
+                    borderBottom: "1px solid #222",
+                  }}
+                >
+                  <div style={{ color: "#b45309" }}>
+                    <PhoneCall size={24} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#666",
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {profile.name2.split(' ')[0]}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
+                      {profile.phone2}
+                    </div>
+                  </div>
+                </a>
+              )}
+              {profile.whatsapp && (
+                <a
+                  href={`https://wa.me/${(profile.whatsapp || profile.socials?.whatsapp || '').replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    paddingBottom: 16,
+                    borderBottom: "1px solid #222",
+                  }}
+                >
+                  <div style={{ color: "#25D366" }}>
+                    <FaWhatsapp size={24} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#666",
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                        marginBottom: 4,
+                      }}
+                    >
+                      WhatsApp {profile.name2 ? `(${profile.name.split(' ')[0]})` : ''}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
+                      +{profile.whatsapp}
+                    </div>
+                  </div>
+                </a>
+              )}
+              {profile.whatsapp2 && (
+                <a
+                  href={`https://wa.me/${profile.whatsapp2.replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    paddingBottom: 16,
+                    borderBottom: "1px solid #222",
+                  }}
+                >
+                  <div style={{ color: "#25D366" }}>
+                    <FaWhatsapp size={24} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#666",
+                        textTransform: "uppercase",
+                        letterSpacing: 1,
+                        marginBottom: 4,
+                      }}
+                    >
+                      WhatsApp {profile.name2 ? `(${profile.name2.split(' ')[0]})` : ''}
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
+                      +{profile.whatsapp2}
+                    </div>
+                  </div>
+                </a>
+              )}
               <a
                 href={`mailto:${profile.email}`}
                 style={{

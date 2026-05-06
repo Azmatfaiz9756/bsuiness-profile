@@ -199,7 +199,9 @@ export default function ClassicModern({
   };
 
   const processVcfDownload = () => {
-    const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL:${profile.phone}\nEMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
+    let vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}${profile.name2 ? ' & ' + profile.name2 : ''}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL;TYPE=CELL:${profile.phone}\n`;
+    if (profile.phone2) vcard += `TEL;TYPE=CELL:${profile.phone2}\n`;
+    vcard += `EMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
     const blob = new Blob([vcard], { type: "text/vcard" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1104,10 +1106,50 @@ export default function ClassicModern({
                     <div
                       style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
                     >
-                      Call Mobile
+                      Call {profile.name2 ? 'Owner 1' : 'Mobile'}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {profile.phone}
+                    </div>
+                  </div>
+                </a>
+              )}
+              {profile.phone2 && (
+                <a
+                  href={`tel:${profile.phone2}`}
+                  style={{
+                    textDecoration: "none",
+                    background: "#f9fafb",
+                    border: "1px solid #e5e7eb",
+                    padding: 16,
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#dcfce7",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#16a34a",
+                    }}
+                  >
+                    <PhoneCall size={20} />
+                  </div>
+                  <div>
+                    <div
+                      style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
+                    >
+                      Call {profile.name2 || 'Owner 2'}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      {profile.phone2}
                     </div>
                   </div>
                 </a>
@@ -1190,10 +1232,56 @@ export default function ClassicModern({
                         color: "#1f2937",
                       }}
                     >
-                      WhatsApp
+                      WhatsApp {profile.name2 ? 'Owner 1' : ''}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       +{profile.whatsapp}
+                    </div>
+                  </div>
+                </a>
+              )}
+              {profile.whatsapp2 && (
+                <a
+                  href={`https://wa.me/${(profile.whatsapp2).replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: "none",
+                    background: "#f9fafb",
+                    border: "1px solid #e5e7eb",
+                    padding: 16,
+                    borderRadius: 12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#dcfce7",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#16a34a",
+                    }}
+                  >
+                    <MessageSquare size={20} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: "#1f2937",
+                      }}
+                    >
+                      WhatsApp {profile.name2 || 'Owner 2'}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>
+                      +{profile.whatsapp2}
                     </div>
                   </div>
                 </a>
@@ -2743,7 +2831,7 @@ export default function ClassicModern({
             Create your own free digital profile today
           </div>
           <Link
-            to="/register"
+            to="/plans"
             style={{
               textDecoration: "none",
               background: "#0f172a",

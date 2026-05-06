@@ -16,60 +16,38 @@ export function PromotionBanner() {
     ? siteSettings.promotionSlides 
     : defaultSlides;
 
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
-
   if (!slides || slides.length === 0) return null;
 
-  const slide = slides[currentSlide];
+  // For the marquee effect, we join all headlines
+  const marqueeText = slides.map(s => s.headline).join(" • ");
+  const activeSlide = slides[0]; // Use first slide's color and link as primary
 
   return (
-    <div className="relative z-40 overflow-hidden" style={{ backgroundColor: slide.color || '#0f172a' }}>
-      <AnimatePresence mode="wait" initial={false}>
+    <div className="relative z-40 overflow-hidden py-2" style={{ backgroundColor: activeSlide.color || '#0f172a' }}>
+      <div className="flex items-center whitespace-nowrap">
         <motion.div 
-          key={slide.id + currentSlide}
-          initial={{ opacity: 0.5 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0.5 }}
-          transition={{ duration: 0.3 }}
-          className="text-white py-2.5 px-4 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 min-h-[44px]"
+          animate={{ x: [0, -1000] }} 
+          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+          className="flex items-center gap-10 pr-10"
         >
-          <motion.div 
-            animate={{ scale: [1, 1.05, 1] }} 
-            transition={{ duration: 2, repeat: Infinity }}
-            className="bg-white px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
-            style={{ color: slide.color || '#2563eb' }}
-          >
-            Offer
-          </motion.div>
-          <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] m-0">
-            {slide.headline}
-          </p>
-          <div className="flex items-center gap-4">
-            <Link 
-              to={slide.link || "/plans"} 
-              className="text-white border border-white/40 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white hover:text-blue-600 flex items-center gap-2"
-              style={{ 
-                backgroundColor: 'transparent',
-                color: 'white'
-              }}
-            >
-              <Zap size={10} fill="currentColor" /> {slide.btnText || 'Claim Now'}
-            </Link>
-            <span className="hidden md:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white opacity-40">
-              <ShieldCheck size={14} className="shrink-0" /> 
-              Verified
-            </span>
-          </div>
+          {/* Repeating 4 times to ensure continuous scroll */}
+          {[1,2,3,4].map((i) => (
+            <div key={i} className="flex items-center gap-10">
+              {slides.map((s: any, idx: number) => (
+                <div key={`${i}-${idx}`} className="flex items-center gap-4 text-white">
+                  <div className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border border-white/20">
+                    {s.btnText || 'OFFER'}
+                  </div>
+                  <Link to={s.link || "/plans"} className="text-[10px] md:text-xs font-black uppercase tracking-[0.1em] hover:underline transition-all">
+                    {s.headline}
+                  </Link>
+                  <Zap size={10} fill="currentColor" className="text-amber-400" />
+                </div>
+              ))}
+            </div>
+          ))}
         </motion.div>
-      </AnimatePresence>
+      </div>
     </div>
   );
 }

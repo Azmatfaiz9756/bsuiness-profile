@@ -113,7 +113,9 @@ export default function MinimalClean({
   };
 
   const handleSave = () => {
-    const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL:${profile.phone}\nEMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
+    let vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}${profile.name2 ? ' & ' + profile.name2 : ''}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL;TYPE=CELL:${profile.phone}\n`;
+    if (profile.phone2) vcard += `TEL;TYPE=CELL:${profile.phone2}\n`;
+    vcard += `EMAIL:${profile.email}\nURL:${profile.website}\nEND:VCARD`;
     const blob = new Blob([vcard], { type: "text/vcard" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -614,12 +616,82 @@ export default function MinimalClean({
                 <span
                   style={{ display: "flex", alignItems: "center", gap: 12 }}
                 >
-                  <Phone size={20} /> {profile.phone}
+                  <Phone size={20} /> {profile.phone} {profile.name2 ? `(${profile.name.split(' ')[0]})` : ''}
                 </span>
                 <span style={{ color: "#a1a1aa" }}>
                   <ArrowUpRight size={16} />
                 </span>
               </a>
+              {profile.phone2 && (
+                <a
+                  href={`tel:${profile.phone2}`}
+                  style={{
+                    textDecoration: "none",
+                    color: "#09090b",
+                    fontSize: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <Phone size={20} /> {profile.phone2} {profile.name2 ? `(${profile.name2.split(' ')[0]})` : ''}
+                  </span>
+                  <span style={{ color: "#a1a1aa" }}>
+                    <ArrowUpRight size={16} />
+                  </span>
+                </a>
+              )}
+              {profile.whatsapp && (
+                <a
+                  href={`https://wa.me/${(profile.whatsapp || profile.socials?.whatsapp || '').replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: "none",
+                    color: "#09090b",
+                    fontSize: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <MessageSquare size={20} color="#25D366" /> WhatsApp {profile.name2 ? `(${profile.name.split(' ')[0]})` : ''}
+                  </span>
+                  <span style={{ color: "#a1a1aa" }}>
+                    <ArrowUpRight size={16} />
+                  </span>
+                </a>
+              )}
+              {profile.whatsapp2 && (
+                <a
+                  href={`https://wa.me/${profile.whatsapp2.replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    textDecoration: "none",
+                    color: "#09090b",
+                    fontSize: 16,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{ display: "flex", alignItems: "center", gap: 12 }}
+                  >
+                    <MessageSquare size={20} color="#25D366" /> WhatsApp {profile.name2 ? `(${profile.name2.split(' ')[0]})` : ''}
+                  </span>
+                  <span style={{ color: "#a1a1aa" }}>
+                    <ArrowUpRight size={16} />
+                  </span>
+                </a>
+              )}
               <a
                 href={`mailto:${profile.email}`}
                 style={{

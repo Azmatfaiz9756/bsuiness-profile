@@ -1352,6 +1352,28 @@ export default function OwnerDashboard() {
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number</label>
                       <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971 50 123 4567" />
                     </div>
+
+                    {/* Second Owner Section */}
+                    <div className="md:col-span-2 mt-4 pt-4 border-t border-slate-200">
+                      <div className="flex items-center gap-2 mb-4 text-blue-600">
+                        <Users size={16} />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Second Owner / Partner (Optional)</span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Partner Name</label>
+                          <input type="text" value={formData.name2 || ''} onChange={e => setFormData({...formData, name2: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Second Owner Name" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Partner Phone</label>
+                          <input type="text" value={formData.phone2 || ''} onChange={e => setFormData({...formData, phone2: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971..." />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Partner WhatsApp</label>
+                          <input type="text" value={formData.whatsapp2 || ''} onChange={e => setFormData({...formData, whatsapp2: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971..." />
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex flex-col gap-1.5 md:col-span-2">
                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-1">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bio {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>

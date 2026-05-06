@@ -3,12 +3,17 @@ import { useAppContext } from '../../context/AppContext';
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
-  const { stats, profiles, orders } = useAppContext();
+  const { stats, profiles, orders, usersCount } = useAppContext();
 
   return (
     <>
       <div className="stats-grid">
         <div className="stat-card gold">
+          <div className="stat-icon">👥</div>
+          <div className="stat-label">TOTAL USERS</div>
+          <div className="stat-value">{usersCount || profiles.length}</div>
+        </div>
+        <div className="stat-card purple">
           <div className="stat-icon">👤</div>
           <div className="stat-label">TOTAL PROFILES</div>
           <div className="stat-value">{profiles.length}</div>

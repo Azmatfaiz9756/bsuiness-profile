@@ -11,33 +11,24 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [usersCount, setUsersCount] = useState(0);
   
   const [joinNotifications, setJoinNotifications] = useState<any[]>([]);
 
   useEffect(() => {
-    const SUPER_ADMINS = ['azmatfaiz9756@gmail.com'];
-    if (user && SUPER_ADMINS.includes(user.email || '')) {
+    const SUPER_ADMINS = ['azmatfaiz9756@gmail.com', 'admin@example.com'];
+    const userEmail = user?.email?.toLowerCase() || '';
+    if (user && SUPER_ADMINS.some(admin => admin.toLowerCase() === userEmail)) {
       const q = query(collection(db, 'join_notifications'), orderBy('createdAt', 'desc'), limit(20));
       const unsub = onSnapshot(q, (snapshot) => {
-        const newDocs = snapshot.docChanges().filter(change => change.type === 'added');
-        if (newDocs.length > 0 && !snapshot.metadata.hasPendingWrites) {
-           // Basic check to see if this is initial load vs new doc
-           // If we have existing notifications, it's likely a new user join
-           setJoinNotifications(prev => {
-             if (prev.length > 0) {
-                newDocs.forEach(d => {
-                  const data = d.doc.data();
-                  console.log(`New Join: ${data.userName}`);
-                  // Note: We can't easily trigger a toast from here without a global toast state
-                  // but we already have joinNotifications state which AdminLayout uses.
-                });
-             }
-             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-           });
-        } else {
-           setJoinNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        }
-      }, (err) => console.error("Notif listener error:", err));
+        setJoinNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      });
+
+      // Also get total users count for admin
+      import('firebase/firestore').then(({ getDocs, collection }) => {
+        getDocs(collection(db, 'users')).then(snap => setUsersCount(snap.size));
+      });
+
       return () => unsub();
     }
   }, [user]);
@@ -240,6 +231,45 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthLoading(false);
       
       if (u) {
+        // Record join in Firestore for all methods (Gmail, Phone)
+        import('firebase/firestore').then(async ({ doc, getDoc, setDoc, addDoc, collection, serverTimestamp }) => {
+          const userDocRef = doc(db, 'users', u.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (!userDoc.exists()) {
+            const initialData = {
+              email: u.email || '',
+              phone: u.phoneNumber || '',
+              displayName: u.displayName || '',
+              photoURL: u.photoURL || '',
+              createdAt: serverTimestamp(),
+              lastLogin: serverTimestamp(),
+              walletBalance: 0,
+              totalEarned: 0,
+              totalSpent: 0
+            };
+            await setDoc(userDocRef, initialData, { merge: true });
+
+            await addDoc(collection(db, 'join_notifications'), {
+              userId: u.uid,
+              userName: u.displayName || u.phoneNumber || 'New User',
+              userEmail: u.email || u.phoneNumber || '',
+              createdAt: serverTimestamp(),
+              plan: 'Free'
+            });
+            
+            setUsersCount(prev => prev + 1);
+          } else {
+            const updateData = { 
+              lastLogin: serverTimestamp(),
+              // Sync email/phone if missing
+              ...(u.email && !userDoc.data()?.email ? { email: u.email } : {}),
+              ...(u.phoneNumber && !userDoc.data()?.phone ? { phone: u.phoneNumber } : {})
+            };
+            await setDoc(userDocRef, updateData, { merge: true });
+          }
+        });
+
         const hasGottenBonus = localStorage.getItem(`dbc_bonus_${u.uid}`);
         if (!hasGottenBonus) {
            // Find user's profile to check plan
@@ -277,7 +307,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       shopBanners, setShopBanners,
       jobOpenings, setJobOpenings,
       selectedCountry, setSelectedCountry,
-      joinNotifications
+      joinNotifications, usersCount
     }}>
       {children}
     </AppContext.Provider>

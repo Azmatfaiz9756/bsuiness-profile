@@ -1,13 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 export default function AdminWallets() {
-  const [wallets, setWallets] = useState([
-    { id: 'DBC000000042', name: 'Ahmed Al Rashidi', balance: 340, earned: 580, spent: 240 },
-    { id: 'DBC000000098', name: 'Sara Khan', balance: 120, earned: 200, spent: 80 }
-  ]);
+  const [wallets, setWallets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalState, setModalState] = useState<{ open: boolean, type: 'Credit' | 'Debit', wallet: any }>({ open: false, type: 'Credit', wallet: null });
   const [amount, setAmount] = useState('');
+  const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    const fetchWallets = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'users'));
+        const data = snap.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().displayName || doc.data().email || 'Unnamed User',
+          balance: doc.data().walletBalance || 0,
+          earned: doc.data().totalEarned || 0,
+          spent: doc.data().totalSpent || 0,
+          email: doc.data().email
+        }));
+        setWallets(data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWallets();
+  }, [refresh]);
 
   const handleExport = () => {
     alert("Exporting Wallet Reports...");
@@ -18,24 +41,44 @@ export default function AdminWallets() {
     setAmount('');
   };
 
-  const submitAction = (e: React.FormEvent) => {
+  const submitAction = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = parseFloat(amount);
     if (!val || val <= 0) return;
 
-    setWallets(wallets.map(w => {
-      if (w.id === modalState.wallet.id) {
-        if (modalState.type === 'Credit') {
-          return { ...w, balance: w.balance + val, earned: w.earned + val };
-        } else {
-          const newBal = w.balance - val;
-          return { ...w, balance: newBal < 0 ? 0 : newBal, spent: w.spent + val };
-        }
+    try {
+      const walletDocRef = doc(db, 'users', modalState.wallet.id);
+      let newBalance = modalState.wallet.balance;
+      let newEarned = modalState.wallet.earned;
+      let newSpent = modalState.wallet.spent;
+
+      if (modalState.type === 'Credit') {
+        newBalance += val;
+        newEarned += val;
+      } else {
+        newBalance = Math.max(0, newBalance - val);
+        newSpent += val;
       }
-      return w;
-    }));
+
+      await setDoc(walletDocRef, {
+        walletBalance: newBalance,
+        totalEarned: newEarned,
+        totalSpent: newSpent
+      }, { merge: true });
+
+      alert(`Successfully ${modalState.type === 'Credit' ? 'credited' : 'debited'} AED ${val}`);
+      setRefresh(prev => prev + 1);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to update wallet.');
+    }
+    
     setModalState({ open: false, type: 'Credit', wallet: null });
   };
+
+  const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0);
+  const totalEarned = wallets.reduce((acc, w) => acc + w.earned, 0);
+  const totalSpent = wallets.reduce((acc, w) => acc + w.spent, 0);
 
   return (
     <>
@@ -49,15 +92,15 @@ export default function AdminWallets() {
       <div className="stats-grid" style={{gridTemplateColumns: 'repeat(3, 1fr)'}}>
         <div className="stat-card gold">
           <div className="stat-label">TOTAL WALLET FUNDS</div>
-          <div className="stat-value">AED 15,640</div>
+          <div className="stat-value">AED {totalBalance.toLocaleString()}</div>
         </div>
         <div className="stat-card green">
-          <div className="stat-label">REFERRAL PAID OUT</div>
-          <div className="stat-value">AED 4,820</div>
+          <div className="stat-label">TOTAL EARNED (REFERRALS)</div>
+          <div className="stat-value">AED {totalEarned.toLocaleString()}</div>
         </div>
         <div className="stat-card blue">
-          <div className="stat-label">TOP-UPS THIS MONTH</div>
-          <div className="stat-value">AED 8,200</div>
+          <div className="stat-label">TOTAL SPENT / WITHDRAWN</div>
+          <div className="stat-value">AED {totalSpent.toLocaleString()}</div>
         </div>
       </div>
 
