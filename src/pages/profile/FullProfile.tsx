@@ -215,9 +215,9 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
       {!isPreview && (
         <>
-          {profile.whatsapp && (
+          {profile?.whatsapp && (
             <a 
-              href={`https://wa.me/${profile.whatsapp.replace(/\D/g, '')}`}
+              href={`https://wa.me/${String(profile.whatsapp).replace(/\D/g, '')}`}
               target="_blank"
               rel="noreferrer"
               className="fixed bottom-24 right-4 w-12 h-12 bg-[#25D366] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 md:right-8 md:bottom-28 animate-pulse"

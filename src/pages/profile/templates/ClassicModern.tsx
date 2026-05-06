@@ -206,7 +206,7 @@ export default function ClassicModern({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${profile.name.replace(/\s+/g, "_")}.vcf`;
+    a.download = `${String(profile.name || 'profile').replace(/\s+/g, "_")}.vcf`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1196,7 +1196,7 @@ export default function ClassicModern({
               )}
               {profile.whatsapp && (
                 <a
-                  href={`https://wa.me/${(profile.whatsapp || profile.socials?.whatsapp || '').replace(/[^0-9]/g, "")}`}
+                  href={`https://wa.me/${String(profile.whatsapp || profile.socials?.whatsapp || '').replace(/[^0-9]/g, "")}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -1242,7 +1242,7 @@ export default function ClassicModern({
               )}
               {profile.whatsapp2 && (
                 <a
-                  href={`https://wa.me/${(profile.whatsapp2).replace(/[^0-9]/g, "")}`}
+                  href={`https://wa.me/${String(profile.whatsapp2 || '').replace(/[^0-9]/g, "")}`}
                   target="_blank"
                   rel="noreferrer"
                   style={{

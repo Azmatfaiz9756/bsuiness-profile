@@ -345,16 +345,16 @@ export default function FrontendShop() {
         {/* Marquee Navigation Bar */}
         {view === 'catalog' && (
           <div className="bg-slate-800 border-t border-slate-700 py-1.5 overflow-hidden flex items-center relative">
-            <div className="flex gap-4 md:gap-8 whitespace-nowrap px-4 animate-marquee">
-              {[1, 2].map((loop) => (
-                <React.Fragment key={loop}>
+            <div className="flex whitespace-nowrap animate-marquee w-max">
+              {[1, 2, 3, 4].map((loop) => (
+                <div key={loop} className="flex gap-4 md:gap-8 px-4 items-center">
                   <span className="text-[10px] md:text-sm font-bold text-amber-400 flex items-center gap-2"><Zap size={12}/> SPECIAL OFFER: GET 20% OFF WALLET RECHARGES</span>
                   <span className="text-xs font-medium text-slate-500">|</span>
                   <span className="text-[10px] md:text-sm font-bold text-blue-400 flex items-center gap-2"><Tag size={12}/> FREE SHIPPING ON ORDERS OVER 500 AED</span>
                   <span className="text-xs font-medium text-slate-500">|</span>
                   <span className="text-[10px] md:text-sm font-bold text-green-400 flex items-center gap-2"><Gift size={12}/> NEW ARRIVALS: METAL NFC CARDS</span>
                   <span className="text-xs font-medium text-slate-500">|</span>
-                </React.Fragment>
+                </div>
               ))}
             </div>
           </div>

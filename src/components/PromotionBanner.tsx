@@ -24,15 +24,15 @@ export function PromotionBanner() {
 
   return (
     <div className="relative z-40 overflow-hidden py-2" style={{ backgroundColor: activeSlide.color || '#0f172a' }}>
-      <div className="flex items-center whitespace-nowrap">
+      <div className="flex items-center">
         <motion.div 
-          animate={{ x: [0, -1000] }} 
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="flex items-center gap-10 pr-10"
+          animate={{ x: ["0%", "-50%"] }} 
+          transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+          className="flex items-center whitespace-nowrap w-max"
         >
-          {/* Repeating 4 times to ensure continuous scroll */}
-          {[1,2,3,4].map((i) => (
-            <div key={i} className="flex items-center gap-10">
+          {/* Duplicate exactly once for smooth infinite scroll with -50% */}
+          {[1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-10 pr-10">
               {slides.map((s: any, idx: number) => (
                 <div key={`${i}-${idx}`} className="flex items-center gap-4 text-white">
                   <div className="bg-white/20 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border border-white/20">

@@ -18,8 +18,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.get('email', '').lower() == "azmatfaiz9756@gmail.com" || 
-        request.auth.token.get('email', '').lower() == "admin@example.com"
+        request.auth.token.get('email', '').toLower() == "azmatfaiz9756@gmail.com" || 
+        request.auth.token.get('email', '').toLower() == "admin@example.com"
       );
     }
 
@@ -167,7 +167,7 @@ service cloud.firestore {
     }
 
     function isProfileOwner(docId, existingData) {
-      return isOwner(docId) || (isSignedIn() && (existingData.get('ownerId', '') == request.auth.uid || existingData.get('email', '') == request.auth.token.get('email', '')));
+      return isOwner(docId) || (isSignedIn() && (existingData.get('ownerId', '') == request.auth.uid || existingData.get('email', '').toLower() == request.auth.token.get('email', '').toLower()));
     }
 
     function isValidAppointment(data) {

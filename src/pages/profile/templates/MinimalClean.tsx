@@ -120,7 +120,7 @@ export default function MinimalClean({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${profile.name.replace(/\s+/g, "_")}.vcf`;
+    a.download = `${String(profile.name || 'profile').replace(/\s+/g, "_")}.vcf`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1145,7 +1145,7 @@ export default function MinimalClean({
                         </a>
                       ) : (
                         <a
-                          href={`https://wa.me/${profile.phone?.replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
+                          href={`https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
                           target="_blank"
                           rel="noreferrer"
                           style={{
