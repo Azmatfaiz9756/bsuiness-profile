@@ -149,27 +149,33 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
             Object.keys(data.countryPlans).forEach(country => {
               if (Array.isArray(data.countryPlans[country])) {
                 newCountryPlans[country] = data.countryPlans[country].map((plan: any, idx: number) => {
-                  const hardcodedPlan = prev.countryPlans[country]?.[idx] || prev.countryPlans['Global']?.[idx];
-                  // If hardcoded plan has significantly more features, prefer it (or merged)
-                  if (hardcodedPlan && plan.features && plan.features.length < 5 && hardcodedPlan.features.length > 5) {
+                  const hardcodedPlan = (prev.countryPlans && prev.countryPlans[country]) ? prev.countryPlans[country][idx] : (prev.countryPlans && prev.countryPlans['Global'] ? prev.countryPlans['Global'][idx] : null);
+                  if (hardcodedPlan && plan.features && (!plan.features.length || plan.features.length < 5) && hardcodedPlan.features?.length > 5) {
                     return { ...plan, features: hardcodedPlan.features };
                   }
-                  return plan;
+                  return { ...plan, features: plan.features || [] };
                 });
               }
             });
             merged.countryPlans = newCountryPlans;
           }
           
-          // Same for root plans
           if (data.plans && Array.isArray(data.plans)) {
             merged.plans = data.plans.map((plan: any, idx: number) => {
               const hardcodedPlan = prev.plans?.[idx];
-              if (hardcodedPlan && plan.features && plan.features.length < 5 && hardcodedPlan.features.length > 5) {
+              if (hardcodedPlan && plan.features && (!plan.features.length || plan.features.length < 5) && hardcodedPlan.features?.length > 5) {
                 return { ...plan, features: hardcodedPlan.features };
               }
-              return plan;
+              return { ...plan, features: plan.features || [] };
             });
+          }
+
+          if (data.promotionSlides && !Array.isArray(data.promotionSlides)) {
+            merged.promotionSlides = prev.promotionSlides;
+          }
+
+          if (data.trialPlans && !Array.isArray(data.trialPlans)) {
+            merged.trialPlans = prev.trialPlans;
           }
 
           return merged;

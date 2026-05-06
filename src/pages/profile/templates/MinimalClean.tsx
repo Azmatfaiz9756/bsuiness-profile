@@ -73,7 +73,6 @@ export default function MinimalClean({
     { id: 'services', label: 'Services', icon: <Sparkles size={18} />, show: profile.services && profile.services.length > 0 },
     { id: 'shop', label: 'Store', icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
     { id: 'bank', label: 'Bank', icon: <Building size={18} />, show: hasPayments },
-    { id: 'inquiry', label: 'Inquiry', icon: <Mail size={18} />, show: true }
   ].filter(item => item.show);
 
   const toggleAudio = () => {
@@ -462,47 +461,53 @@ export default function MinimalClean({
                 <Wallet size={20} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
               </button>
             )}
-            <div style={{ display: "flex", gap: 12 }}>
-              <button
-                onClick={() => setActiveTab('inquiry')}
-                style={{
-                  flex: 1,
-                  background: "#09090b",
-                  color: "#fff",
-                  padding: "14px",
-                  borderRadius: 999,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontSize: 15,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  border: "none",
-                }}
-              >
-                <UserPlus size={16} /> Exchange Contact
-              </button>
-              <button
-                onClick={() => setShowShareModal(true)}
-                style={{
-                  flex: 1,
-                  background: "#f4f4f5",
-                  color: "#09090b",
-                  border: "1px solid #e4e4e7",
-                  padding: "14px",
-                  borderRadius: 999,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontSize: 15,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                }}
-              >
-                <Send size={16} /> Share
-              </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 32 }}>
+              <LeadCapture profile={profile} />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                <button
+                  onClick={handleSave}
+                  style={{
+                    flex: 1,
+                    minWidth: '150px',
+                    background: "#2563eb",
+                    color: "#fff",
+                    padding: "14px",
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 15,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    border: "none",
+                    boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
+                  }}
+                >
+                  <Download size={16} /> Save Contact
+                </button>
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  style={{
+                    flex: 1,
+                    minWidth: '150px',
+                    background: "#f4f4f5",
+                    color: "#09090b",
+                    border: "1px solid #e4e4e7",
+                    padding: "14px",
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 15,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Share2 size={16} /> Share Profile
+                </button>
+              </div>
             </div>
             {!profile.plan?.includes("Enterprise") && (
               <Link
@@ -577,27 +582,7 @@ export default function MinimalClean({
                 </a>
               </>
             )}
-            <button
-              onClick={handleSave}
-              style={{
-                width: "100%",
-                background: "#2563eb",
-                color: "#fff",
-                padding: "14px",
-                borderRadius: 999,
-                fontWeight: 600,
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                fontSize: 15,
-                boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
-              }}
-            >
-              <UserPlus size={18} /> Save Contact
-            </button>
+
           </div>
           </>)}
         </div>
@@ -1294,78 +1279,7 @@ export default function MinimalClean({
             </AccordionItem>
           )}
 
-          {activeTab === 'inquiry' && (
-          <AccordionItem id="inquiry" title="Inquiry">
-            <div
-              style={{
-                border: "1px solid #e4e4e7",
-                padding: 24,
-                borderRadius: 16,
-              }}
-            >
-              <input
-                type="text"
-                placeholder="Name"
-                style={{
-                  width: "100%",
-                  padding: "12px 0",
-                  border: "none",
-                  borderBottom: "1px solid #e4e4e7",
-                  marginBottom: 12,
-                  outline: "none",
-                  fontSize: 15,
-                  background: "transparent",
-                }}
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                style={{
-                  width: "100%",
-                  padding: "12px 0",
-                  border: "none",
-                  borderBottom: "1px solid #e4e4e7",
-                  marginBottom: 12,
-                  outline: "none",
-                  fontSize: 15,
-                  background: "transparent",
-                }}
-              />
-              <textarea
-                placeholder="Message"
-                rows={3}
-                style={{
-                  width: "100%",
-                  padding: "12px 0",
-                  border: "none",
-                  borderBottom: "1px solid #e4e4e7",
-                  marginBottom: 24,
-                  outline: "none",
-                  fontSize: 15,
-                  fontFamily: "inherit",
-                  resize: "vertical",
-                  background: "transparent",
-                }}
-              ></textarea>
-              <button
-                onClick={() => alert("Sent!")}
-                style={{
-                  width: "100%",
-                  background: "#09090b",
-                  color: "#fff",
-                  border: "none",
-                  padding: 14,
-                  borderRadius: 999,
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  fontSize: 15,
-                }}
-              >
-                Send Message
-              </button>
-            </div>
-          </AccordionItem>
-          )}
+
 
           {(activeTab === 'home' || activeTab === 'bank') && (
           <AccordionItem id="platform" title="Platform Details">

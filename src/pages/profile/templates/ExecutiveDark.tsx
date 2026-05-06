@@ -76,7 +76,6 @@ export default function ExecutiveDark({
     { id: 'services', label: 'Services', icon: <Globe size={18} />, show: profile.services && profile.services.length > 0 },
     { id: 'shop', label: 'Store', icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
     { id: 'bank', label: 'Bank', icon: <Building size={18} />, show: (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName },
-    { id: 'inquiry', label: 'Inquiry', icon: <Mail size={18} />, show: true },
   ].filter(item => item.show);
 
   const toggleAudio = () => {
@@ -595,13 +594,16 @@ export default function ExecutiveDark({
                   <Share2 size={16} /> Refer & Earn
                 </Link>
               )}
-              <div style={{ display: "flex", gap: 8, flex: 1.5 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
+              <LeadCapture profile={profile} />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <button
                   onClick={handleSave}
                   style={{
                     flex: 1,
-                    background: "#fff",
-                    color: "#000",
+                    minWidth: '120px',
+                    background: "#b45309",
+                    color: "#fff",
                     border: "none",
                     padding: "12px",
                     borderRadius: 4,
@@ -611,31 +613,39 @@ export default function ExecutiveDark({
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 8,
-                    fontSize: 13,
+                    textDecoration: "none",
+                    fontSize: 14,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1
                   }}
                 >
-                  <UserPlus size={16} /> Save
+                  <Download size={16} /> Save Contact
                 </button>
                 <button
                   onClick={() => setShowShareModal(true)}
                   style={{
                     flex: 1,
-                    background: "transparent",
+                    minWidth: '120px',
+                    background: "#222",
                     color: "#fff",
-                    border: "1px solid #444",
+                    border: "1px solid #333",
                     padding: "12px",
                     borderRadius: 4,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 8,
+                    fontSize: 14,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1
                   }}
                 >
-                  <Send size={16} /> Share
+                  <Share2 size={16} /> Share Profile
                 </button>
               </div>
+            </div>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
@@ -687,32 +697,7 @@ export default function ExecutiveDark({
                 </a>
               </>
             )}
-            <button
-               onClick={() => {
-                 window.scrollTo({
-                   top: document.body.scrollHeight,
-                   behavior: 'smooth'
-                 });
-               }}
-               style={{
-                 width: "100%",
-                 background: "#2563eb",
-                 color: "#fff",
-                 padding: "14px",
-                 borderRadius: 4,
-                 fontWeight: 700,
-                 border: "none",
-                 cursor: "pointer",
-                 display: "flex",
-                 alignItems: "center",
-                 justifyContent: "center",
-                 gap: 8,
-                 fontSize: 14,
-                 boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
-               }}
-            >
-              <UserPlus size={18} /> Save Contact
-            </button>
+
             {profile.documentUrl && (
               <a
                 href={profile.documentUrl}
@@ -1278,87 +1263,7 @@ export default function ExecutiveDark({
               </div>
             </SectionContainer>
           )}
-          {activeTab === 'inquiry' && (
-            <SectionContainer title="Send Inquiry" icon={<Mail size={18} />}>
-            <div
-              style={{
-                background: "#111",
-                border: "1px solid #222",
-                padding: 20,
-                borderRadius: 8,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: "#fff",
-                  marginBottom: 16,
-                }}
-              >
-                Request a Consultation
-              </div>
-              <input
-                type="text"
-                placeholder="Full Name"
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 4,
-                  border: "1px solid #333",
-                  background: "#1a1a1a",
-                  color: "#fff",
-                  marginBottom: 12,
-                  boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="email"
-                placeholder="Email Address"
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 4,
-                  border: "1px solid #333",
-                  background: "#1a1a1a",
-                  color: "#fff",
-                  marginBottom: 12,
-                  boxSizing: "border-box",
-                }}
-              />
-              <textarea
-                placeholder="How can I help you?"
-                rows={4}
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 4,
-                  border: "1px solid #333",
-                  background: "#1a1a1a",
-                  color: "#fff",
-                  marginBottom: 16,
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                }}
-              ></textarea>
-              <button
-                onClick={() => alert("Request Sent!")}
-                style={{
-                  width: "100%",
-                  background: "#b45309",
-                  color: "#fff",
-                  border: "none",
-                  padding: 12,
-                  borderRadius: 4,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Send Request
-              </button>
-            </div>
-          </SectionContainer>
-          )}
+
           {(activeTab === 'home' || activeTab === 'bank') && (
             <SectionContainer
               title={isOwner ? "Wallet & Platform" : "Platform Details"}

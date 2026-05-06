@@ -811,7 +811,7 @@ export default function ClassicModern({
               </button>
             )}
             
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button
                 onClick={() => handleSave()}
                 style={{
@@ -826,12 +826,35 @@ export default function ClassicModern({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 10,
-                  fontSize: 14,
-                  boxShadow: "0 10px 20px -5px rgba(0,0,0,0.3)"
+                  gap: 8,
+                  fontSize: 13,
+                  boxShadow: "0 10px 20px -5px rgba(0,0,0,0.3)",
+                  minWidth: '140px'
                 }}
               >
-                <UserPlus size={20} /> Exchange Contact
+                <UserPlus size={18} /> Exchange
+              </button>
+              <button
+                onClick={() => processVcfDownload()}
+                style={{
+                  flex: 1,
+                  background: themeVars.primary,
+                  color: "#fff",
+                  border: "none",
+                  height: 52,
+                  borderRadius: 14,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 13,
+                  boxShadow: `0 10px 20px -5px ${themeVars.primary}40`,
+                  minWidth: '140px'
+                }}
+              >
+                <Download size={18} /> Save Contact
               </button>
               <button
                 onClick={() => setShowShareModal(true)}
@@ -847,11 +870,12 @@ export default function ClassicModern({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  gap: 10,
-                  fontSize: 14
+                  gap: 8,
+                  fontSize: 13,
+                  minWidth: '140px'
                 }}
               >
-                <Send size={18} /> Share Profile
+                <Send size={16} /> Share
               </button>
             </div>
           </div>
@@ -1675,76 +1699,7 @@ export default function ClassicModern({
           </div>
           )}
 
-          {(activeTab === 'home' || activeTab === 'inquiry') && (
-          <div id="inquiry-section">
-            <SectionContainer title="Send Inquiry" icon={<Mail size={18} />} id="inquiry">
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #e5e7eb",
-                padding: 20,
-                borderRadius: 16,
-              }}
-            >
-              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>
-                Send an Inquiry
-              </div>
-              <input
-                type="text"
-                placeholder="Your Name"
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 8,
-                  border: "1px solid #d1d5db",
-                  marginBottom: 12,
-                  boxSizing: "border-box",
-                }}
-              />
-              <input
-                type="email"
-                placeholder="Your Email"
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 8,
-                  border: "1px solid #d1d5db",
-                  marginBottom: 12,
-                  boxSizing: "border-box",
-                }}
-              />
-              <textarea
-                placeholder="Message"
-                rows={4}
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  borderRadius: 8,
-                  border: "1px solid #d1d5db",
-                  marginBottom: 16,
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                }}
-              ></textarea>
-              <button
-                onClick={() => alert("Message Sent!")}
-                style={{
-                  width: "100%",
-                  background: "#1a1a2e",
-                  color: "#fff",
-                  border: "none",
-                  padding: 12,
-                  borderRadius: 8,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Submit
-              </button>
-            </div>
-          </SectionContainer>
-        </div>
-        )}
+
 
           {(activeTab === 'wallet' || (activeTab === 'bank' && isOwner)) && (
             <SectionContainer title="Wallet" icon={<Wallet size={18} />}>
