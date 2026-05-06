@@ -99,6 +99,7 @@ export default function AdminSettings() {
           { id: 'general', label: 'General / App', icon: <Smartphone size={16} /> },
           { id: 'seo', label: 'Global SEO', icon: <Search size={16} /> },
           { id: 'ecommerce', label: 'E-commerce', icon: <CreditCard size={16} /> },
+          { id: 'promotions', label: 'Promotions', icon: <Sparkles size={16} /> },
           { id: 'plans', label: 'Plans & Referral', icon: <TrendingUp size={16} /> },
           { id: 'env', label: 'API Keys & Env', icon: <Key size={16} /> }
         ].map(tab => (
@@ -217,6 +218,103 @@ export default function AdminSettings() {
                   <div style={{ fontSize: 13, color: '#6b7280' }}>Flat 10% Off on all physical products</div>
                </div>
                <button style={{ background: 'none', border: 'none', color: '#ef4444', fontWeight: 600, cursor: 'pointer' }}>Revoke</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'promotions' && (
+        <div style={{ background: '#fff', padding: 32, borderRadius: 16, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ background: '#eff6ff', padding: 16, borderRadius: 12, display: 'flex', gap: 12, color: '#1e40af' }}>
+            <Sparkles size={24} />
+            <div>
+              <h4 style={{ fontWeight: 700, margin: '0 0 4px' }}>Free Trial & Promotion Banner</h4>
+              <p style={{ margin: 0, fontSize: 14 }}>Manage global free trial rules and the marketing banner shown to all visitors. These changes apply instantly to the homepage and pricing sections.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#f9fafb', padding: 16, borderRadius: 12, border: '1px solid #e5e7eb' }}>
+            <input 
+              type="checkbox" 
+              checked={formData.trialEnabled || false} 
+              onChange={e => handleChange('trialEnabled', e.target.checked)}
+              id="trialEnabled"
+              style={{ width: 20, height: 20 }}
+            />
+            <div>
+              <label htmlFor="trialEnabled" style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#111827', cursor: 'pointer' }}>Enable Global Free Trial Offer</label>
+              <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>If enabled, a promotional banner will appear and eligible plans will show trial buttons.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Trial Duration (Months)</label>
+              <input 
+                type="number" 
+                value={formData.trialMonths || 1} 
+                onChange={e => handleChange('trialMonths', Number(e.target.value))} 
+                style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Banner Accent Color</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                 <input 
+                    type="color" 
+                    value={formData.bannerColor || '#2563eb'} 
+                    onChange={e => handleChange('bannerColor', e.target.value)} 
+                    style={{ width: 44, height: 44, padding: 2, border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', background: '#fff' }} 
+                 />
+                 <input 
+                    type="text" 
+                    value={formData.bannerColor || '#2563eb'} 
+                    onChange={e => handleChange('bannerColor', e.target.value)} 
+                    style={{ flex: 1, padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+                 />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Banner Headline</label>
+            <input 
+              type="text" 
+              value={formData.trialHeadline || 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION'} 
+              onChange={e => handleChange('trialHeadline', e.target.value)} 
+              placeholder="e.g. HURRY UP! GET 1 MONTH FREE TRIAL"
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Banner Button Text</label>
+            <input 
+              type="text" 
+              value={formData.trialBtnText || 'CLAIM NOW'} 
+              onChange={e => handleChange('trialBtnText', e.target.value)} 
+              style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 12 }}>Apply Trial to Following Plans</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {['Pro', 'Premium', 'Enterprise'].map(plan => (
+                <label key={plan} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', border: '1px solid #e5e7eb', borderRadius: 10, cursor: 'pointer', background: (formData.trialPlans || []).includes(plan) ? '#f0f9ff' : 'white' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={(formData.trialPlans || []).includes(plan)}
+                    onChange={e => {
+                      const current = formData.trialPlans || [];
+                      const updated = e.target.checked ? [...current, plan] : current.filter((p: string) => p !== plan);
+                      handleChange('trialPlans', updated);
+                    }}
+                    style={{ width: 18, height: 18 }}
+                  />
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{plan} Plan</span>
+                </label>
+              ))}
             </div>
           </div>
         </div>

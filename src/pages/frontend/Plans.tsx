@@ -7,7 +7,10 @@ export default function FrontendPlans() {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const trialPeriod = siteSettings.trialPeriod || '1 Month';
+  const trialMonths = siteSettings?.trialMonths || 1;
+  const trialPeriod = siteSettings?.trialPeriod || `${trialMonths} Month${trialMonths > 1 ? 's' : ''}`;
+  const trialEnabled = siteSettings?.trialEnabled || false;
+  const trialPlans = siteSettings?.trialPlans || ['Pro'];
   
   // Use country specific plans if available, else fallback to Global or default
   const defaultPlans = [
@@ -42,8 +45,8 @@ export default function FrontendPlans() {
         console.error("Trial start error:", err);
         alert('Could not start trial. Please try again or create a profile first.');
       }
-    } else if (plan.name === 'Pro') {
-        const confirmTrial = window.confirm(`Start your 1-month FREE trial of the ${plan.name} plan? No credit card required.`);
+    } else if (trialEnabled && trialPlans.includes(plan.name)) {
+        const confirmTrial = window.confirm(`Start your ${trialMonths}-month FREE trial of the ${plan.name} plan? No credit card required.`);
         if (confirmTrial) {
           try {
             const { doc, updateDoc } = await import('firebase/firestore');
@@ -51,7 +54,7 @@ export default function FrontendPlans() {
             const userRef = doc(db, 'profiles', user.uid);
             
             const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + 30);
+            expiryDate.setMonth(expiryDate.getMonth() + trialMonths);
             
             const updateData: any = { 
               plan: plan.name, 
@@ -61,7 +64,7 @@ export default function FrontendPlans() {
             };
             
             await updateDoc(userRef, updateData);
-            alert(`Your 1-month free trial of ${plan.name} is now active! Expires on ${updateData.expiry}`);
+            alert(`Your ${trialMonths}-month free trial of ${plan.name} is now active! Expires on ${updateData.expiry}`);
             window.location.href = '/dashboard';
           } catch (err) {
             console.error("Trial activation error:", err);
@@ -70,7 +73,7 @@ export default function FrontendPlans() {
           }
         }
     } else {
-        // For Premium and Enterprise, go straight to payment
+        // Not a trial plan or trial disabled, go straight to payment
         setSelectedPlan(plan);
         setIsPaymentModalOpen(true);
     }
@@ -85,11 +88,13 @@ export default function FrontendPlans() {
       />
       
       <div className="text-center mb-10">
-        <div className="inline-block bg-blue-50 border border-blue-200 rounded-full px-4 py-1.5 text-xs font-bold text-blue-700 mb-4 tracking-wide uppercase">
-          LIMITED OFFER: 1 MONTH {trialPeriod} TRIAL ON PRO
-        </div>
+        {trialEnabled && (
+          <div className="inline-block bg-blue-50 border border-blue-200 rounded-full px-4 py-1.5 text-xs font-bold text-blue-700 mb-4 tracking-wide uppercase">
+            LIMITED OFFER: {trialMonths} MONTH{trialMonths > 1 ? 'S' : ''} FREE TRIAL ON {trialPlans.join(' & ')}
+          </div>
+        )}
         <h2 className="text-2xl md:text-4xl font-extrabold text-slate-900 mb-2">Simple, transparent pricing</h2>
-        <p className="text-sm md:text-base text-slate-500 max-w-2xl mx-auto">Choose the plan that fits your growth. Get started with our Pro plan trial today.</p>
+        <p className="text-sm md:text-base text-slate-500 max-w-2xl mx-auto">Choose the plan that fits your growth. {trialEnabled ? `Get started with our ${trialPlans[0]} plan trial today.` : 'Get started with our premium plans today.'}</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-8">
@@ -122,7 +127,7 @@ export default function FrontendPlans() {
             </div>
             
             <button onClick={() => handleStartTrial(plan)} className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>
-              {plan.price === 'Free' ? 'Choose Basic' : (plan.name === 'Pro' ? 'Start Free Trial' : 'Buy Now')}
+              {plan.price === 'Free' ? 'Choose Basic' : (trialEnabled && trialPlans.includes(plan.name) ? 'Start Free Trial' : 'Buy Now')}
             </button>
           </div>
         ))}

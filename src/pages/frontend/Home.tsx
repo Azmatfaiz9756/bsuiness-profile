@@ -252,12 +252,14 @@ function HeroSection() {
               >
                 Get Started Free
               </a>
-              <Link
-                to="/plans"
-                className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-black py-4 px-10 rounded-2xl transition-all flex justify-center items-center text-base uppercase tracking-wider"
-              >
-                Start 1-Month Trial
-              </Link>
+              {siteSettings?.trialEnabled && (
+                <Link
+                  to="/plans"
+                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 font-black py-4 px-10 rounded-2xl transition-all flex justify-center items-center text-base uppercase tracking-wider"
+                >
+                  Start {siteSettings.trialMonths || 1}-Month Trial
+                </Link>
+              )}
             </div>
 
             <div className="mt-12 grid grid-cols-2 sm:grid-cols-3 gap-8 border-t border-slate-800 pt-8 w-full max-w-md">
@@ -838,19 +840,29 @@ export default function FrontendHome() {
       />
 
       {/* Limited Offer Banner */}
-      <div className="bg-blue-600 text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden">
-        <motion.div 
-          animate={{ scale: [1, 1.05, 1] }} 
-          transition={{ duration: 1, repeat: Infinity }}
-          className="bg-white text-blue-600 px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
-        >
-          Limited Offer
-        </motion.div>
-        <p className="text-sm font-black uppercase tracking-tight m-0">Hurry Up! Get 1 Month FREE Trial on PRO Version</p>
-        <Link to="/plans" className="text-white border border-white/40 hover:bg-white hover:text-blue-600 px-4 py-1 rounded-full text-[10px] font-black transition-all uppercase tracking-widest">
-          Claim Now
-        </Link>
-      </div>
+      {siteSettings?.trialEnabled && (
+        <div className="text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden" style={{ backgroundColor: siteSettings.bannerColor || '#2563eb' }}>
+          <motion.div 
+            animate={{ scale: [1, 1.05, 1] }} 
+            transition={{ duration: 1, repeat: Infinity }}
+            className="bg-white px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+            style={{ color: siteSettings.bannerColor || '#2563eb' }}
+          >
+            Limited Offer
+          </motion.div>
+          <p className="text-sm font-black uppercase tracking-tight m-0">
+            {siteSettings.trialHeadline || `Hurry Up! Get ${siteSettings.trialMonths || 1} Month FREE Trial on PRO Version`}
+          </p>
+          <Link to="/plans" className="text-white border border-white/40 hover:bg-white transition-all px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ '--hover-color': siteSettings.bannerColor || '#2563eb' } as any}>
+            {siteSettings.trialBtnText || 'Claim Now'}
+          </Link>
+          <style>{`
+            a[style*="--hover-color"]:hover {
+              color: var(--hover-color) !important;
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Animated Hero */}
       <HeroSection />

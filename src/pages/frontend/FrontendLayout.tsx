@@ -67,30 +67,25 @@ export const FrontendLayout = () => {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       
       {/* Promotion Banner */}
-      {!isShop && !isMobileMenuOpen && (
-        <div className="bg-slate-900 text-white py-2.5 relative overflow-hidden border-b border-slate-800 shadow-xl">
-          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
-          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
+      {!isShop && !isMobileMenuOpen && siteSettings?.trialEnabled && (
+        <div className="text-white py-2.5 relative overflow-hidden border-b border-slate-800 shadow-xl" style={{ backgroundColor: siteSettings.bannerColor || '#0f172a' }}>
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#0f172a]/20 to-transparent z-10 pointer-events-none"></div>
+          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-[#0f172a]/20 to-transparent z-10 pointer-events-none"></div>
           
           <div className="animate-marquee flex whitespace-nowrap items-center">
             {/* Duplicated content for seamless scrolling */}
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex items-center gap-12 px-6">
-                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-sky-400">
-                  <Sparkles size={14} className="text-yellow-400 animate-pulse shrink-0" /> 
+              <div key={i} className="flex items-center gap-12 px-6 font-sans">
+                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white">
+                   {siteSettings.trialHeadline || `HURRY UP! GET ${siteSettings.trialMonths || 1} MONTH FREE TRIAL ON PRO VERSION`}
+                </span>
+                <Link to="/plans" className="text-[10px] md:text-xs font-black uppercase tracking-widest bg-white text-[#2563eb] px-4 py-1 rounded-full hover:bg-slate-100 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2" style={{ color: siteSettings.bannerColor || '#2563eb' }}>
+                  <Zap size={10} fill="currentColor" /> {siteSettings.trialBtnText || 'Claim Now'}
+                </Link>
+                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white opacity-40">
+                  <ShieldCheck size={14} className="shrink-0" /> 
                   Premium Networking
                 </span>
-                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-white">
-                  <Zap size={14} className="text-blue-400 shrink-0" /> 
-                  1-Month FREE Trial active
-                </span>
-                <span className="flex items-center gap-3 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-emerald-400">
-                   <ShieldCheck size={14} className="text-emerald-400 shrink-0" /> 
-                   Secure & Private
-                </span>
-                <Link to="/plans" className="text-[10px] md:text-xs font-black uppercase tracking-widest bg-blue-600 px-4 py-1 rounded-full hover:bg-blue-500 transition-all transform hover:scale-105 shadow-lg shadow-blue-600/20">
-                  Claim Now
-                </Link>
               </div>
             ))}
           </div>
