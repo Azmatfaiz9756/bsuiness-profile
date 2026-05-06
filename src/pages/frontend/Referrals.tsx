@@ -49,14 +49,15 @@ export default function FrontendReferrals() {
         <h1 className="text-3xl md:text-4xl font-extrabold mb-4">Refer & Earn Rewards</h1>
         <div className="text-base md:text-lg text-blue-50 max-w-2xl mx-auto mb-8 leading-relaxed space-y-4">
           <p>
-            When you share a business profile and it leads to a premium plan sale within {purchaseWindow} days, everyone wins! All new profiles get a {trialPeriod} Free Trial.
+            When you share a business profile and it leads to a premium plan sale within {purchaseWindow} days, everyone wins! {siteSettings?.trialEnabled && `All new profiles get a ${trialPeriod} Free Trial.`}
           </p>
           <ul className="text-left list-disc pl-5 mt-4 space-y-2 bg-black/10 rounded-xl p-4 backdrop-blur-sm">
-            <li><strong>As a Normal User / Free Trial User:</strong> Share any profile. If someone purchases a plan through it, you earn <strong>5% of the plan cost</strong> per sale, and the profile owner also earns <strong>5% of the plan cost</strong>.</li>
+            <li><strong>As a Normal User {siteSettings?.trialEnabled && "/ Free Trial User"}:</strong> Share any profile. If someone purchases a plan through it, you earn <strong>5% of the plan cost</strong> per sale, and the profile owner also earns <strong>5% of the plan cost</strong>.</li>
             <li><strong>As a Profile Owner:</strong> Share your own profile directly. If someone signs up and buys a plan through your link, you earn a <strong>10% direct commission</strong> of their plan cost!</li>
             <li><strong>Welcome Bonus:</strong> Subscribe to a paid plan (excluding Enterprise) and instantly receive a <strong>10% Welcome Bonus</strong> in your wallet!</li>
           </ul>
         </div>
+
 
         {user ? (
           <div className="bg-white p-2 rounded-xl flex flex-col md:flex-row gap-2 max-w-md mx-auto shadow-sm">

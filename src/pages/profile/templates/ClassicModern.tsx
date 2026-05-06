@@ -2291,7 +2291,9 @@ export default function ClassicModern({
                 Refer & Earn Rewards
               </div>
               <div style={{ fontSize: 13, color: "#dbeafe", marginBottom: 16, textAlign: 'left', lineHeight: 1.5 }}>
-                <div style={{ marginBottom: 8 }}>• <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial to explore all features.</div>
+                {siteSettings?.trialEnabled && (
+                  <div style={{ marginBottom: 8 }}>• <strong>{siteSettings?.trialPeriod || '1 Month'} Free Trial:</strong> All new business profiles get a free trial to explore all features.</div>
+                )}
                 <div>• <strong>Referral Success:</strong> If your referral purchases any plan within <strong>{siteSettings?.referralPurchaseWindow || 35} days</strong> of signing up, your referral is marked successful and you both earn rewards!</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>

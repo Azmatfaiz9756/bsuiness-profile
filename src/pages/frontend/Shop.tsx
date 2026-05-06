@@ -405,12 +405,14 @@ export default function FrontendShop() {
                 </div>
              </div>
 
-             <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
-               <div className="absolute -right-10 -bottom-10 opacity-20"><Zap size={120} /></div>
-               <h3 className="font-black text-lg mb-2 relative z-10">Pro Plan Trial</h3>
-               <p className="text-sm text-indigo-100 mb-4 relative z-10">Upgrade your digital networking with our Business Pro features.</p>
-               <button className="bg-white text-indigo-600 text-sm font-bold py-2 px-4 rounded-full shadow-md hover:bg-indigo-50 transition relative z-10">Get 1 Month Free</button>
-             </div>
+             {siteSettings?.trialEnabled && (
+               <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg overflow-hidden relative">
+                 <div className="absolute -right-10 -bottom-10 opacity-20"><Zap size={120} /></div>
+                 <h3 className="font-black text-lg mb-2 relative z-10">Pro Plan {siteSettings?.trialMonths || 1} Month Trial</h3>
+                 <p className="text-sm text-indigo-100 mb-4 relative z-10">Upgrade your digital networking with our Business Pro features.</p>
+                 <Link to="/plans" className="inline-block bg-white text-indigo-600 text-sm font-bold py-2 px-4 rounded-full shadow-md hover:bg-indigo-50 transition relative z-10">Get started Free</Link>
+               </div>
+             )}
           </aside>
         )}
 

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Shield, Zap, Bot, Share2, BarChart3, Smartphone, LayoutGrid, Globe, Heart, DollarSign, Users, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAppContext } from '../../context/AppContext';
 
 export default function FeaturesDetail() {
+  const { siteSettings } = useAppContext();
   return (
     <div className="bg-white min-h-screen">
       {/* Hero Section */}
@@ -26,21 +28,23 @@ export default function FeaturesDetail() {
             automate follow-ups, and provide real ROI data for your business.
           </p>
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-12 max-w-2xl mx-auto bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 p-6 md:p-8 rounded-[2.5rem] backdrop-blur-xl relative overflow-hidden"
-          >
-             <div className="absolute top-0 right-0 p-4">
-                <div className="bg-blue-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-[0.2em] animate-pulse">Limited Time</div>
-             </div>
-             <h3 className="text-white text-xl md:text-2xl font-black mb-2 italic">Hurry Up! 1 Month FREE Trial</h3>
-             <p className="text-slate-300 text-sm font-medium mb-6">Test the full power of our PRO features without spending a dime. No credit card required, instant activation.</p>
-             <Link to="/plans" className="inline-flex h-12 items-center px-8 bg-white text-blue-600 font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest text-[10px]">
-                Start Your Pro Trial Now
-             </Link>
-          </motion.div>
+          {siteSettings?.trialEnabled && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-12 max-w-2xl mx-auto bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 p-6 md:p-8 rounded-[2.5rem] backdrop-blur-xl relative overflow-hidden"
+            >
+               <div className="absolute top-0 right-0 p-4">
+                  <div className="bg-blue-600 text-white text-[8px] font-black px-3 py-1 rounded-full uppercase tracking-[0.2em] animate-pulse">Limited Time</div>
+               </div>
+               <h3 className="text-white text-xl md:text-2xl font-black mb-2 italic">Hurry Up! {siteSettings?.trialMonths || 1} Month FREE Trial</h3>
+               <p className="text-slate-300 text-sm font-medium mb-6">Test the full power of our PRO features without spending a dime. No credit card required, instant activation.</p>
+               <Link to="/plans" className="inline-flex h-12 items-center px-8 bg-white text-blue-600 font-black rounded-xl hover:bg-slate-50 transition-all uppercase tracking-widest text-[10px]">
+                  Start Your Pro Trial Now
+               </Link>
+            </motion.div>
+          )}
         </div>
       </section>
 

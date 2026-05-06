@@ -13,9 +13,16 @@ export function PromotionBanner() {
     { id: 'bonus', headline: 'WELCOME BONUS! JOIN NOW & GET 10 AED IN YOUR WALLET', btnText: 'JOIN NOW', link: '/', color: '#059669' }
   ];
   
-  const slides = Array.isArray(siteSettings?.promotionSlides) && siteSettings.promotionSlides.length > 0 
+  const trialEnabled = siteSettings?.trialEnabled ?? false;
+  
+  let slides = Array.isArray(siteSettings?.promotionSlides) && siteSettings.promotionSlides.length > 0 
     ? siteSettings.promotionSlides 
     : defaultSlides;
+
+  // Filter out trial slide if disabled
+  if (!trialEnabled) {
+    slides = slides.filter((s: any) => s.id !== 'trial');
+  }
 
   useEffect(() => {
     if (slides.length <= 1) return;
