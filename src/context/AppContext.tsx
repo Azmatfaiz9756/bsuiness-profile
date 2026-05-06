@@ -101,36 +101,40 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     },
     countryPlans: {
       'Global': [
-        { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
-        { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
-        { id: 'premium', name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
-        { id: 'enterprise', name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
+        { id: 'basic', name: 'Basic', price: 'Free', originalPrice: '', discount: 0, popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
+        { id: 'pro', name: 'Pro', price: '$19', originalPrice: '$38', discount: 50, popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
+        { id: 'premium', name: 'Premium', price: '$49', originalPrice: '$98', discount: 50, popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
+        { id: 'enterprise', name: 'Enterprise', price: '$199', originalPrice: '$398', discount: 50, popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
       ],
       'India': [
-        { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
-        { id: 'pro', name: 'Pro', price: '₹999', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
-        { id: 'premium', name: 'Premium', price: '₹2499', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
-        { id: 'enterprise', name: 'Enterprise', price: '₹9999', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
+        { id: 'basic', name: 'Basic', price: 'Free', originalPrice: '', discount: 0, popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
+        { id: 'pro', name: 'Pro', price: '₹999', originalPrice: '₹1998', discount: 50, popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
+        { id: 'premium', name: 'Premium', price: '₹2499', originalPrice: '₹4998', discount: 50, popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
+        { id: 'enterprise', name: 'Enterprise', price: '₹9999', originalPrice: '₹19998', discount: 50, popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
       ],
       'UAE': [
-        { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
-        { id: 'pro', name: 'Pro', price: 'AED 69', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
-        { id: 'premium', name: 'Premium', price: 'AED 179', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
-        { id: 'enterprise', name: 'Enterprise', price: 'AED 699', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
+        { id: 'basic', name: 'Basic', price: 'Free', originalPrice: '', discount: 0, popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
+        { id: 'pro', name: 'Pro', price: 'AED 69', originalPrice: 'AED 138', discount: 50, popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
+        { id: 'premium', name: 'Premium', price: 'AED 179', originalPrice: 'AED 358', discount: 50, popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
+        { id: 'enterprise', name: 'Enterprise', price: 'AED 699', originalPrice: 'AED 1398', discount: 50, popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
       ]
     },
     plans: [
-      { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
-      { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
-      { id: 'premium', name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
-      { id: 'enterprise', name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
+      { id: 'basic', name: 'Basic', price: 'Free', originalPrice: '', discount: 0, popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
+      { id: 'pro', name: 'Pro', price: '$19', originalPrice: '$38', discount: 50, popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
+      { id: 'premium', name: 'Premium', price: '$49', originalPrice: '$98', discount: 50, popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
+      { id: 'enterprise', name: 'Enterprise', price: '$199', originalPrice: '$398', discount: 50, popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
     ],
     trialEnabled: false,
     trialMonths: 1,
     trialPlans: ['Pro'],
     bannerColor: '#2563eb',
     trialHeadline: 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION',
-    trialBtnText: 'CLAIM NOW'
+    trialBtnText: 'CLAIM NOW',
+    promotionSlides: [
+      { id: 'trial', headline: 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION', btnText: 'CLAIM NOW', link: '/plans', color: '#2563eb' },
+      { id: 'bonus', headline: 'WELCOME BONUS! JOIN NOW & GET 10 AED IN YOUR WALLET', btnText: 'JOIN NOW', link: '/', color: '#059669' }
+    ]
   });
 
   useEffect(() => {

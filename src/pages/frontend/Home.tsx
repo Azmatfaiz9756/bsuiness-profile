@@ -19,7 +19,68 @@ import {
   Bot,
   DollarSign
 } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+
+function PromotionBanner() {
+  const { siteSettings } = useAppContext();
+  const slides = siteSettings?.promotionSlides || [
+    { id: 'trial', headline: 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION', btnText: 'CLAIM NOW', link: '/plans', color: '#2563eb' }
+  ];
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  if (!siteSettings?.trialEnabled || slides.length === 0) return null;
+
+  const slide = slides[currentSlide];
+
+  return (
+    <div className="relative z-40 overflow-hidden" style={{ backgroundColor: slide.color || '#2563eb' }}>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={slide.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.5 }}
+          className="text-white py-3 px-4 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4"
+        >
+          <motion.div 
+            animate={{ scale: [1, 1.05, 1] }} 
+            transition={{ duration: 1, repeat: Infinity }}
+            className="bg-white px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
+            style={{ color: slide.color || '#2563eb' }}
+          >
+            Limited Offer
+          </motion.div>
+          <p className="text-sm font-black uppercase tracking-tight m-0">
+            {slide.headline}
+          </p>
+          <Link 
+            to={slide.link || "/plans"} 
+            className="text-white border border-white/40 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+            onMouseEnter={(e) => {
+              (e.currentTarget as any).style.backgroundColor = 'white';
+              (e.currentTarget as any).style.color = slide.color || '#2563eb';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as any).style.backgroundColor = 'transparent';
+              (e.currentTarget as any).style.color = 'white';
+            }}
+          >
+            {slide.btnText || 'Claim Now'}
+          </Link>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
 import {
   collection,
   query,
@@ -841,35 +902,7 @@ export default function FrontendHome() {
       />
 
       {/* Limited Offer Banner */}
-      {siteSettings?.trialEnabled && (
-        <div className="text-white py-3 px-4 relative z-40 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 overflow-hidden" style={{ backgroundColor: siteSettings?.bannerColor || '#2563eb' }}>
-          <motion.div 
-            animate={{ scale: [1, 1.05, 1] }} 
-            transition={{ duration: 1, repeat: Infinity }}
-            className="bg-white px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest"
-            style={{ color: siteSettings?.bannerColor || '#2563eb' }}
-          >
-            Limited Offer
-          </motion.div>
-          <p className="text-sm font-black uppercase tracking-tight m-0">
-            {siteSettings?.trialHeadline || `Hurry Up! Get ${siteSettings?.trialMonths || 1} Month FREE Trial on PRO Version`}
-          </p>
-          <Link 
-            to="/plans" 
-            className="text-white border border-white/40 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
-            onMouseEnter={(e) => {
-              (e.currentTarget as any).style.backgroundColor = 'white';
-              (e.currentTarget as any).style.color = siteSettings?.bannerColor || '#2563eb';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as any).style.backgroundColor = 'transparent';
-              (e.currentTarget as any).style.color = 'white';
-            }}
-          >
-            {siteSettings?.trialBtnText || 'Claim Now'}
-          </Link>
-        </div>
-      )}
+      <PromotionBanner />
 
       {/* Animated Hero */}
       <HeroSection />

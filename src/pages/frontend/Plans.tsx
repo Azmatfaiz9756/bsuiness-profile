@@ -104,7 +104,17 @@ export default function FrontendPlans() {
                {plan.badge}
             </div>
             <div className={`text-base font-extrabold mb-1 ${plan.popular ? 'text-blue-600' : 'text-slate-900'}`}>{plan.name}</div>
-            <div className="text-3xl font-black text-slate-900 mb-6">{plan.price}<sub className="text-xs text-slate-500 font-medium bottom-0">/yr</sub></div>
+            <div className="flex flex-col items-center justify-center mb-6">
+              <div className="text-3xl font-black text-slate-900">{plan.price}<sub className="text-xs text-slate-500 font-medium bottom-0">/yr</sub></div>
+              {plan.originalPrice && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm text-slate-400 line-through font-medium">{plan.originalPrice}</span>
+                  {plan.discount > 0 && (
+                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded uppercase tracking-wider">{plan.discount}% OFF</span>
+                  )}
+                </div>
+              )}
+            </div>
             
             <div className="text-left flex flex-col gap-3 mb-8">
                {plan.features && plan.features.length > 0 ? plan.features.map((feature: string, idx: number) => (

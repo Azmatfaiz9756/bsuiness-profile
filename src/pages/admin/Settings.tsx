@@ -298,6 +298,90 @@ export default function AdminSettings() {
           </div>
 
           <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 12 }}>Promotion Banner Slides</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {(formData.promotionSlides || []).map((slide: any, sIdx: number) => (
+                <div key={sIdx} style={{ padding: 16, border: '1px solid #e5e7eb', borderRadius: 12, background: '#f9fafb' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Headline</label>
+                      <input 
+                        type="text" 
+                        value={slide.headline} 
+                        onChange={e => {
+                          const updated = [...formData.promotionSlides];
+                          updated[sIdx].headline = e.target.value;
+                          handleChange('promotionSlides', updated);
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Button Text</label>
+                      <input 
+                        type="text" 
+                        value={slide.btnText} 
+                        onChange={e => {
+                          const updated = [...formData.promotionSlides];
+                          updated[sIdx].btnText = e.target.value;
+                          handleChange('promotionSlides', updated);
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Link URL</label>
+                      <input 
+                        type="text" 
+                        value={slide.link} 
+                        onChange={e => {
+                          const updated = [...formData.promotionSlides];
+                          updated[sIdx].link = e.target.value;
+                          handleChange('promotionSlides', updated);
+                        }}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Background Color</label>
+                      <input 
+                        type="color" 
+                        value={slide.color} 
+                        onChange={e => {
+                          const updated = [...formData.promotionSlides];
+                          updated[sIdx].color = e.target.value;
+                          handleChange('promotionSlides', updated);
+                        }}
+                        style={{ width: '100%', height: 40, padding: 2, border: '1px solid #d1d5db', borderRadius: 8, cursor: 'pointer', background: '#fff' }} 
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      const updated = formData.promotionSlides.filter((_: any, i: number) => i !== sIdx);
+                      handleChange('promotionSlides', updated);
+                    }}
+                    style={{ marginTop: 12, border: 'none', background: 'none', color: '#ef4444', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                  >
+                    Remove Slide
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => {
+                  const updated = [...(formData.promotionSlides || []), { id: Date.now().toString(), headline: 'NEW OFFER!', btnText: 'CHECK NOW', link: '/', color: '#2563eb' }];
+                  handleChange('promotionSlides', updated);
+                }}
+                style={{ padding: '10px 16px', border: '1px dashed #d1d5db', borderRadius: 12, background: '#fff', color: '#2563eb', fontWeight: 600, cursor: 'pointer' }}
+              >
+                + Add New Promotion Slide
+              </button>
+            </div>
+          </div>
+
+          <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 12 }}>Apply Trial to Following Plans</label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {['Pro', 'Premium', 'Enterprise'].map(plan => (
@@ -380,32 +464,50 @@ export default function AdminSettings() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               {(formData.countryPlans?.[adminRegion] || []).map((plan: any, idx: number) => (
                 <div key={idx} style={{ padding: 20, border: '1px solid #e5e7eb', borderRadius: 16, background: '#f9fafb' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Plan Name</label>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Plan Name</label>
                       <input 
                         type="text" 
                         value={plan.name} 
                         onChange={e => handlePlanChange(idx, 'name', e.target.value)}
-                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Price (Label)</label>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Actual Price</label>
                       <input 
                         type="text" 
                         value={plan.price} 
                         onChange={e => handlePlanChange(idx, 'price', e.target.value)}
-                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Badge Text</label>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Old Price (Strike)</label>
+                      <input 
+                        type="text" 
+                        value={plan.originalPrice || ''} 
+                        onChange={e => handlePlanChange(idx, 'originalPrice', e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Off %</label>
+                      <input 
+                        type="number" 
+                        value={plan.discount || 0} 
+                        onChange={e => handlePlanChange(idx, 'discount', Number(e.target.value))}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#6b7280', marginBottom: 4 }}>Badge Text</label>
                       <input 
                         type="text" 
                         value={plan.badge} 
                         onChange={e => handlePlanChange(idx, 'badge', e.target.value)}
-                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8 }} 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13 }} 
                       />
                     </div>
                   </div>
