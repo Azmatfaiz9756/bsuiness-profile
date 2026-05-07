@@ -4,6 +4,7 @@ import { LayoutDashboard, Users, CreditCard, ShoppingBag, Settings, BarChart2, T
 import { useAppContext } from '../../context/AppContext';
 import { loginWithGoogle, logout } from '../../firebase';
 import AnimatedLogo from '../../components/AnimatedLogo';
+import { PromotionBanner } from '../../components/PromotionBanner';
 
 export const AdminLayout = () => {
   const location = useLocation();
@@ -173,6 +174,7 @@ export const AdminLayout = () => {
         
         {/* Main Workspace */}
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          <PromotionBanner />
           <div className="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-8">
             <div className="text-lg md:text-xl font-bold text-slate-800 truncate">
               {location.pathname === '/admin' ? 'Dashboard' : 

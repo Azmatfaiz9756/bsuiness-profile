@@ -36,6 +36,43 @@ export function PromotionBanner() {
 
   const activeSlide = slides[currentSlide];
 
+  const marqueeEnabled = siteSettings?.marqueeEnabled || false;
+  const marqueeText = siteSettings?.marqueeText || '';
+  const marqueeBgColor = siteSettings?.marqueeBgColor || '#2563eb';
+  const marqueeTextColor = siteSettings?.marqueeTextColor || '#ffffff';
+  const marqueeSpeed = siteSettings?.marqueeSpeed || 30;
+
+  if (marqueeEnabled && marqueeText) {
+    return (
+      <div 
+        className="relative z-50 py-2.5 overflow-hidden border-b border-white/10 shadow-lg"
+        style={{ backgroundColor: marqueeBgColor }}
+      >
+        <div className="flex whitespace-nowrap animate-marquee w-max">
+          {[1, 2, 3, 4].map((i) => (
+            <span 
+              key={i}
+              className="inline-block px-8 text-xs md:text-sm font-black uppercase tracking-widest"
+              style={{ color: marqueeTextColor }}
+            >
+              {marqueeText}
+            </span>
+          ))}
+        </div>
+        
+        <style>{`
+          .animate-marquee {
+            animation: marquee ${marqueeSpeed}s linear infinite;
+          }
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-25%); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   if (!activeSlide) return null;
 
   return (

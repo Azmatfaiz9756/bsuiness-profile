@@ -146,6 +146,7 @@ export default function AdminProfiles() {
                <button onClick={() => setEditTab('media')} style={{ padding: '12px 16px', background: editTab === 'media' ? '#fff' : '#f9fafb', border: 'none', borderBottom: editTab === 'media' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: editTab === 'media' ? '#2563eb' : '#6b7280', cursor: 'pointer', whiteSpace: 'nowrap' }}>Media</button>
                <button onClick={() => setEditTab('bank')} style={{ padding: '12px 16px', background: editTab === 'bank' ? '#fff' : '#f9fafb', border: 'none', borderBottom: editTab === 'bank' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: editTab === 'bank' ? '#2563eb' : '#6b7280', cursor: 'pointer', whiteSpace: 'nowrap' }}>Bank Details</button>
                <button onClick={() => setEditTab('seo')} style={{ padding: '12px 16px', background: editTab === 'seo' ? '#fff' : '#f9fafb', border: 'none', borderBottom: editTab === 'seo' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: editTab === 'seo' ? '#2563eb' : '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><Search size={16} /> SEO</button>
+               <button onClick={() => setEditTab('subscription')} style={{ padding: '12px 16px', background: editTab === 'subscription' ? '#fff' : '#f9fafb', border: 'none', borderBottom: editTab === 'subscription' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: editTab === 'subscription' ? '#2563eb' : '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><Shield size={16} /> Subscription</button>
                <button onClick={() => setEditTab('domain')} style={{ padding: '12px 16px', background: editTab === 'domain' ? '#fff' : '#f9fafb', border: 'none', borderBottom: editTab === 'domain' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: 600, color: editTab === 'domain' ? '#2563eb' : '#6b7280', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><Globe size={16} /> Domain</button>
             </div>
 
@@ -339,6 +340,74 @@ export default function AdminProfiles() {
                      <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Target Keywords</label>
                      <input type="text" placeholder="e.g. real estate agent dubai, luxury properties, ahmed ali" value={formData.seo.keywords} onChange={e => handleSeoChange('keywords', e.target.value)} style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 15 }} />
                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>Comma-separated keywords for local indexing.</div>
+                   </div>
+                 </div>
+               )}
+
+               {editTab === 'subscription' && (
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                   <div style={{ background: '#f0f9ff', padding: 16, borderRadius: 12, border: '1px solid #bae6fd' }}>
+                     <h4 style={{ margin: '0 0 8px', fontSize: 14, color: '#0369a1' }}>Current Plan Settings</h4>
+                     <p style={{ margin: 0, fontSize: 12, color: '#075985' }}>Manually override user plans or manage their free trial status here.</p>
+                   </div>
+                   
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                     <div>
+                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Select Plan</label>
+                       <select 
+                         value={formData.plan || 'Free'} 
+                         onChange={e => setFormData({...formData, plan: e.target.value})} 
+                         style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8, background: '#fff' }}
+                       >
+                         <option value="Free">Free</option>
+                         <option value="Basic">Basic</option>
+                         <option value="Pro">Pro</option>
+                         <option value="Enterprise">Enterprise</option>
+                         <option value="Enterprise Lifetime">Enterprise Lifetime</option>
+                       </select>
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Trial Status</label>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0' }}>
+                         <input 
+                           type="checkbox" 
+                           id="trialActiveAdmin"
+                           checked={formData.trialActive || false} 
+                           onChange={e => setFormData({...formData, trialActive: e.target.checked})} 
+                         />
+                         <label htmlFor="trialActiveAdmin" style={{ fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Active Trial Mode</label>
+                       </div>
+                     </div>
+                   </div>
+
+                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                     <div>
+                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Trial Used Status</label>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0' }}>
+                         <input 
+                           type="checkbox" 
+                           id="hasUsedTrialAdmin"
+                           checked={formData.hasUsedTrial || false} 
+                           onChange={e => setFormData({...formData, hasUsedTrial: e.target.checked})} 
+                         />
+                         <label htmlFor="hasUsedTrialAdmin" style={{ fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mark Trial as Used</label>
+                       </div>
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: 12, fontWeight: 700, marginBottom: 8, color: '#374151' }}>Trial End Date (Optional)</label>
+                       <input 
+                         type="datetime-local" 
+                         value={formData.trialEndsAt ? new Date(formData.trialEndsAt).toISOString().slice(0, 16) : ''} 
+                         onChange={e => setFormData({...formData, trialEndsAt: e.target.value ? new Date(e.target.value).toISOString() : null})} 
+                         style={{ width: '100%', padding: 12, border: '1px solid #d1d5db', borderRadius: 8 }} 
+                       />
+                     </div>
+                   </div>
+
+                   <div style={{ padding: 16, background: '#fff7ed', borderRadius: 12, border: '1px solid #ffedd5' }}>
+                     <p style={{ margin: 0, fontSize: 12, color: '#9a3412', lineHeight: 1.5 }}>
+                       <strong>Note:</strong> Changing the plan here will instantly unlock associated features for the user. Adding "Enterprise Lifetime" will grant all features permanently without a monthly cost.
+                     </p>
                    </div>
                  </div>
                )}

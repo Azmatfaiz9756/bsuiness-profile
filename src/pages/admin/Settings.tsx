@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp, Key, Sparkles } from 'lucide-react';
+import { Search, Globe, Smartphone, CreditCard, Save, TrendingUp, Key, Sparkles, Wand2 } from 'lucide-react';
 import { db } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { ProxyGoogleGenAI } from '../../lib/gemini';
 
 export default function AdminSettings() {
   const { siteSettings, setSiteSettings } = useAppContext();
@@ -13,6 +14,7 @@ export default function AdminSettings() {
   // Separate state for keys because they shouldn't live in public firestore 'settings'
   const [apiKeys, setApiKeys] = useState({ STRIPE_SECRET_KEY: '', GEMINI_API_KEY: '' });
   const [savingKeys, setSavingKeys] = useState(false);
+  const [generatingAi, setGeneratingAi] = useState(false);
 
   React.useEffect(() => {
     setFormData(siteSettings);
@@ -82,6 +84,32 @@ export default function AdminSettings() {
       console.error(err);
     } finally {
       setSavingKeys(false);
+    }
+  };
+
+  const generateAiMarquee = async () => {
+    try {
+      setGeneratingAi(true);
+      const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+      const prompt = `Generate a catchy, short, and professional scrolling marquee text for a Digital Business Card platform.
+      Rules:
+      - Use emojis and icons for high visibility.
+      - Keep it professional yet urgent (Hurry up, limited time, etc).
+      - Include focus on NFC cards, saving contacts, or digital profiles.
+      - It should be in 1 line.
+      - Return ONLY the text, nothing else.`;
+
+      const result = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }]
+      });
+      const text = result.candidates[0].content.parts[0].text.trim();
+      handleChange('marqueeText', text);
+    } catch (err) {
+      console.error(err);
+      alert("AI Generation failed. Ensure VITE_GEMINI_API_KEY is set.");
+    } finally {
+      setGeneratingAi(false);
     }
   };
 
@@ -378,6 +406,88 @@ export default function AdminSettings() {
               >
                 + Add New Promotion Slide
               </button>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 12 }}>Scrolling Marquee Settings</label>
+            <div style={{ background: '#f9fafb', padding: 24, borderRadius: 16, border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 20 }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.marqueeEnabled || false} 
+                    onChange={e => handleChange('marqueeEnabled', e.target.checked)}
+                    id="marqueeEnabled"
+                    style={{ width: 20, height: 20 }}
+                  />
+                  <label htmlFor="marqueeEnabled" style={{ fontSize: 14, fontWeight: 700, color: '#111827', cursor: 'pointer' }}>Show Global Scrolling Marquee</label>
+               </div>
+               
+               <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: '#4b5563' }}>Marquee Content</label>
+                    <button 
+                      onClick={generateAiMarquee}
+                      disabled={generatingAi}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 6, background: '#f3f4f6', border: '1px solid #d1d5db', fontSize: 11, fontWeight: 700, color: '#374151', cursor: generatingAi ? 'not-allowed' : 'pointer' }}
+                    >
+                      <Wand2 size={12} className={generatingAi ? 'animate-spin' : ''} /> {generatingAi ? 'Generating...' : 'AI Generate'}
+                    </button>
+                  </div>
+                  <textarea 
+                    value={formData.marqueeText || ''} 
+                    onChange={e => handleChange('marqueeText', e.target.value)}
+                    rows={2}
+                    style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, lineHeight: 1.5 }}
+                  />
+               </div>
+
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 8 }}>Background Color</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                       <input 
+                          type="color" 
+                          value={formData.marqueeBgColor || '#2563eb'} 
+                          onChange={e => handleChange('marqueeBgColor', e.target.value)} 
+                          style={{ width: 36, height: 36, padding: 2, border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }} 
+                       />
+                       <input 
+                          type="text" 
+                          value={formData.marqueeBgColor || '#2563eb'} 
+                          onChange={e => handleChange('marqueeBgColor', e.target.value)} 
+                          style={{ flex: 1, padding: '8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 12 }} 
+                       />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 8 }}>Text Color</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                       <input 
+                          type="color" 
+                          value={formData.marqueeTextColor || '#ffffff'} 
+                          onChange={e => handleChange('marqueeTextColor', e.target.value)} 
+                          style={{ width: 36, height: 36, padding: 2, border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }} 
+                       />
+                       <input 
+                          type="text" 
+                          value={formData.marqueeTextColor || '#ffffff'} 
+                          onChange={e => handleChange('marqueeTextColor', e.target.value)} 
+                          style={{ flex: 1, padding: '8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 12 }} 
+                       />
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#4b5563', marginBottom: 8 }}>Scroll Speed</label>
+                    <input 
+                      type="number" 
+                      value={formData.marqueeSpeed || 30} 
+                      onChange={e => handleChange('marqueeSpeed', Number(e.target.value))} 
+                      style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 12 }}
+                    />
+                    <p style={{ fontSize: 10, color: '#6b7280', marginTop: 4 }}>Time in sec (Higher is slower)</p>
+                  </div>
+               </div>
             </div>
           </div>
 

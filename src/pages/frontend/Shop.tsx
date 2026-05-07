@@ -343,7 +343,7 @@ export default function FrontendShop() {
         </div>
         
         {/* Marquee Navigation Bar */}
-        {view === 'catalog' && (
+        {view === 'catalog' && !siteSettings?.marqueeEnabled && (
           <div className="bg-slate-800 border-t border-slate-700 py-1.5 overflow-hidden flex items-center relative">
             <div className="flex whitespace-nowrap animate-marquee w-max">
               {[1, 2, 3, 4].map((loop) => (

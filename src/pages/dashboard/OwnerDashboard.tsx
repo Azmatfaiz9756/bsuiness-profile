@@ -3269,9 +3269,36 @@ export default function OwnerDashboard() {
                        ) : (
                          <button 
                            onClick={() => { 
+                             const isTrialAvailable = siteSettings?.trialEnabled && 
+                                                     siteSettings?.trialPlans?.includes(plan.name) && 
+                                                     !profile?.hasUsedTrial;
+
                              if(plan.price === 'Free') {
                                setFormData({...formData, plan: plan.name}); 
                                setTimeout(handleSave, 100); 
+                             } else if (isTrialAvailable) {
+                               if (window.confirm(`Activate ${siteSettings.trialMonths || 1} month free trial for ${plan.name}?`)) {
+                                 const trialEndDate = new Date();
+                                 trialEndDate.setMonth(trialEndDate.getMonth() + (siteSettings.trialMonths || 1));
+                                 
+                                 const updatedProfile = {
+                                   ...formData,
+                                   plan: plan.name,
+                                   hasUsedTrial: true,
+                                   trialActive: true,
+                                   trialEndsAt: trialEndDate.toISOString(),
+                                   updatedAt: new Date().toISOString()
+                                 };
+                                 
+                                 setFormData(updatedProfile);
+                                 import('firebase/firestore').then(({ doc, setDoc }) => {
+                                   setDoc(doc(db, 'profiles', editingSubProfileId || user.uid), updatedProfile, { merge: true })
+                                     .then(() => {
+                                       setProfile(updatedProfile);
+                                       alert(`${plan.name} Trial Activated!`);
+                                     });
+                                 });
+                               }
                              } else {
                                setSelectedPlanForPayment(plan);
                                setIsPaymentModalOpen(true);
@@ -3279,7 +3306,7 @@ export default function OwnerDashboard() {
                            }} 
                            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 ${plan.popular ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10'}`}
                          >
-                           Choose {plan.name}
+                           {siteSettings?.trialEnabled && siteSettings?.trialPlans?.includes(plan.name) && !profile?.hasUsedTrial ? `Start Free Trial` : `Choose ${plan.name}`}
                          </button>
                        )}
                      </div>
