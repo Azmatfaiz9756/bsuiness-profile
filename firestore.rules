@@ -150,6 +150,10 @@ service cloud.firestore {
              (!('website' in data) || data.website is string) &&
              (!('address' in data) || data.address is string) &&
              (!('updatedAt' in data) || (data.updatedAt is string || data.updatedAt is number || data.updatedAt is timestamp)) &&
+             (!('hasUsedTrial' in data) || (data.hasUsedTrial is bool || data.hasUsedTrial is string)) &&
+             (!('trialActive' in data) || (data.trialActive is bool || data.trialActive is string)) &&
+             (!('trialEndsAt' in data) || (data.trialEndsAt is string || data.trialEndsAt is timestamp)) &&
+             (!('isTrial' in data) || (data.isTrial is bool || data.isTrial is string)) &&
              (!('isDb' in data) || (data.isDb is bool || data.isDb is string)) &&
              (!('role' in data) || data.role is string) &&
              (!('avatar' in data) || data.avatar is string) &&

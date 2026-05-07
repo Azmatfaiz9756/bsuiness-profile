@@ -11,6 +11,7 @@ export default function AdminProfiles() {
   const [editingProfile, setEditingProfile] = useState<any>(null);
   const [editTab, setEditTab] = useState('seo');
   const [formData, setFormData] = useState<any>({});
+  const [searchTerm, setSearchTerm] = useState('');
   
   useEffect(() => {
     const fetchDbProfiles = async () => {
@@ -32,8 +33,15 @@ export default function AdminProfiles() {
         combined.push(dbp);
       }
     });
-    return combined;
-  }, [staticProfiles, dbProfiles]);
+    if (!searchTerm) return combined;
+    const term = searchTerm.toLowerCase();
+    return combined.filter(p => 
+      (p.name && p.name.toLowerCase().includes(term)) || 
+      (p.email && p.email.toLowerCase().includes(term)) ||
+      (p.id && p.id.toLowerCase().includes(term)) ||
+      (p.slug && p.slug.toLowerCase().includes(term))
+    );
+  }, [staticProfiles, dbProfiles, searchTerm]);
 
   const handleEditClick = (profile: any) => {
     setFormData({ ...profile, seo: profile.seo || { title: '', desc: '', keywords: '' } });
@@ -80,7 +88,12 @@ export default function AdminProfiles() {
       <div className="filters">
         <div className="search-bar" style={{width: 240}}>
            <span style={{color: 'var(--text3)'}}>🔍</span>
-           <input type="text" placeholder="Search profiles..." />
+           <input 
+             type="text" 
+             placeholder="Search profiles..." 
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+           />
         </div>
       </div>
 

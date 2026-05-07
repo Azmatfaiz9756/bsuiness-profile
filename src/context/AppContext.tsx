@@ -47,6 +47,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [profilesCount, setProfilesCount] = useState(0);
   const [profile, setProfile] = useState<any>(null);
   const [usersCount, setUsersCount] = useState(0);
   
@@ -65,6 +66,10 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         getDocs(collection(db, 'users'))
           .then(snap => setUsersCount(snap.size))
           .catch(err => handleFirestoreError(err, OperationType.LIST, 'users (count)'));
+          
+        getDocs(collection(db, 'profiles'))
+          .then(snap => setProfilesCount(snap.size))
+          .catch(err => handleFirestoreError(err, OperationType.LIST, 'profiles (count)'));
       });
 
       return () => unsub();
@@ -373,7 +378,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       shopBanners, setShopBanners,
       jobOpenings, setJobOpenings,
       selectedCountry, setSelectedCountry,
-      joinNotifications, usersCount
+      joinNotifications, usersCount, profilesCount, setProfilesCount
     }}>
       {children}
     </AppContext.Provider>

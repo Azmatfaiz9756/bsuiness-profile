@@ -688,7 +688,12 @@ export default function OwnerDashboard() {
           setProfile(emptyProfile);
           setFormData(emptyProfile);
           // Auto create
-          await setDoc(docRef, emptyProfile);
+          try {
+            await setDoc(docRef, emptyProfile);
+          } catch (createErr) {
+            console.error("Initial profile creation failed:", createErr);
+            showToast("Failed to initialize your profile. Please check your connection.");
+          }
           
           // Create Join Notification for Admin
           try {
@@ -3320,6 +3325,10 @@ export default function OwnerDashboard() {
                                      .then(() => {
                                        setProfile(updatedProfile);
                                        alert(`${plan.name} Trial Activated!`);
+                                     })
+                                     .catch(err => {
+                                       console.error("Trial activation failed:", err);
+                                       alert("Trial activation failed. Please try again or contact support.");
                                      });
                                  });
                                }
