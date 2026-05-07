@@ -41,7 +41,16 @@ export default function FrontendPlans() {
         const { db } = await import('../../firebase');
         const userRef = doc(db, 'profiles', user.uid);
         const refCode = localStorage.getItem('dbc_referred_by');
-        const updateData: any = { plan: plan.name, updatedAt: new Date().toISOString() };
+        const updateData: any = { 
+          plan: plan.name, 
+          updatedAt: new Date().toISOString(),
+          ownerId: user.uid,
+          email: user.email,
+          name: user.displayName || user.email?.split('@')[0] || 'User',
+          id: user.uid,
+          status: 'Active',
+          views: 0
+        };
         if (refCode) {
           updateData.referredBy = refCode;
         }
@@ -68,7 +77,13 @@ export default function FrontendPlans() {
               trialActive: true,
               hasUsedTrial: true,
               trialEndsAt: expiryDate.toISOString(),
-              updatedAt: new Date().toISOString() 
+              updatedAt: new Date().toISOString(),
+              ownerId: user.uid,
+              email: user.email,
+              name: user.displayName || user.email?.split('@')[0] || 'User',
+              id: user.uid,
+              status: 'Active',
+              views: 0
             };
             
             await setDoc(userRef, updateData, { merge: true });

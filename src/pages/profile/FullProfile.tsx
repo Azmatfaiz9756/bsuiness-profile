@@ -24,8 +24,11 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
   const { profiles } = useAppContext();
   
-  // Try to find profile in context immediately to avoid flicker
-  const initialProfile = profiles.find((p: any) => p.id === id || p.slug === id);
+      // Try to find profile in context immediately to avoid flicker
+  const initialProfile = profiles.find((p: any) => 
+    p.id === id || 
+    (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
+  );
   const [profile, setProfile] = useState<any>(initialProfile || null);
   const [template, setTemplate] = useState(initialProfile?.template || 'classic');
   const [loading, setLoading] = useState(!initialProfile);
@@ -86,11 +89,18 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           if (!querySnapshot.empty) {
             foundProfile = { ...querySnapshot.docs[0].data(), id: querySnapshot.docs[0].id };
           } else {
-            // Last resort: search by id field as fallback for some older profiles
-            const q2 = query(collection(db, 'profiles'), where('id', '==', id));
-            const snap2 = await getDocs(q2);
-            if (!snap2.empty) {
-              foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
+            // Try searching by original ID as slug just in case it was saved with mixed case
+            const qOrig = query(collection(db, 'profiles'), where('slug', '==', id));
+            const snapOrig = await getDocs(qOrig);
+            if (!snapOrig.empty) {
+              foundProfile = { ...snapOrig.docs[0].data(), id: snapOrig.docs[0].id };
+            } else {
+              // Last resort: search by id field as fallback for some older profiles
+              const q2 = query(collection(db, 'profiles'), where('id', '==', id));
+              const snap2 = await getDocs(q2);
+              if (!snap2.empty) {
+                foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
+              }
             }
           }
         }
@@ -131,7 +141,10 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
         } else {
           // If no profile found in DB, we stay at null to show 404
-          const existsInContext = profiles.find((p: any) => p.id === id || p.slug === id);
+          const existsInContext = profiles.find((p: any) => 
+            p.id === id || 
+            (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
+          );
           if (existsInContext) {
             setProfile(existsInContext);
           } else {
@@ -141,7 +154,10 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       } catch (err) {
         console.error("Error fetching profile:", err);
         if (!profile) {
-          const localProfile = profiles.find((p: any) => p.id === id || p.slug === id) || profiles[0];
+          const localProfile = profiles.find((p: any) => 
+            p.id === id || 
+            (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
+          ) || profiles[0];
           setProfile(localProfile);
           if (localProfile && localProfile.template) {
             setTemplate(localProfile.template);

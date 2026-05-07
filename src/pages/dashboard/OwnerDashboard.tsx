@@ -598,6 +598,27 @@ export default function OwnerDashboard() {
         const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
           const data = docSnap.data();
+          
+          // Check if this is a "partial" profile (missing core fields like name or slug)
+          if (!data.name || !data.slug || !data.ownerId) {
+            console.log("Partial profile detected, filling in defaults...");
+            const mergeData = {
+              id: user.uid,
+              ownerId: user.uid,
+              slug: data.slug || user.uid.substring(0, 8).toLowerCase(),
+              name: data.name || user.displayName || user.email?.split('@')[0] || 'User',
+              email: data.email || user.email,
+              status: data.status || 'Active',
+              plan: data.plan || 'Free',
+              updatedAt: new Date().toISOString()
+            };
+            const completeData = { ...data, ...mergeData };
+            await setDoc(doc(db, 'profiles', user.uid), completeData, { merge: true });
+            setProfile(completeData);
+            setFormData(completeData);
+            return;
+          }
+
           // Auto-upgrade admin email to Enterprise Lifetime if needed
           if (user.email?.toLowerCase() === 'azmatfaiz9756@gmail.com' && data.plan !== 'Enterprise' && data.plan !== 'Enterprise Lifetime') {
             const upgradedData = { ...data, plan: 'Enterprise Lifetime', updatedAt: new Date().toISOString() };
@@ -623,7 +644,7 @@ export default function OwnerDashboard() {
           // Initialize empty profile
           const emptyProfile = {
             id: user.uid,
-            slug: user.uid.substring(0, 8),
+            slug: user.uid.substring(0, 8).toLowerCase(),
             name: user.displayName || 'Jane Doe',
             title: 'Founding Partner',
             company: 'Acme Corp',
@@ -688,10 +709,12 @@ export default function OwnerDashboard() {
           setProfile(emptyProfile);
           setFormData(emptyProfile);
           // Auto create
+          console.log("Preparing to create initial profile for:", user.uid);
           try {
             await setDoc(docRef, emptyProfile);
+            console.log("Initial profile created successfully for:", user.uid);
           } catch (createErr) {
-            console.error("Initial profile creation failed:", createErr);
+            console.error("Initial profile creation failed for:", user.uid, createErr);
             showToast("Failed to initialize your profile. Please check your connection.");
           }
           

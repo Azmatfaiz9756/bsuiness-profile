@@ -12,17 +12,22 @@ export default function AdminProfiles() {
   const [editTab, setEditTab] = useState('seo');
   const [formData, setFormData] = useState<any>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
+  const fetchDbProfiles = async () => {
+    setIsRefreshing(true);
+    try {
+      const snap = await getDocs(collection(db, 'profiles'));
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true }));
+      setDbProfiles(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDbProfiles = async () => {
-      try {
-        const snap = await getDocs(collection(db, 'profiles'));
-        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true }));
-        setDbProfiles(data);
-      } catch (e) {
-        console.error(e);
-      }
-    };
     fetchDbProfiles();
   }, [editingProfile]);
 
@@ -95,6 +100,13 @@ export default function AdminProfiles() {
              onChange={(e) => setSearchTerm(e.target.value)}
            />
         </div>
+        <button 
+          onClick={fetchDbProfiles}
+          disabled={isRefreshing}
+          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${isRefreshing ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+        >
+          {isRefreshing ? 'Refreshing...' : 'Refresh List'}
+        </button>
       </div>
 
       <div className="card">
