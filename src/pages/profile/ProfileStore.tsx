@@ -22,6 +22,7 @@ export default function ProfileStore({ forcedId }: ProfileStoreProps) {
 
   const [view, setView] = useState<'catalog' | 'product'>('catalog');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [quantity, setQuantity] = useState(1);
   
   // Filters
   const [search, setSearch] = useState('');
@@ -104,12 +105,20 @@ export default function ProfileStore({ forcedId }: ProfileStoreProps) {
       // Stub
   };
 
-  const handleActionClick = (p: any, type: 'buy' | 'whatsapp' = 'whatsapp') => {
+  const handleActionClick = (p: any, type: 'buy' | 'whatsapp' = 'whatsapp', qty: number = 1) => {
     if (type === 'buy' && p.link) {
-      window.open(p.link, '_blank');
+      try {
+        const url = new URL(p.link);
+        if (!url.searchParams.has('quantity')) {
+          url.searchParams.append('quantity', qty.toString());
+        }
+        window.open(url.toString(), '_blank');
+      } catch (e) {
+        window.open(p.link, '_blank');
+      }
     } else {
       const phone = String(profile?.phone || '').replace(/[^0-9]/g, "");
-      const txt = encodeURIComponent(`Hi, I would like to order: ${p.name}`);
+      const txt = encodeURIComponent(`Hi, I would like to order: ${p.name} (Quantity: ${qty})`);
       window.open(`https://wa.me/${phone}?text=${txt}`, '_blank');
     }
   };
@@ -252,7 +261,7 @@ export default function ProfileStore({ forcedId }: ProfileStoreProps) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    {filteredProducts.map((p: any, i: number) => <ProductCard key={i} p={p} toggleWishlist={toggleWishlist} setView={setView} setSelectedProduct={setSelectedProduct} handleActionClick={handleActionClick} />)}
+                    {filteredProducts.map((p: any, i: number) => <ProductCard key={i} p={p} toggleWishlist={toggleWishlist} setView={setView} setSelectedProduct={setSelectedProduct} setQuantity={setQuantity} handleActionClick={handleActionClick} />)}
                   </div>
                 )}
               </div>
@@ -289,18 +298,27 @@ export default function ProfileStore({ forcedId }: ProfileStoreProps) {
 
                   <p className="text-slate-600 leading-relaxed mb-8">{selectedProduct.description}</p>
 
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Quantity</span>
+                    <div className="flex items-center bg-slate-100 rounded-xl overflow-hidden">
+                      <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition font-black text-xl">-</button>
+                      <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} className="w-16 h-12 bg-transparent text-center font-black text-lg text-slate-900 outline-none p-0" />
+                      <button onClick={() => setQuantity(quantity + 1)} className="w-12 h-12 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition font-black text-xl">+</button>
+                    </div>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row gap-4 mb-8">
                     {selectedProduct.link ? (
                       <>
-                        <button onClick={() => handleActionClick(selectedProduct, 'buy')} className="flex-1 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/30">
+                        <button onClick={() => handleActionClick(selectedProduct, 'buy', quantity)} className="flex-1 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/30">
                           Buy Now
                         </button>
-                        <button onClick={() => handleActionClick(selectedProduct, 'whatsapp')} className="flex-1 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-xl shadow-[#25D366]/30">
+                        <button onClick={() => handleActionClick(selectedProduct, 'whatsapp', quantity)} className="flex-1 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-xl shadow-[#25D366]/30">
                           WhatsApp
                         </button>
                       </>
                     ) : (
-                      <button onClick={() => handleActionClick(selectedProduct, 'whatsapp')} className="flex-1 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-xl shadow-[#25D366]/30">
+                      <button onClick={() => handleActionClick(selectedProduct, 'whatsapp', quantity)} className="flex-1 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-xl shadow-[#25D366]/30">
                         Order via WhatsApp
                       </button>
                     )}
@@ -319,9 +337,9 @@ export default function ProfileStore({ forcedId }: ProfileStoreProps) {
 }
 
 // Reusable Product Card
-const ProductCard = ({ p, toggleWishlist, setView, setSelectedProduct, handleActionClick }: any) => (
+const ProductCard = ({ p, toggleWishlist, setView, setSelectedProduct, setQuantity, handleActionClick }: any) => (
   <div className="bg-white rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-slate-100 group relative flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <div onClick={() => { setSelectedProduct(p); setView('product'); }} className="aspect-[4/3] bg-slate-50 flex items-center justify-center text-5xl md:text-8xl cursor-pointer relative overflow-hidden">
+    <div onClick={() => { setSelectedProduct(p); setQuantity(1); setView('product'); }} className="aspect-[4/3] bg-slate-50 flex items-center justify-center text-5xl md:text-8xl cursor-pointer relative overflow-hidden">
       {p.image ? (
         <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
       ) : (
@@ -333,7 +351,7 @@ const ProductCard = ({ p, toggleWishlist, setView, setSelectedProduct, handleAct
     
     <div className="p-3 md:p-5 flex flex-col flex-1">
       <div className="text-[8px] md:text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 md:mb-2">{p.category || 'General'}</div>
-      <h3 onClick={() => { setSelectedProduct(p); setView('product'); }} className="font-bold text-slate-900 text-xs md:text-base mb-2 md:mb-3 leading-snug cursor-pointer group-hover:text-blue-600 transition line-clamp-2">{p.name}</h3>
+      <h3 onClick={() => { setSelectedProduct(p); setQuantity(1); setView('product'); }} className="font-bold text-slate-900 text-xs md:text-base mb-2 md:mb-3 leading-snug cursor-pointer group-hover:text-blue-600 transition line-clamp-2">{p.name}</h3>
       
       <div className="mt-auto flex items-end justify-between gap-2">
         <div className="flex-1 min-w-0">

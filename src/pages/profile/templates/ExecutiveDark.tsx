@@ -1280,6 +1280,40 @@ export default function ExecutiveDark({
                         </div>
                       ))}
                     </div>
+
+                    <div style={{ padding: '0 24px 24px' }}>
+                      <button 
+                        onClick={() => {
+                          const isCustomDomain = window.location.pathname === '/';
+                          const storeUrl = isCustomDomain ? '/store' : `/profile/${profile.id || profile.slug}/store`;
+                          window.open(storeUrl, '_blank');
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '16px',
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          transition: 'opacity 0.2s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                      >
+                        Visit Premium Storefront <ArrowRight size={18} />
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               )}

@@ -1167,6 +1167,37 @@ export default function MinimalClean({
                         </div>
                       ))}
                     </div>
+
+                    <div style={{ padding: '0 24px 24px' }}>
+                      <button 
+                        onClick={() => {
+                          const isCustomDomain = window.location.pathname === '/';
+                          const storeUrl = isCustomDomain ? '/store' : `/profile/${profile.id || profile.slug}/store`;
+                          window.open(storeUrl, '_blank');
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          background: '#09090b',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '16px',
+                          fontSize: '15px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#27272a'}
+                        onMouseLeave={e => e.currentTarget.style.background = '#09090b'}
+                      >
+                        View Full Store ({profile.products.length} Products) <ArrowRight size={18} />
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               )}

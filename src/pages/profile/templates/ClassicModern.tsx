@@ -1925,6 +1925,38 @@ export default function ClassicModern({
                         </div>
                       ))}
                     </div>
+
+                    <div style={{ padding: '0 24px 24px' }}>
+                      <button 
+                        onClick={() => {
+                          const isCustomDomain = window.location.pathname === '/';
+                          const storeUrl = isCustomDomain ? '/store' : `/profile/${profile.id || profile.slug}/store`;
+                          window.open(storeUrl, '_blank');
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          background: '#2563eb',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '16px',
+                          fontSize: '16px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
+                        onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
+                      >
+                        View Full Store ({profile.products.length} Products) <ArrowRight size={18} />
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               )}
