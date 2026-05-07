@@ -42,6 +42,7 @@ import TermsConditions from './pages/frontend/TermsConditions';
 import ContactUs from './pages/frontend/ContactUs';
 import FeaturesDetail from './pages/frontend/FeaturesDetail';
 import FullProfile from './pages/profile/FullProfile';
+import ProfileStore from './pages/profile/ProfileStore';
 import RedirectHandler from './pages/RedirectHandler';
 
 import AdminDNSHelp from './pages/admin/DNSHelp';
@@ -108,11 +109,25 @@ export default function App() {
 
   // If we are on a custom domain, ONLY show the profile
   if (domainProfileId) {
+    if (window.location.pathname.startsWith('/store')) {
+      return (
+        <HelmetProvider>
+          <AppProvider>
+            <Toaster position="top-center" />
+            <BrowserRouter>
+              <ProfileStore forcedId={domainProfileId} />
+            </BrowserRouter>
+          </AppProvider>
+        </HelmetProvider>
+      );
+    }
     return (
       <HelmetProvider>
         <AppProvider>
           <Toaster position="top-center" />
-          <FullProfile forcedId={domainProfileId} />
+          <BrowserRouter>
+            <FullProfile forcedId={domainProfileId} />
+          </BrowserRouter>
         </AppProvider>
       </HelmetProvider>
     );
@@ -167,6 +182,8 @@ export default function App() {
             <Route path="/q/:serial" element={<RedirectHandler />} />
 
             {/* Independent Profile View Route */}
+            <Route path="/profile/:id/store" element={<ProfileStore />} />
+            <Route path="/:id/store" element={<ProfileStore />} />
             <Route path="/profile/:id" element={<FullProfile />} />
             <Route path="/:id" element={<FullProfile />} />
 

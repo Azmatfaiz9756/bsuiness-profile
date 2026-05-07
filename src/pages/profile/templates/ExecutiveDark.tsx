@@ -34,7 +34,8 @@ import {
   Volume2,
   VolumeX,
   Building,
-  BadgeCheck
+  BadgeCheck,
+  ArrowRight
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -1375,6 +1376,33 @@ export default function ExecutiveDark({
                         </div>
                       </div>
                     ))}
+                    {Array.isArray(profile?.products) && profile.products.length > 0 && (
+                      <button 
+                        onClick={() => {
+                          const isCustomDomain = window.location.pathname === '/';
+                          const storeUrl = isCustomDomain ? '/store' : `/profile/${profile.id || profile.slug}/store`;
+                          window.open(storeUrl, '_blank');
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: '#1a1a1a',
+                          color: '#b45309',
+                          border: '1px solid #2a2a2a',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          marginTop: '4px'
+                        }}
+                      >
+                        View Full Store ({profile.products.length} Products) <ArrowRight size={16} />
+                      </button>
+                    )}
                   </div>
                 </SectionContainer>
               )}

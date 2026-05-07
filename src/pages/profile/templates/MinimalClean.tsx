@@ -34,7 +34,8 @@ import {
   Building,
   BadgeCheck,
   Contact2,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -1267,6 +1268,33 @@ export default function MinimalClean({
                         </div>
                       </div>
                     ))}
+                    {Array.isArray(profile?.products) && profile.products.length > 0 && (
+                      <button 
+                        onClick={() => {
+                          const isCustomDomain = window.location.pathname === '/';
+                          const storeUrl = isCustomDomain ? '/store' : `/profile/${profile.id || profile.slug}/store`;
+                          window.open(storeUrl, '_blank');
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: '#f4f4f5',
+                          color: '#09090b',
+                          border: 'none',
+                          borderRadius: '12px',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          marginTop: '8px'
+                        }}
+                      >
+                        View Full Store ({profile.products.length} Products) <ArrowRight size={16} />
+                      </button>
+                    )}
                   </div>
                 </AccordionItem>
               )}
