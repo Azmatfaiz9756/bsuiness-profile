@@ -8,6 +8,7 @@ import AnimatedLogo from '../../components/AnimatedLogo';
 import toast from 'react-hot-toast';
 
 import { PromotionBanner } from '../../components/PromotionBanner';
+import { GlobalMarquee } from '../../components/GlobalMarquee';
 
 export const FrontendLayout = () => {
   const location = useLocation();
@@ -17,7 +18,7 @@ export const FrontendLayout = () => {
   
   const isShop = location.pathname === '/shop';
   const marqueeEnabled = siteSettings?.marqueeEnabled || false;
-  const showBanner = (!isShop || marqueeEnabled) && !isMobileMenuOpen;
+  const showBanner = !isShop && !isMobileMenuOpen;
 
   const [currentLang, setCurrentLang] = useState(user?.language || 'en');
 
@@ -70,8 +71,7 @@ export const FrontendLayout = () => {
     <div className="frontend-root w-full overflow-x-hidden relative">
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       
-      {showBanner && <PromotionBanner />}
-
+      {marqueeEnabled && !isMobileMenuOpen && <GlobalMarquee />}
       
       {/* Desktop & Mobile Header */}
       {!isShop && (
@@ -156,6 +156,8 @@ export const FrontendLayout = () => {
           </button>
         </div>
       )}
+
+      {showBanner && <PromotionBanner />}
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && !isShop && (

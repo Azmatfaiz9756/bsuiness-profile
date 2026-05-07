@@ -30,7 +30,7 @@ export default function FrontendPlans() {
 
     if (plan.price === 'Free') {
       try {
-        const { doc, updateDoc } = await import('firebase/firestore');
+        const { doc, setDoc } = await import('firebase/firestore');
         const { db } = await import('../../firebase');
         const userRef = doc(db, 'profiles', user.uid);
         const refCode = localStorage.getItem('dbc_referred_by');
@@ -38,7 +38,7 @@ export default function FrontendPlans() {
         if (refCode) {
           updateData.referredBy = refCode;
         }
-        await updateDoc(userRef, updateData);
+        await setDoc(userRef, updateData, { merge: true });
         alert(`Successfully subscribed to ${plan.name} plan!`);
         window.location.reload();
       } catch (err) {
@@ -49,7 +49,7 @@ export default function FrontendPlans() {
         const confirmTrial = window.confirm(`Start your ${trialMonths}-month FREE trial of the ${plan.name} plan? No credit card required.`);
         if (confirmTrial) {
           try {
-            const { doc, updateDoc } = await import('firebase/firestore');
+            const { doc, setDoc } = await import('firebase/firestore');
             const { db } = await import('../../firebase');
             const userRef = doc(db, 'profiles', user.uid);
             
@@ -58,18 +58,18 @@ export default function FrontendPlans() {
             
             const updateData: any = { 
               plan: plan.name, 
-              isTrial: true,
-              expiry: expiryDate.toISOString().split('T')[0],
+              trialActive: true,
+              hasUsedTrial: true,
+              trialEndsAt: expiryDate.toISOString(),
               updatedAt: new Date().toISOString() 
             };
             
-            await updateDoc(userRef, updateData);
-            alert(`Your ${trialMonths}-month free trial of ${plan.name} is now active! Expires on ${updateData.expiry}`);
+            await setDoc(userRef, updateData, { merge: true });
+            alert(`Your ${trialMonths}-month free trial of ${plan.name} is now active! Expires on ${updateData.trialEndsAt.substring(0, 10)}`);
             window.location.href = '/dashboard';
           } catch (err) {
             console.error("Trial activation error:", err);
-            setSelectedPlan(plan);
-            setIsPaymentModalOpen(true);
+            alert("Could not activate trial. Please try again.");
           }
         }
     } else {
