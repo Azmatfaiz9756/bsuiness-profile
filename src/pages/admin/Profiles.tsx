@@ -8,6 +8,7 @@ import { db } from '../../firebase';
 export default function AdminProfiles() {
   const { profiles: staticProfiles, setProfiles: setStaticProfiles } = useAppContext();
   const [dbProfiles, setDbProfiles] = useState<any[]>([]);
+  const [dbUsers, setDbUsers] = useState<any[]>([]);
   const [editingProfile, setEditingProfile] = useState<any>(null);
   const [editTab, setEditTab] = useState('seo');
   const [formData, setFormData] = useState<any>({});
@@ -17,9 +18,14 @@ export default function AdminProfiles() {
   const fetchDbProfiles = async () => {
     setIsRefreshing(true);
     try {
-      const snap = await getDocs(collection(db, 'profiles'));
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true }));
-      setDbProfiles(data);
+      const [profilesSnap, usersSnap] = await Promise.all([
+        getDocs(collection(db, 'profiles')),
+        getDocs(collection(db, 'users'))
+      ]);
+      const pData = profilesSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true, hasProfile: true }));
+      const uData = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), isUserRecord: true }));
+      setDbProfiles(pData);
+      setDbUsers(uData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -33,20 +39,38 @@ export default function AdminProfiles() {
 
   const allProfiles = useMemo(() => {
     const combined = [...staticProfiles];
+    
+    // Add logic to merge users and profiles
+    // 1. Add all users as potential profiles
+    dbUsers.forEach(user => {
+      const existingIdx = combined.findIndex(p => p.id === user.id || (user.email && p.email === user.email));
+      if (existingIdx >= 0) {
+        combined[existingIdx] = { ...combined[existingIdx], ...user };
+      } else {
+        combined.push({ ...user, name: user.name || user.displayName || 'New User', status: 'Inactive' });
+      }
+    });
+
+    // 2. Merge with actual profiles
     dbProfiles.forEach(dbp => {
-      if (!combined.find(p => p.email === dbp.email || p.id === dbp.id)) {
+      const existingIdx = combined.findIndex(p => p.id === dbp.id || (dbp.email && p.email === dbp.email));
+      if (existingIdx >= 0) {
+        combined[existingIdx] = { ...combined[existingIdx], ...dbp };
+      } else {
         combined.push(dbp);
       }
     });
+
     if (!searchTerm) return combined;
     const term = searchTerm.toLowerCase();
     return combined.filter(p => 
       (p.name && p.name.toLowerCase().includes(term)) || 
       (p.email && p.email.toLowerCase().includes(term)) ||
       (p.id && p.id.toLowerCase().includes(term)) ||
-      (p.slug && p.slug.toLowerCase().includes(term))
+      (p.slug && p.slug.toLowerCase().includes(term)) ||
+      (p.phone && p.phone.toLowerCase().includes(term))
     );
-  }, [staticProfiles, dbProfiles, searchTerm]);
+  }, [staticProfiles, dbProfiles, dbUsers, searchTerm]);
 
   const handleEditClick = (profile: any) => {
     setFormData({ ...profile, seo: profile.seo || { title: '', desc: '', keywords: '' } });
@@ -126,12 +150,15 @@ export default function AdminProfiles() {
               <tr key={p.id}>
                 <td>
                   <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
-                    <div style={{width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--gold), var(--gold2))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#ffffff'}}>
+                    <div style={{width: 32, height: 32, borderRadius: '50%', background: p.hasProfile ? 'linear-gradient(135deg, var(--gold), var(--gold2))' : '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#ffffff'}}>
                       {String(p.name || 'U').substring(0,2).toUpperCase()}
                     </div>
                     <div>
                       <div style={{fontWeight: 600, color: 'var(--text)'}}>{p.name}</div>
-                      <div style={{fontSize: 11, color: 'var(--text3)'}}>{p.email}</div>
+                      <div style={{fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 5}}>
+                        {p.email}
+                        {!p.hasProfile && <span style={{fontSize: 9, background: '#fef3c7', color: '#92400e', padding: '1px 4px', borderRadius: 4, fontWeight: 700}}>NO PROFILE</span>}
+                      </div>
                     </div>
                   </div>
                 </td>

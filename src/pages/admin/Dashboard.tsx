@@ -10,13 +10,13 @@ export default function AdminDashboard() {
       <div className="stats-grid">
         <div className="stat-card gold">
           <div className="stat-icon">👥</div>
-          <div className="stat-label">TOTAL USERS</div>
-          <div className="stat-value">{usersCount || profiles.length}</div>
+          <div className="stat-label">REGISTERED USERS</div>
+          <div className="stat-value">{usersCount}</div>
         </div>
         <div className="stat-card purple">
           <div className="stat-icon">👤</div>
-          <div className="stat-label">TOTAL PROFILES</div>
-          <div className="stat-value">{profilesCount || profiles.length}</div>
+          <div className="stat-label">ACTIVE PROFILES</div>
+          <div className="stat-value">{profilesCount}</div>
         </div>
         <div className="stat-card green">
           <div className="stat-icon">👁️</div>
