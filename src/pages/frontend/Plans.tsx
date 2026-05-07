@@ -126,7 +126,7 @@ export default function FrontendPlans() {
                {plan.badge}
             </div>
             <div className={`text-base font-extrabold mb-1 ${plan.popular ? 'text-blue-600' : 'text-slate-900'}`}>{plan.name}</div>
-            <div className="flex flex-col items-center justify-center mb-6">
+            <div className="flex flex-col items-center justify-center mb-4">
               <div className="text-3xl font-black text-slate-900">{plan.price}<sub className="text-xs text-slate-500 font-medium bottom-0">/yr</sub></div>
               {plan.originalPrice && (
                 <div className="flex items-center gap-2 mt-1">
@@ -137,6 +137,12 @@ export default function FrontendPlans() {
                 </div>
               )}
             </div>
+            
+            {plan.price !== 'Free' && (
+              <div className="mb-6 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] font-bold text-amber-700 uppercase tracking-widest text-center shadow-sm">
+                Yearly Renewal 50% Less
+              </div>
+            )}
             
             <div className="text-left flex flex-col gap-3 mb-8">
                {plan.features && plan.features.length > 0 ? plan.features.map((feature: string, idx: number) => (

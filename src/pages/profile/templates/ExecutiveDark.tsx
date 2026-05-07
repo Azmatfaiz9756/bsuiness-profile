@@ -1090,7 +1090,12 @@ export default function ExecutiveDark({
                             {h.closed ? (
                               <span style={{ color: "#ef4444" }}>Closed</span>
                             ) : (
-                              `${h.open} - ${h.close}`
+                              <>
+                                {h.open} - {h.close}
+                                {h.split && h.open2 && h.close2 && (
+                                  <><br/><span style={{ fontSize: 11, color: '#777' }}>&amp;</span> {h.open2} - {h.close2}</>
+                                )}
+                              </>
                             )}
                           </span>
                         </div>
@@ -1222,100 +1227,158 @@ export default function ExecutiveDark({
             </SectionContainer>
           )}
           {(activeTab === 'home' || activeTab === 'shop') && Array.isArray(profile?.products) && profile.products.length > 0 && (
-            <SectionContainer title="Products" icon={<ShoppingBag size={18} />}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {Array.isArray(profile?.products) && profile.products.map((prod: any, i: number) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: "#1a1a1a",
-                      border: "1px solid #2a2a2a",
-                      borderRadius: 8,
-                      overflow: "hidden",
-                    }}
-                  >
-                    {prod.image && (
-                      <img
-                        src={prod.image}
-                        alt={prod.name}
-                        style={{
-                          width: "100%",
-                          height: 160,
-                          objectFit: "cover",
-                        }}
-                      />
+            <>
+              {activeTab === 'shop' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.3s ease-out' }}>
+                  <div style={{ 
+                    background: '#1a1a1a', 
+                    borderRadius: 24, 
+                    overflow: 'hidden', 
+                    border: '1px solid #2a2a2a',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+                  }}>
+                    {profile.storeMarquee && (
+                      <div style={{ background: '#b45309', color: '#fff', padding: '10px 0', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                         <div style={{ animation: 'marquee 15s linear infinite', display: 'inline-block', fontSize: 13, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                           ⭐ {profile.storeMarquee} &nbsp; &nbsp; &nbsp; ⭐ {profile.storeMarquee} &nbsp; &nbsp; &nbsp; ⭐ {profile.storeMarquee}
+                         </div>
+                      </div>
                     )}
-                    <div style={{ padding: 16 }}>
-                      <div
-                        style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}
-                      >
-                        {prod.name}
+                    {profile.storeBannerUrl && (
+                      <div style={{ position: 'relative', height: 180, width: '100%' }}>
+                        <img src={profile.storeBannerUrl} alt="Store Banner" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #1a1a1a, transparent)' }} />
                       </div>
-                      <div
-                        style={{ fontSize: 13, color: "#888", marginTop: 4 }}
-                      >
-                        {prod.description}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop: 12,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 16,
-                            fontWeight: 800,
-                            color: "#b45309",
-                          }}
-                        >
-                          {prod.price}
-                        </div>
-                        {prod.link ? (
-                          <a
-                            href={prod.link}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              background: "#333",
-                              color: "#fff",
-                              border: "none",
-                              padding: "6px 16px",
-                              borderRadius: 4,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              textDecoration: "none",
-                            }}
-                          >
-                            Buy Now
-                          </a>
-                        ) : (
-                          <a
-                            href={`https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              background: "#25D366",
-                              color: "#fff",
-                              border: "none",
-                              padding: "6px 16px",
-                              borderRadius: 4,
-                              fontSize: 13,
-                              fontWeight: 600,
-                              textDecoration: "none",
-                            }}
-                          >
-                            WhatsApp
-                          </a>
-                        )}
+                    )}
+                    <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #2a2a2a', marginTop: profile.storeBannerUrl ? -40 : 0, position: 'relative', zIndex: 10 }}>
+                      {profile.storeCompanyLogo && (
+                        <img src={profile.storeCompanyLogo} alt="Logo" style={{ width: 72, height: 72, borderRadius: 16, objectFit: 'cover', background: '#222', border: '3px solid #1a1a1a', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)' }} />
+                      )}
+                      <div>
+                        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{profile.storeCompanyName || profile.company || `${profile.name}'s Shop`}</h2>
+                        <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 600, color: '#b45309' }}>Exclusive Storefront</p>
                       </div>
                     </div>
+                    
+                    <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 16 }}>
+                      {profile.products.map((prod: any, i: number) => (
+                        <div key={`shop-${i}`} style={{ background: '#222', borderRadius: 16, overflow: 'hidden', border: '1px solid #2a2a2a', display: 'flex', flexDirection: 'column', transition: 'all 0.2s ease', cursor: 'pointer' }} onMouseEnter={(e) => {e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.borderColor = '#b45309';}} onMouseLeave={(e) => {e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#2a2a2a';}}>
+                          {prod.image && (
+                            <img src={prod.image} alt={prod.name} style={{ width: '100%', height: 140, objectFit: 'cover', borderBottom: '1px solid #2a2a2a', opacity: 0.9 }} />
+                          )}
+                          <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 4, lineHeight: 1.3 }}>{prod.name}</div>
+                            <div style={{ fontSize: 11, color: '#888', marginBottom: 12, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{prod.description}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                              <div style={{ fontSize: 14, fontWeight: 900, color: '#b45309' }}>{prod.price}</div>
+                            </div>
+                            <a href={prod.link || `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`} target="_blank" rel="noreferrer" style={{ display: 'block', background: prod.link ? '#b45309' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', marginTop: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {prod.link ? 'Buy Now' : 'WhatsApp'}
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </SectionContainer>
+                </div>
+              )}
+              {activeTab === 'home' && (
+                <SectionContainer title="Store Highlights" icon={<ShoppingBag size={18} />}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {Array.isArray(profile?.products) && profile.products.slice(0, 3).map((prod: any, i: number) => (
+                      <div
+                        key={i}
+                        style={{
+                          background: "#1a1a1a",
+                          border: "1px solid #2a2a2a",
+                          borderRadius: 8,
+                          overflow: "hidden",
+                        }}
+                      >
+                        {prod.image && (
+                          <img
+                            src={prod.image}
+                            alt={prod.name}
+                            style={{
+                              width: "100%",
+                              height: 160,
+                              objectFit: "cover",
+                            }}
+                          />
+                        )}
+                        <div style={{ padding: 16 }}>
+                          <div
+                            style={{ fontSize: 16, fontWeight: 700, color: "#fff" }}
+                          >
+                            {prod.name}
+                          </div>
+                          <div
+                            style={{ fontSize: 13, color: "#888", marginTop: 4 }}
+                          >
+                            {prod.description}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              marginTop: 12,
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 800,
+                                color: "#b45309",
+                              }}
+                            >
+                              {prod.price}
+                            </div>
+                            {prod.link ? (
+                              <a
+                                href={prod.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  background: "#333",
+                                  color: "#fff",
+                                  border: "none",
+                                  padding: "6px 16px",
+                                  borderRadius: 4,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  textDecoration: "none",
+                                }}
+                              >
+                                Buy Now
+                              </a>
+                            ) : (
+                              <a
+                                href={`https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  background: "#25D366",
+                                  color: "#fff",
+                                  border: "none",
+                                  padding: "6px 16px",
+                                  borderRadius: 4,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                  textDecoration: "none",
+                                }}
+                              >
+                                WhatsApp
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </SectionContainer>
+              )}
+            </>
           )}
           {activeTab === 'home' && Array.isArray(profile?.testimonials) && profile.testimonials.length > 0 && (
             <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>

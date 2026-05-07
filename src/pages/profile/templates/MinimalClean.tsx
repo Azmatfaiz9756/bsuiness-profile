@@ -1054,7 +1054,16 @@ export default function MinimalClean({
                         {day}
                       </span>
                       <span style={{ color: h.closed ? "#ef4444" : "#52525b" }}>
-                        {h.closed ? "Closed" : `${h.open} - ${h.close}`}
+                        {h.closed ? (
+                          "Closed"
+                        ) : (
+                          <>
+                            {h.open} - {h.close}
+                            {h.split && h.open2 && h.close2 && (
+                              <><br/><span style={{ fontSize: 12, opacity: 0.6 }}>&amp;</span> {h.open2} - {h.close2}</>
+                            )}
+                          </>
+                        )}
                       </span>
                     </div>
                   );
@@ -1109,105 +1118,159 @@ export default function MinimalClean({
           )}
 
           {(activeTab === 'home' || activeTab === 'shop') && Array.isArray(profile.products) && profile.products.length > 0 && (
-            <AccordionItem id="shop" title="Products">
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 16 }}
-              >
-              {Array.isArray(profile?.products) && profile.products.map((prod: any, i: number) => (
-                  <div
-                    key={i}
-                    style={{
-                      border: "1px solid #e4e4e7",
-                      borderRadius: 16,
-                      padding: 16,
-                    }}
-                  >
-                    {prod.image && (
-                      <img
-                        src={prod.image}
-                        alt={prod.name}
-                        style={{
-                          width: "100%",
-                          height: 200,
-                          objectFit: "cover",
-                          borderRadius: 8,
-                          marginBottom: 12,
-                        }}
-                      />
-                    )}
-                    <div
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 600,
-                        color: "#09090b",
-                      }}
-                    >
-                      {prod.name}
-                    </div>
-                    <div
-                      style={{ fontSize: 14, color: "#52525b", marginTop: 4 }}
-                    >
-                      {prod.description}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginTop: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 700,
-                          color: "#09090b",
-                        }}
-                      >
-                        {prod.price}
+            <>
+              {activeTab === 'shop' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.3s ease-out' }}>
+                  <div style={{ 
+                    background: '#fff', 
+                    borderRadius: 24, 
+                    overflow: 'hidden', 
+                    border: '1px solid #e4e4e7',
+                  }}>
+                    {profile.storeMarquee && (
+                      <div style={{ background: '#09090b', color: '#fff', padding: '10px 0', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                         <div style={{ animation: 'marquee 15s linear infinite', display: 'inline-block', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                           ⚡ {profile.storeMarquee} &nbsp; &nbsp; &nbsp; ⚡ {profile.storeMarquee} &nbsp; &nbsp; &nbsp; ⚡ {profile.storeMarquee}
+                         </div>
                       </div>
-                      {prod.link ? (
-                        <a
-                          href={prod.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            background: "#09090b",
-                            color: "#fff",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: 8,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            textDecoration: "none",
-                          }}
-                        >
-                          Buy Now
-                        </a>
-                      ) : (
-                        <a
-                          href={`https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            background: "#25D366",
-                            color: "#fff",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: 8,
-                            fontSize: 13,
-                            fontWeight: 600,
-                            textDecoration: "none",
-                          }}
-                        >
-                          Order on WhatsApp
-                        </a>
+                    )}
+                    {profile.storeBannerUrl && (
+                      <div style={{ position: 'relative', height: 160, width: '100%' }}>
+                        <img src={profile.storeBannerUrl} alt="Store Banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <div style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: '1px solid #e4e4e7' }}>
+                      {profile.storeCompanyLogo && (
+                        <img src={profile.storeCompanyLogo} alt="Logo" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', border: '1px solid #e4e4e7' }} />
                       )}
+                      <div>
+                        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#09090b', letterSpacing: '-0.02em' }}>{profile.storeCompanyName || profile.company || `${profile.name}'s Store`}</h2>
+                        <p style={{ margin: '2px 0 0', fontSize: 13, color: '#52525b' }}>Verified Online Storefront</p>
+                      </div>
+                    </div>
+                    
+                    <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
+                      {profile.products.map((prod: any, i: number) => (
+                        <div key={`shop-${i}`} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', border: '1px solid #e4e4e7', display: 'flex', flexDirection: 'column' }}>
+                          {prod.image && (
+                            <img src={prod.image} alt={prod.name} style={{ width: '100%', height: 140, objectFit: 'cover', borderBottom: '1px solid #f4f4f5' }} />
+                          )}
+                          <div style={{ padding: 12, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#09090b', marginBottom: 4 }}>{prod.name}</div>
+                            <div style={{ fontSize: 12, color: '#52525b', marginBottom: 12, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{prod.description}</div>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: '#09090b', marginBottom: 12 }}>{prod.price}</div>
+                            <a href={prod.link || `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`} target="_blank" rel="noreferrer" style={{ display: 'block', background: prod.link ? '#09090b' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', marginTop: 'auto' }}>
+                              {prod.link ? 'Buy Now' : 'WhatsApp'}
+                            </a>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </AccordionItem>
+                </div>
+              )}
+              {activeTab === 'home' && (
+                <AccordionItem id="shop" title="Products">
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                  >
+                  {Array.isArray(profile?.products) && profile.products.slice(0, 3).map((prod: any, i: number) => (
+                      <div
+                        key={i}
+                        style={{
+                          border: "1px solid #e4e4e7",
+                          borderRadius: 16,
+                          padding: 16,
+                        }}
+                      >
+                        {prod.image && (
+                          <img
+                            src={prod.image}
+                            alt={prod.name}
+                            style={{
+                              width: "100%",
+                              height: 200,
+                              objectFit: "cover",
+                              borderRadius: 8,
+                              marginBottom: 12,
+                            }}
+                          />
+                        )}
+                        <div
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 600,
+                            color: "#09090b",
+                          }}
+                        >
+                          {prod.name}
+                        </div>
+                        <div
+                          style={{ fontSize: 14, color: "#52525b", marginTop: 4 }}
+                        >
+                          {prod.description}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginTop: 16,
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 16,
+                              fontWeight: 700,
+                              color: "#09090b",
+                            }}
+                          >
+                            {prod.price}
+                          </div>
+                          {prod.link ? (
+                            <a
+                              href={prod.link}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                background: "#09090b",
+                                color: "#fff",
+                                border: "none",
+                                padding: "8px 16px",
+                                borderRadius: 8,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                textDecoration: "none",
+                              }}
+                            >
+                              Buy Now
+                            </a>
+                          ) : (
+                            <a
+                              href={`https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                background: "#25D366",
+                                color: "#fff",
+                                border: "none",
+                                padding: "8px 16px",
+                                borderRadius: 8,
+                                fontSize: 13,
+                                fontWeight: 600,
+                                textDecoration: "none",
+                              }}
+                            >
+                              WhatsApp
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionItem>
+              )}
+            </>
           )}
 
           {activeTab === 'home' && ((profile.gallery && profile.gallery.length > 0) ||

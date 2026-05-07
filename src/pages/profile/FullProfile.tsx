@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
-import ClassicModern from './templates/ClassicModern';
-import ExecutiveDark from './templates/ExecutiveDark';
-import MinimalClean from './templates/MinimalClean';
+const ClassicModern = lazy(() => import('./templates/ClassicModern'));
+const ExecutiveDark = lazy(() => import('./templates/ExecutiveDark'));
+const MinimalClean = lazy(() => import('./templates/MinimalClean'));
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
@@ -77,37 +77,35 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         let foundProfile = null;
         console.log("Searching for profile with ID or Slug:", cleanId);
 
-        // 1. Try to fetch by UID (id) first
+        // Run primary queries in parallel to speed up load time
         const docRef = doc(db, 'profiles', cleanId);
-        const docSnap = await getDoc(docRef);
+        const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId));
         
+        const [docSnap, slugLowerSnap] = await Promise.all([
+          getDoc(docRef),
+          getDocs(qSlugLowerCase)
+        ]);
+
         if (docSnap.exists()) {
           console.log("Profile found by direct ID match");
           foundProfile = { ...docSnap.data(), id: docSnap.id };
+        } else if (!slugLowerSnap.empty) {
+          console.log("Profile found by lowercase slug match");
+          foundProfile = { ...slugLowerSnap.docs[0].data(), id: slugLowerSnap.docs[0].id };
         } else {
-          // 2. Try searching by slug
-          console.log("Not found by ID, searching by slug:", normalizedId);
-          const q = query(collection(db, 'profiles'), where('slug', '==', normalizedId));
-          const querySnapshot = await getDocs(q);
-          
-          if (!querySnapshot.empty) {
-            console.log("Profile found by lowercase slug match");
-            foundProfile = { ...querySnapshot.docs[0].data(), id: querySnapshot.docs[0].id };
+          // 3. Try searching by original ID as slug (mixed case)
+          const qOrig = query(collection(db, 'profiles'), where('slug', '==', cleanId));
+          const snapOrig = await getDocs(qOrig);
+          if (!snapOrig.empty) {
+            console.log("Profile found by mixed-case slug match");
+            foundProfile = { ...snapOrig.docs[0].data(), id: snapOrig.docs[0].id };
           } else {
-            // 3. Try searching by original ID as slug (mixed case)
-            const qOrig = query(collection(db, 'profiles'), where('slug', '==', cleanId));
-            const snapOrig = await getDocs(qOrig);
-            if (!snapOrig.empty) {
-              console.log("Profile found by mixed-case slug match");
-              foundProfile = { ...snapOrig.docs[0].data(), id: snapOrig.docs[0].id };
-            } else {
-              // 4. Last resort: search by id field as fallback for some older profiles
-              const q2 = query(collection(db, 'profiles'), where('id', '==', cleanId));
-              const snap2 = await getDocs(q2);
-              if (!snap2.empty) {
-                console.log("Profile found by 'id' field fallback");
-                foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
-              }
+            // 4. Last resort: search by id field as fallback for some older profiles
+            const q2 = query(collection(db, 'profiles'), where('id', '==', cleanId));
+            const snap2 = await getDocs(q2);
+            if (!snap2.empty) {
+              console.log("Profile found by 'id' field fallback");
+              foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
             }
           }
         }
@@ -247,9 +245,15 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         </div>
       )}
 
-      {template === 'classic' && <ClassicModern profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-      {template === 'executive' && <ExecutiveDark profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-      {template === 'minimal' && <MinimalClean profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+      <Suspense fallback={
+        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+          <div className="w-12 h-12 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"></div>
+        </div>
+      }>
+        {template === 'classic' && <ClassicModern profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+        {template === 'executive' && <ExecutiveDark profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+        {template === 'minimal' && <MinimalClean profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+      </Suspense>
 
       {!isPreview && (
         <>
