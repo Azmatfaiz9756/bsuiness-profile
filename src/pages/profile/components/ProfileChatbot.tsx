@@ -361,6 +361,10 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         setCountdown(null);
         if (timer) clearTimeout(timer);
       }
+    }, (error) => {
+      import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
+        handleFirestoreError(error, OperationType.GET, `chat_sessions/${liveChatSessionId}`);
+      });
     });
 
     return () => {

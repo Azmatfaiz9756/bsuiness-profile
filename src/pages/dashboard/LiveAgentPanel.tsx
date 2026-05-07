@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../firebase';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
 import { AGENT_LANGUAGES } from '../../lib/languages';
@@ -32,12 +33,20 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
   const [input, setInput] = useState('');
   const [agentLang, setAgentLang] = useState(localStorage.getItem('agent_chat_lang') || 'en');
   const [isTranslating, setIsTranslating] = useState(false);
+  const [user, setUser] = useState<FirebaseUser | null>(auth.currentUser);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
+  }, []);
 
   const ai = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
 
   // Listen to sessions
   useEffect(() => {
+    if (!user) return;
+
     // If profileId is 'platform', we show ALL sessions (Super Agent mode)
     // For others, we listen for chats where they are priority or fallback
     const sessionsRef = collection(db, 'chat_sessions');
@@ -49,7 +58,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
       // Default: show sessions for this profile or fallback
       q = query(
         sessionsRef,
-        where('ownerId', '==', auth.currentUser?.uid || ''),
+        where('ownerId', '==', user.uid),
         orderBy('updatedAt', 'desc')
       );
     }

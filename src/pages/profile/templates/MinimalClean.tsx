@@ -555,7 +555,15 @@ export default function MinimalClean({
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
                     <div style={{ fontSize: 14, lineHeight: 1.5, color: "#27272a" }}>
-                      {profile.address}
+                      {profile.address_street ? (
+                        <>
+                          {profile.address_street}{profile.address_city ? `, ${profile.address_city}` : ''}
+                          {profile.address_state ? `, ${profile.address_state}` : ''}
+                          {profile.address_zip ? ` ${profile.address_zip}` : ''}
+                        </>
+                      ) : (
+                        profile.address
+                      )}
                     </div>
                   </div>
                 </div>
@@ -734,9 +742,10 @@ export default function MinimalClean({
                   <ArrowUpRight size={16} />
                 </span>
               </a>
-              {profile.address && profile.mapLink && (
+              {(profile.address || profile.mapLink || profile.address_street) && (
                 <a
-                  href={profile.mapLink}
+                  href={profile.mapLink || '#'}
+                  onClick={(e) => !profile.mapLink && e.preventDefault()}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -751,7 +760,14 @@ export default function MinimalClean({
                   <span
                     style={{ display: "flex", alignItems: "center", gap: 12 }}
                   >
-                    <MapPin size={20} /> {profile.address}
+                    <MapPin size={20} /> 
+                    {profile.address_street ? (
+                      <>
+                        {profile.address_street}{profile.address_city ? `, ${profile.address_city}` : ''}
+                      </>
+                    ) : (
+                      profile.address || 'Visit Us'
+                    )}
                   </span>
                   <span style={{ color: "#a1a1aa" }}>
                     <ArrowUpRight size={16} />
@@ -1662,14 +1678,29 @@ export default function MinimalClean({
                              </div>
                           </div>
                         )}
+
+                        {acc.ifscCode && (
+                          <div style={{ marginBottom: 16 }}>
+                             <div style={{ fontSize: 10, color: '#71717a', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>IFSC / Swift / Routing</div>
+                             <div 
+                               onClick={() => {
+                                 navigator.clipboard.writeText(acc.ifscCode);
+                                 alert("Code copied!");
+                               }}
+                               style={{ fontSize: 14, color: "#2563eb", fontWeight: 800, fontFamily: "monospace", cursor: "pointer", background: '#f8fafc', padding: '10px', borderRadius: 8, border: '1px solid #e2e8f0', textAlign: 'center' }}
+                             >
+                               {acc.ifscCode}
+                             </div>
+                          </div>
+                        )}
                         <div style={{ display: 'flex', gap: 12 }}>
                           <div style={{ flex: 1, background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                            <div style={{ fontSize: 9, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>Country</div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#09090b", marginTop: 2 }}>{acc.country || 'UAE'}</div>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>SWIFT/BIC</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#09090b", marginTop: 2 }}>{acc.swiftCode || acc.swift || 'N/A'}</div>
                           </div>
                           <div style={{ flex: 1, background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                            <div style={{ fontSize: 9, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>SWIFT</div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: "#09090b", marginTop: 2 }}>{acc.swift || 'N/A'}</div>
+                            <div style={{ fontSize: 9, fontWeight: 800, color: "#71717a", textTransform: "uppercase" }}>IFSC/Routing</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "#09090b", marginTop: 2 }}>{acc.ifscCode || acc.routing || 'N/A'}</div>
                           </div>
                         </div>
                       </div>

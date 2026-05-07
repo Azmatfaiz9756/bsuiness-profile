@@ -682,7 +682,15 @@ export default function ExecutiveDark({
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
                     <div style={{ fontSize: 14, lineHeight: 1.5 }}>
-                      {profile.address}
+                      {profile.address_street ? (
+                        <>
+                          {profile.address_street}{profile.address_city ? `, ${profile.address_city}` : ''}
+                          {profile.address_state ? `, ${profile.address_state}` : ''}
+                          {profile.address_zip ? ` ${profile.address_zip}` : ''}
+                        </>
+                      ) : (
+                        profile.address
+                      )}
                     </div>
                   </div>
                 </div>
@@ -974,9 +982,10 @@ export default function ExecutiveDark({
                   </div>
                 </div>
               </a>
-              {profile.address && profile.mapLink && (
+              {(profile.address || profile.mapLink || profile.address_street) && (
                 <a
-                  href={profile.mapLink}
+                  href={profile.mapLink || '#'}
+                  onClick={(e) => !profile.mapLink && e.preventDefault()}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -1006,7 +1015,15 @@ export default function ExecutiveDark({
                     <div
                       style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}
                     >
-                      {profile.address}
+                      {profile.address_street ? (
+                        <>
+                          {profile.address_street}{profile.address_city ? `, ${profile.address_city}` : ''}
+                          {profile.address_state ? `, ${profile.address_state}` : ''}
+                          {profile.address_zip ? ` ${profile.address_zip}` : ''}
+                        </>
+                      ) : (
+                        profile.address || 'Visit Us'
+                      )}
                     </div>
                   </div>
                 </a>
@@ -1555,14 +1572,40 @@ export default function ExecutiveDark({
                         </div>
                       )}
 
+                      {acc.ifscCode && (
+                        <div style={{ marginBottom: 16 }}>
+                           <div style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>IFSC / Swift / Routing</div>
+                           <div 
+                             onClick={() => {
+                               navigator.clipboard.writeText(acc.ifscCode);
+                               alert("Code copied!");
+                             }}
+                             style={{ 
+                               fontSize: 14, 
+                               fontWeight: 800, 
+                               color: "#fef3c7", 
+                               background: "#0a0a0a", 
+                               padding: "10px", 
+                               borderRadius: 8, 
+                               textAlign: "center",
+                               fontFamily: "monospace",
+                               cursor: "pointer",
+                               border: "1px solid #333"
+                             }}
+                           >
+                             {acc.ifscCode}
+                           </div>
+                        </div>
+                      )}
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                         <div style={{ background: "#0a0a0a", padding: "8px", borderRadius: 4 }}>
-                          <div style={{ fontSize: 9, color: "#666", textTransform: "uppercase" }}>Country</div>
-                          <div style={{ fontSize: 12, color: "#ccc" }}>{acc.country || 'UAE'}</div>
+                          <div style={{ fontSize: 9, color: "#666", textTransform: "uppercase" }}>SWIFT/BIC</div>
+                          <div style={{ fontSize: 12, color: "#ccc" }}>{acc.swiftCode || acc.swift || 'N/A'}</div>
                         </div>
                         <div style={{ background: "#0a0a0a", padding: "8px", borderRadius: 4 }}>
-                          <div style={{ fontSize: 9, color: "#666", textTransform: "uppercase" }}>SWIFT</div>
-                          <div style={{ fontSize: 12, color: "#ccc" }}>{acc.swift || 'N/A'}</div>
+                          <div style={{ fontSize: 9, color: "#666", textTransform: "uppercase" }}>IFSC/Routing</div>
+                          <div style={{ fontSize: 12, color: "#ccc" }}>{acc.ifscCode || acc.routing || 'N/A'}</div>
                         </div>
                       </div>
                     </div>

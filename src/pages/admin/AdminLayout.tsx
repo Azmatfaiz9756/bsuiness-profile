@@ -12,7 +12,7 @@ export const AdminLayout = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, authLoading, joinNotifications } = useAppContext();
 
-  const SUPER_ADMINS = ['azmatfaiz9756@gmail.com']; // Allow this email specifically for super admin
+  const SUPER_ADMINS = ['azmatfaiz9756@gmail.com', 'admin@example.com']; // Sync with AppContext and rules
 
   if (authLoading) {
     return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif' }}>Loading...</div>;

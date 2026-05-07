@@ -18,8 +18,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        request.auth.token.get('email', '').toLower() == "azmatfaiz9756@gmail.com" || 
-        request.auth.token.get('email', '').toLower() == "admin@example.com"
+        request.auth.token.email == "azmatfaiz9756@gmail.com" || 
+        request.auth.token.email == "admin@example.com"
       );
     }
 
@@ -194,15 +194,11 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(incoming());
       allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (
         isAdmin() || (
-          // Owner can update these fields
+          // Owner can update these fields (added more allowed fields for syncing)
           incoming().diff(existing()).affectedKeys().hasOnly([
             'name', 'displayName', 'photoURL', 'lastLogin', 'email', 'phone', 
-            'walletBalance', 'totalEarned', 'totalSpent', 'plan'
-          ]) &&
-          // Sensitive fields must NOT change
-          (!('role' in incoming()) || (incoming().role == existing().get('role', 'Owner'))) &&
-          (!('isSuperAdmin' in incoming()) || (incoming().isSuperAdmin == existing().get('isSuperAdmin', false))) &&
-          (!('id' in incoming()) || (incoming().id == existing().id))
+            'walletBalance', 'totalEarned', 'totalSpent', 'plan', 'isTrial', 'expiry', 'updatedAt'
+          ])
         )
       );
     }
@@ -246,7 +242,11 @@ service cloud.firestore {
     }
 
     match /chat_sessions/{sessionId} {
-      allow read, write: if isAdmin() || (isSignedIn() && (resource.data.get('userId', '') == request.auth.uid || resource.data.get('ownerId', '') == request.auth.uid));
+      allow read: if true;
+      allow update: if 
+        isAdmin() || 
+        (isSignedIn() && (resource.data.get('ownerId', '') == request.auth.uid || resource.data.get('userId', '') == request.auth.uid)) ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['routingLevel', 'fallbackAgentIds', 'updatedAt', 'status', 'lastMessage']));
       allow create: if true;
       allow list: if isAdmin() || (isSignedIn() && (resource.data.get('ownerId', '') == request.auth.uid || resource.data.get('userId', '') == request.auth.uid));
       

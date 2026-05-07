@@ -7,18 +7,7 @@ export const AppContext = createContext<any>(null);
 
 const SUPER_ADMINS = ['azmatfaiz9756@gmail.com', 'admin@example.com'];
 
-export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [usersCount, setUsersCount] = useState(0);
-  
-  const [joinNotifications, setJoinNotifications] = useState<any[]>([]);
-
-  useEffect(() => {
-    enum OperationType {
+enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
   DELETE = 'delete',
@@ -49,20 +38,32 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  // In production, we might want a toast too
+  console.error('CRITICAL FIRESTORE ERROR: ', JSON.stringify(errInfo));
 }
-    const SUPER_ADMINS = ['azmatfaiz9756@gmail.com', 'admin@example.com'];
+
+export const AppProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [usersCount, setUsersCount] = useState(0);
+  
+  const [joinNotifications, setJoinNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
     const userEmail = user?.email?.toLowerCase() || '';
     if (user && SUPER_ADMINS.some(admin => admin.toLowerCase() === userEmail)) {
       const q = query(collection(db, 'join_notifications'), orderBy('createdAt', 'desc'), limit(20));
       const unsub = onSnapshot(q, (snapshot) => {
         setJoinNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      });
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'join_notifications'));
 
       // Also get total users count for admin
       import('firebase/firestore').then(({ getDocs, collection }) => {
-        getDocs(collection(db, 'users')).then(snap => setUsersCount(snap.size));
+        getDocs(collection(db, 'users'))
+          .then(snap => setUsersCount(snap.size))
+          .catch(err => handleFirestoreError(err, OperationType.LIST, 'users (count)'));
       });
 
       return () => unsub();
@@ -79,7 +80,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
           ...doc.data()
         }));
         setProfiles(items);
-      });
+      }, (err) => handleFirestoreError(err, OperationType.LIST, 'profiles (active)'));
       return unsub;
     }).then(unsub => {
        // Need to handle unsub properly if component unmounts quickly
@@ -114,7 +115,10 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     seoTitle: 'DBC - Digital Business Card',
     seoDesc: 'Create your digital business card and start networking smarter.',
     seoKeywords: 'nfc card, digital business card, networking',
+    trialEnabled: false,
     trialPeriod: '1 Month',
+    trialMonths: 1,
+    trialPlans: ['Pro'],
     referralPurchaseWindow: 35,
     referrerReward: 50,
     refereeReward: 50,
@@ -152,9 +156,6 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
       { id: 'premium', name: 'Premium', price: '$49', originalPrice: '$98', discount: 50, popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
       { id: 'enterprise', name: 'Enterprise', price: '$199', originalPrice: '$398', discount: 50, popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
     ],
-    trialEnabled: false,
-    trialMonths: 1,
-    trialPlans: ['Pro'],
     bannerColor: '#2563eb',
     trialHeadline: 'HURRY UP! GET 1 MONTH FREE TRIAL ON PRO VERSION',
     trialBtnText: 'CLAIM NOW',
@@ -209,7 +210,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
         });
       }
     }, (error) => {
-      console.error("Error fetching site settings:", error);
+      handleFirestoreError(error, OperationType.GET, 'settings/system');
     });
     return () => unsub();
   }, []);
@@ -234,7 +235,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
               setDoc(doc(db, 'users', user.uid), { walletBalance }, { merge: true });
            });
         }
-      });
+      }, (err) => handleFirestoreError(err, OperationType.GET, `users/${user.uid}`));
       return () => unsubWallet();
     } else {
       setWalletBalance(0);

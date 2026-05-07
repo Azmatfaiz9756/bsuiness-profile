@@ -1225,16 +1225,17 @@ export default function OwnerDashboard() {
                  </div>
               </div>
 
-              <div className="flex border-b border-slate-200 bg-white sticky top-0 md:top-0 z-30 px-4 md:px-8 overflow-x-auto no-scrollbar shrink-0">
-                <button onClick={() => setActiveTab('basic')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'basic' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Personal Info</button>
-                <button onClick={() => setActiveTab('social')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'social' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Social Connections</button>
-                <button onClick={() => setActiveTab('commerce')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'commerce' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Quick Pay & Services</button>
-                <button onClick={() => setActiveTab('design')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'design' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Theme & Style</button>
-                <button onClick={() => setActiveTab('widgets')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'widgets' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Booking Tool</button>
-                <button onClick={() => setActiveTab('domain')} className={`px-6 py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'domain' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>Custom Domain</button>
+              <div className="flex border-b border-slate-200 bg-white sticky top-0 md:top-0 z-30 px-2 md:px-8 overflow-x-auto no-scrollbar shrink-0 shadow-sm">
+                <button onClick={() => setActiveTab('basic')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'basic' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>👤 Info</button>
+                <button onClick={() => setActiveTab('contact')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'contact' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>📍 Contact & Address</button>
+                <button onClick={() => setActiveTab('social')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'social' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>🌐 Social</button>
+                <button onClick={() => setActiveTab('commerce')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'commerce' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>💳 Payments & Bank</button>
+                <button onClick={() => setActiveTab('design')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'design' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>🎨 Theme</button>
+                <button onClick={() => setActiveTab('widgets')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'widgets' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>📅 Booking</button>
+                <button onClick={() => setActiveTab('domain')} className={`px-5 py-4 text-[11px] md:text-sm font-black uppercase tracking-widest whitespace-nowrap border-b-2 transition-all ${activeTab === 'domain' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>🔗 Domain</button>
               </div>
               <div className="p-4 md:p-6 lg:p-8 overflow-y-auto relative">
-                {isFreePlan && !['basic', 'contact', 'domain'].includes(activeTab) && (
+                {isFreePlan && !['basic', 'contact', 'domain', 'commerce'].includes(activeTab) && (
                   <div className="absolute inset-0 z-[100] bg-white/80 backdrop-blur-sm flex flex-col items-center pt-24">
                     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm text-center border border-slate-100">
                       <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1495,18 +1496,17 @@ export default function OwnerDashboard() {
                         <input type="text" value={formData.phone || ''} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="+971 50 123 4567" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
-                        <input type="text" disabled={isFreePlan} value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="Include country code without +" />
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">WhatsApp Number</label>
+                        <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="Include country code without +" />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Personal/Business Website {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
-                        <input type="url" disabled={isFreePlan} value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="https://..." />
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Personal/Business Website</label>
+                        <input type="url" value={formData.website || ''} onChange={e => setFormData({...formData, website: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://..." />
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center mb-1">
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Building / Office Address {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Building / Office Address</label>
                           <button 
-                            disabled={isFreePlan}
                             onClick={async () => {
                               if (!navigator.geolocation) {
                                 alert("Geolocation is not supported by your browser");
@@ -1523,15 +1523,32 @@ export default function OwnerDashboard() {
                                     const data = await res.json();
                                     if (data && data.display_name) {
                                       address = data.display_name;
+                                      const addr = data.address || {};
+                                      setFormData({
+                                        ...formData,
+                                        address: address,
+                                        address_street: addr.road || addr.suburb || '',
+                                        address_city: addr.city || addr.town || addr.village || '',
+                                        address_state: addr.state || '',
+                                        address_zip: addr.postcode || '',
+                                        address_country: addr.country || '',
+                                        mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`
+                                      });
+                                    } else {
+                                      setFormData({
+                                        ...formData, 
+                                        address: address,
+                                        mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`
+                                      });
                                     }
                                   } catch (e) {
                                     console.error("Reverse geocoding failed", e);
+                                    setFormData({
+                                      ...formData, 
+                                      address: address,
+                                      mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`
+                                    });
                                   }
-                                  setFormData({
-                                    ...formData, 
-                                    address: address,
-                                    mapLink: `https://www.google.com/maps?q=${latitude},${longitude}`
-                                  });
                                   if(btn) btn.innerHTML = "✅ Found!";
                                   setTimeout(() => { if(btn) btn.innerHTML = "📍 Use My GPS"; }, 2000);
                                 } catch(e) {
@@ -1547,11 +1564,30 @@ export default function OwnerDashboard() {
                             className="text-[10px] bg-slate-100 border border-slate-300 px-2 py-0.5 rounded font-bold text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50"
                           >📍 Use My GPS</button>
                         </div>
-                        <input type="text" disabled={isFreePlan} value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="Office 123, Tower..." />
+                        <input type="text" value={formData.address || ''} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all mb-4" placeholder="Full address" />
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Street</label>
+                            <input type="text" value={formData.address_street || ''} onChange={e => setFormData({...formData, address_street: e.target.value})} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm" placeholder="e.g. 123 Business St" />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">City</label>
+                            <input type="text" value={formData.address_city || ''} onChange={e => setFormData({...formData, address_city: e.target.value})} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm" placeholder="e.g. Dubai" />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">State / Province</label>
+                            <input type="text" value={formData.address_state || ''} onChange={e => setFormData({...formData, address_state: e.target.value})} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm" placeholder="e.g. Dubai" />
+                          </div>
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase">Zip / Postcode</label>
+                            <input type="text" value={formData.address_zip || ''} onChange={e => setFormData({...formData, address_zip: e.target.value})} className="w-full p-2.5 border border-slate-200 rounded-lg text-sm" placeholder="e.g. 00000" />
+                          </div>
+                        </div>
                       </div>
                       <div className="flex flex-col gap-1.5 md:col-span-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions) {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
-                        <input type="url" disabled={isFreePlan} value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all disabled:bg-slate-100 disabled:opacity-60" placeholder="https://maps.google.com/..." />
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions)</label>
+                        <input type="url" value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://maps.google.com/..." />
                       </div>
                     </div>
                   </div>
@@ -1745,41 +1781,147 @@ export default function OwnerDashboard() {
 
                       {/* Bank Details Section */}
                       <div className="p-6 md:p-8 bg-white border border-slate-200 rounded-[2.5rem] shadow-sm mb-6">
-                        <div className="flex items-center gap-3 mb-6">
-                           <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-                             <Building size={24} className="text-slate-600" />
-                           </div>
-                           <div>
-                             <h3 className="m-0 text-xl font-black tracking-tight uppercase text-slate-900">Bank Account Details</h3>
-                             <p className="text-slate-500 text-[10px] font-bold m-0 uppercase tracking-widest opacity-80">Manual Transfer Information</p>
-                           </div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                              <Building size={24} className="text-slate-600" />
+                            </div>
+                            <div>
+                              <h3 className="m-0 text-xl font-black tracking-tight uppercase text-slate-900">Bank Account Details</h3>
+                              <p className="text-slate-500 text-[10px] font-bold m-0 uppercase tracking-widest opacity-80">Manual Transfer Information (Max 3)</p>
+                            </div>
+                          </div>
+                          {(formData.bankAccounts || []).length < 3 && (
+                            <button 
+                              onClick={() => {
+                                const accs = formData.bankAccounts || [];
+                                setFormData({
+                                  ...formData, 
+                                  bankAccounts: [...accs, { bankName: '', accountName: '', accountNumber: '', iban: '', swiftCode: '', ifscCode: '' }]
+                                });
+                              }}
+                              className="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20"
+                            >
+                              + Add Another Bank
+                            </button>
+                          )}
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bank Name</label>
-                             <input type="text" value={formData.bankName || ''} onChange={e => setFormData({...formData, bankName: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Emirates NBD" />
-                           </div>
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Holder Name</label>
-                             <input type="text" value={formData.accountName || ''} onChange={e => setFormData({...formData, accountName: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. John Doe" />
-                           </div>
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Number</label>
-                             <input type="text" value={formData.accountNumber || ''} onChange={e => setFormData({...formData, accountNumber: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 123456789" />
-                           </div>
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IBAN</label>
-                             <input type="text" value={formData.iban || ''} onChange={e => setFormData({...formData, iban: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. AE123456..." />
-                           </div>
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Swift Code / BIC</label>
-                             <input type="text" value={formData.swiftCode || ''} onChange={e => setFormData({...formData, swiftCode: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. EBIZAEAXXX" />
-                           </div>
-                           <div className="flex flex-col gap-1.5">
-                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IFSC Code / Routing</label>
-                             <input type="text" value={formData.ifscCode || ''} onChange={e => setFormData({...formData, ifscCode: e.target.value})} className="w-full p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. HDFC0001234" />
-                           </div>
+                        <div className="flex flex-col gap-8">
+                           {(formData.bankAccounts || []).length === 0 && (
+                             <div className="text-center py-8 border-2 border-dashed border-slate-100 rounded-3xl">
+                               <p className="text-slate-400 text-xs font-bold uppercase">No bank accounts added</p>
+                               <button 
+                                 onClick={() => setFormData({...formData, bankAccounts: [{ bankName: '', accountName: '', accountNumber: '', iban: '', swiftCode: '', ifscCode: '' }]})}
+                                 className="mt-2 text-blue-600 font-bold text-xs uppercase"
+                               >
+                                 Add your first bank account
+                               </button>
+                             </div>
+                           )}
+
+                           {(formData.bankAccounts || []).map((acc: any, idx: number) => (
+                             <div key={idx} className="relative p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                               <div className="flex justify-between items-center mb-4">
+                                 <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">Bank Account #{idx + 1}</span>
+                                 <button 
+                                   onClick={() => {
+                                     const next = formData.bankAccounts.filter((_: any, i: number) => i !== idx);
+                                     setFormData({...formData, bankAccounts: next});
+                                   }}
+                                   className="text-red-400 hover:text-red-600 p-1 transition-colors"
+                                 >
+                                   <X size={16} />
+                                 </button>
+                               </div>
+                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bank Name</label>
+                                   <input 
+                                     type="text" 
+                                     value={acc.bankName || ''} 
+                                     onChange={e => {
+                                       const next = [...formData.bankAccounts];
+                                       next[idx] = { ...next[idx], bankName: e.target.value };
+                                       setFormData({...formData, bankAccounts: next});
+                                     }} 
+                                     className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" 
+                                     placeholder="e.g. Emirates NBD" 
+                                   />
+                                 </div>
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Holder Name</label>
+                                   <input 
+                                     type="text" 
+                                     value={acc.accountName || ''} 
+                                     onChange={e => {
+                                       const next = [...formData.bankAccounts];
+                                       next[idx] = { ...next[idx], accountName: e.target.value };
+                                       setFormData({...formData, bankAccounts: next});
+                                     }} 
+                                     className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" 
+                                     placeholder="e.g. John Doe" 
+                                   />
+                                 </div>
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Number</label>
+                                   <input 
+                                     type="text" 
+                                     value={acc.accountNumber || ''} 
+                                     onChange={e => {
+                                       const next = [...formData.bankAccounts];
+                                       next[idx] = { ...next[idx], accountNumber: e.target.value };
+                                       setFormData({...formData, bankAccounts: next});
+                                     }} 
+                                     className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" 
+                                     placeholder="e.g. 123456789" 
+                                   />
+                                 </div>
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IBAN</label>
+                                   <input 
+                                     type="text" 
+                                     value={acc.iban || ''} 
+                                     onChange={e => {
+                                       const next = [...formData.bankAccounts];
+                                       next[idx] = { ...next[idx], iban: e.target.value };
+                                       setFormData({...formData, bankAccounts: next});
+                                     }} 
+                                     className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" 
+                                     placeholder="e.g. AE123456..." 
+                                   />
+                                 </div>
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Swift Code / BIC</label>
+                                   <input 
+                                     type="text" 
+                                     value={acc.swiftCode || ''} 
+                                     onChange={e => {
+                                       const next = [...formData.bankAccounts];
+                                       next[idx] = { ...next[idx], swiftCode: e.target.value };
+                                       setFormData({...formData, bankAccounts: next});
+                                     }} 
+                                     className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" 
+                                     placeholder="e.g. EBIZAEAXXX" 
+                                   />
+                                 </div>
+                                 <div className="flex flex-col gap-1.5">
+                                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IFSC Code / Routing</label>
+                                   <input 
+                                     type="text" 
+                                     value={acc.ifscCode || ''} 
+                                     onChange={e => {
+                                       const next = [...formData.bankAccounts];
+                                       next[idx] = { ...next[idx], ifscCode: e.target.value };
+                                       setFormData({...formData, bankAccounts: next});
+                                     }} 
+                                     className="w-full p-3 border border-slate-200 rounded-xl bg-white focus:bg-white transition-all outline-none focus:ring-2 focus:ring-blue-500" 
+                                     placeholder="e.g. HDFC0001234" 
+                                   />
+                                 </div>
+                               </div>
+                             </div>
+                           ))}
                         </div>
                       </div>
 

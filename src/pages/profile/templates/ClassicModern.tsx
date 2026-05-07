@@ -1362,9 +1362,10 @@ export default function ClassicModern({
                   </div>
                 </a>
               )}
-              {profile.address && profile.mapLink && (
+              {(profile.address || profile.mapLink || profile.address_street) && (
                 <a
-                  href={profile.mapLink}
+                  href={profile.mapLink || '#'}
+                  onClick={(e) => !profile.mapLink && e.preventDefault()}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -1403,7 +1404,15 @@ export default function ClassicModern({
                       Address
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
-                      {profile.address}
+                      {profile.address_street ? (
+                        <>
+                          {profile.address_street}{profile.address_city ? `, ${profile.address_city}` : ''}
+                          {profile.address_state ? `, ${profile.address_state}` : ''}
+                          {profile.address_zip ? ` ${profile.address_zip}` : ''}
+                        </>
+                      ) : (
+                        profile.address || 'Visit Us'
+                      )}
                     </div>
                   </div>
                 </a>
@@ -2233,12 +2242,12 @@ export default function ClassicModern({
 
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                             <div style={{ background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                              <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>SWIFT</div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{acc.swift || 'N/A'}</div>
+                              <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>SWIFT/BIC</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{acc.swiftCode || acc.swift || 'N/A'}</div>
                             </div>
                             <div style={{ background: "#f8fafc", padding: "10px", borderRadius: 8, border: "1px solid #e2e8f0" }}>
-                              <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>Country</div>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{acc.country || 'UAE'}</div>
+                              <div style={{ fontSize: 9, fontWeight: 800, color: "#64748b", textTransform: "uppercase" }}>IFSC/Routing</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b" }}>{acc.ifscCode || acc.routing || 'N/A'}</div>
                             </div>
                           </div>
                         </div>
