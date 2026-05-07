@@ -738,7 +738,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
                   animate={{ opacity: 1, y: 0 }}
                   style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}
                 >
-                  <div style={{ background: '#dbeafe', p: 4, borderRadius: '50%', marginBottom: 8 }}>
+                  <div style={{ background: '#dbeafe', padding: 16, borderRadius: '50%', marginBottom: 8 }}>
                     <Bot size={48} color="#2563eb" />
                   </div>
                   <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>Select Chat Language</h3>
@@ -770,7 +770,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   onSubmit={submitIdentity}
-                  style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center', p: 16 }}
+                  style={{ display: 'flex', flexDirection: 'column', gap: 12, height: '100%', justifyContent: 'center', padding: 16 }}
                 >
                   <div style={{ textAlign: 'center', marginBottom: 16 }}>
                     <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#1e293b' }}>Join Chat</h3>

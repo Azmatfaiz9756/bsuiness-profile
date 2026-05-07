@@ -7,7 +7,7 @@ import MinimalClean from './templates/MinimalClean';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode, X, Share2, Download, MessageCircle } from 'lucide-react';
+import { QrCode, X, Share2, Download } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { PromotionBanner } from '../../components/PromotionBanner';
 
@@ -62,6 +62,8 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     const fetchProfile = async () => {
       if (!id) return;
       
+      const normalizedId = id.toLowerCase();
+      
       // If we don't have it yet, set loading
       if (!profile) {
         setLoading(true);
@@ -69,19 +71,27 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       
       try {
         let foundProfile = null;
-        // Try to fetch by UID (id) first
+        // Try to fetch by UID (id) first (UID is case sensitive in Firebase but let's try direct first)
         const docRef = doc(db, 'profiles', id);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           foundProfile = { ...docSnap.data(), id: docSnap.id };
         } else {
-          // If not found, try searching by slug
-          const q = query(collection(db, 'profiles'), where('slug', '==', id));
+          // Try fetching by UID but case-insensitive? No, UID is specific.
+          // Try searching by slug (slugs should be lowercase)
+          const q = query(collection(db, 'profiles'), where('slug', '==', normalizedId));
           const querySnapshot = await getDocs(q);
           
           if (!querySnapshot.empty) {
             foundProfile = { ...querySnapshot.docs[0].data(), id: querySnapshot.docs[0].id };
+          } else {
+            // Last resort: search by id field as fallback for some older profiles
+            const q2 = query(collection(db, 'profiles'), where('id', '==', id));
+            const snap2 = await getDocs(q2);
+            if (!snap2.empty) {
+              foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
+            }
           }
         }
 

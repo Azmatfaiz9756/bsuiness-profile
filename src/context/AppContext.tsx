@@ -47,6 +47,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [usersCount, setUsersCount] = useState(0);
   
   const [joinNotifications, setJoinNotifications] = useState<any[]>([]);
@@ -273,6 +274,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthLoading(false);
       
       if (u) {
+        // Fetch current user's profile
+        onSnapshot(doc(db, 'profiles', u.uid), (snap) => {
+          if (snap.exists()) {
+            setProfile({ id: snap.id, ...snap.data() });
+          } else {
+            setProfile(null);
+          }
+        });
+
         const userEmail = u.email?.toLowerCase() || '';
         const isAdmin = SUPER_ADMINS.some(admin => admin.toLowerCase() === userEmail);
 
@@ -356,7 +366,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     <AppContext.Provider value={{
       user, authLoading, 
       isLoginModalOpen, setIsLoginModalOpen,
-      profiles, setProfiles, orders, setOrders, products, setProducts, 
+      profiles, setProfiles, profile, setProfile, orders, setOrders, products, setProducts, 
       walletBalance, setWalletBalance, stats, setStats,
       cart, setCart, wishlist, setWishlist, userOrders, setUserOrders,
       addresses, setAddresses, siteSettings, setSiteSettings,

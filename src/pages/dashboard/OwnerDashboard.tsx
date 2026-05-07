@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
 
@@ -622,7 +622,7 @@ export default function OwnerDashboard() {
         }
           // Initialize empty profile
           const emptyProfile = {
-            id: `DBC${Date.now().toString().slice(-9)}`,
+            id: user.uid,
             slug: user.uid.substring(0, 8),
             name: user.displayName || 'Jane Doe',
             title: 'Founding Partner',
@@ -850,6 +850,8 @@ export default function OwnerDashboard() {
         console.error('Firestore Permission Error Details:', JSON.stringify(errInfo, null, 2));
         throw firestoreErr;
       }
+      
+      showToast('Profile updated securely for optimal SEO ranking!');
       
       if (!editingSubProfileId) {
         setProfile(formData); // keep main profile in sync if editing main
@@ -1121,6 +1123,13 @@ export default function OwnerDashboard() {
                 )}
               </div>
               <div className="flex flex-wrap gap-2 w-full md:w-auto shrink-0">
+                <Link 
+                  to={formData.slug ? `/${formData.slug}` : `/profile/${formData.id || user.uid}`}
+                  target="_blank"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white text-blue-600 font-black rounded-xl border-2 border-blue-600 hover:bg-blue-50 transition-all text-xs uppercase tracking-widest shadow-lg shadow-blue-500/10"
+                >
+                  <Globe size={14} /> View Live Profile
+                </Link>
                 <button onClick={() => {
                   setFormData({
                     ...formData,
@@ -1249,6 +1258,21 @@ export default function OwnerDashboard() {
                 )}
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Public Profile Slug (URL ID)</label>
+                        <div className="flex items-center gap-2">
+                           <span className="text-slate-400 text-sm font-mono">{window.location.origin}/</span>
+                           <input 
+                             type="text" 
+                             value={formData.slug || ''} 
+                             onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')})} 
+                             className="flex-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all font-mono text-sm" 
+                             placeholder="your-unique-slug"
+                           />
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium italic">This is your unique URL identifier used for sharing. Changing it will break existing links.</p>
+                    </div>
+
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Name</label>
                       <input type="text" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />

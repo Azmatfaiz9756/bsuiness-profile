@@ -68,96 +68,99 @@ export const FrontendLayout = () => {
   const closeMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <div className="frontend-root w-full overflow-x-hidden relative">
+    <div className="frontend-root w-full overflow-x-hidden relative flex flex-col min-h-screen">
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       
-      {marqueeEnabled && !isMobileMenuOpen && <GlobalMarquee />}
-      
-      {/* Desktop & Mobile Header */}
-      {!isShop && (
-        <div className="nav flex h-[72px] md:h-[80px] items-center justify-between px-4 md:px-8 bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
-          <Link to="/" className="nav-logo flex items-center gap-3 z-10 group">
-            <AnimatedLogo size={10} theme="light" />
-            <div className="hidden md:flex flex-col">
-              <span className="nav-logo-text font-black text-slate-900 whitespace-nowrap leading-tight text-lg tracking-tighter uppercase italic">
-                VIBE<span className="text-blue-600"> Digital Connect</span>
-              </span>
-              <span className="text-[8px] text-slate-400 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
-            </div>
-          </Link>
+      <div className="sticky top-0 z-[100] flex flex-col">
+        {marqueeEnabled && !isMobileMenuOpen && <GlobalMarquee />}
+        
+        {/* Desktop & Mobile Header */}
+        {!isShop && (
+          <div className="nav flex h-[72px] md:h-[80px] items-center justify-between px-4 md:px-8 bg-white border-b border-slate-100 shadow-sm backdrop-blur-md bg-white/90">
+            <Link to="/" className="nav-logo flex items-center gap-3 z-10 group">
+              <AnimatedLogo size={10} theme="light" />
+              <div className="hidden md:flex flex-col">
+                <span className="nav-logo-text font-black text-slate-900 whitespace-nowrap leading-tight text-lg tracking-tighter uppercase italic">
+                  VIBE<span className="text-blue-600"> Digital Connect</span>
+                </span>
+                <span className="text-[8px] text-slate-400 font-bold tracking-[0.2em] uppercase">HAADI GLOBAL VENTURES FZE LLC</span>
+              </div>
+            </Link>
 
-          {/* Centered Mobile Title */}
-          <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[50%]">
-            <span className="font-black text-slate-900 whitespace-nowrap leading-tight text-base tracking-tighter uppercase italic">VIBE<span className="text-blue-600"> Digital Connect</span></span>
-            <span className="text-[7px] text-slate-400 font-bold tracking-widest uppercase truncate w-full">HAADI GLOBAL VENTURES FZE LLC</span>
-          </Link>
-          
-          {/* Desktop Links */}
-          <div className="nav-links hidden md:flex items-center gap-6">
-            <Link to="/" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/')}`}>Directory</Link>
-            <Link to="/templates" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/templates')}`}>Templates</Link>
-            <Link to="/features" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/features')}`}>Features</Link>
-            <Link to="/shop" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/shop')}`}>Shop</Link>
-            {user && (
-              <Link to="/wallet" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/wallet')}`}>Wallet</Link>
-            )}
-            <Link to="/referrals" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/referrals')}`}>Referrals</Link>
-            <Link to="/leaderboard" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/leaderboard')}`}>Rank</Link>
-            <Link to="/plans" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/plans')}`}>Plans</Link>
+            {/* Centered Mobile Title */}
+            <Link to="/" className="md:hidden absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center text-center w-[50%]">
+              <span className="font-black text-slate-900 whitespace-nowrap leading-tight text-base tracking-tighter uppercase italic">VIBE<span className="text-blue-600"> Digital Connect</span></span>
+              <span className="text-[7px] text-slate-400 font-bold tracking-widest uppercase truncate w-full">HAADI GLOBAL VENTURES FZE LLC</span>
+            </Link>
             
-            <div className="h-4 w-px bg-slate-200"></div>
+            {/* Desktop Links */}
+            <div className="nav-links hidden md:flex items-center gap-6">
+              <Link to="/" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/')}`}>Directory</Link>
+              <Link to="/templates" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/templates')}`}>Templates</Link>
+              <Link to="/features" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/features')}`}>Features</Link>
+              <Link to="/shop" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/shop')}`}>Shop</Link>
+              {user && (
+                <Link to="/wallet" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/wallet')}`}>Wallet</Link>
+              )}
+              <Link to="/referrals" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/referrals')}`}>Referrals</Link>
+              <Link to="/leaderboard" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/leaderboard')}`}>Rank</Link>
+              <Link to="/plans" className={`nav-link px-2 py-1 rounded text-sm font-medium text-slate-600 hover:text-slate-900 ${isActive('/plans')}`}>Plans</Link>
+              
+              <div className="h-4 w-px bg-slate-200"></div>
 
-            <select
-              value={selectedCountry}
-              onChange={(e) => {
-                setSelectedCountry(e.target.value);
-                localStorage.setItem('dbc_country', e.target.value);
-              }}
-              className="bg-transparent border-none outline-none text-sm font-bold text-slate-700 cursor-pointer"
-            >
-              <option value="Global">🌎 Global</option>
-              <option value="India">🇮🇳 India</option>
-              <option value="UAE">🇦🇪 UAE</option>
-            </select>
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  setSelectedCountry(e.target.value);
+                  localStorage.setItem('dbc_country', e.target.value);
+                }}
+                className="bg-transparent border-none outline-none text-sm font-bold text-slate-700 cursor-pointer"
+              >
+                <option value="Global">🌎 Global</option>
+                <option value="India">🇮🇳 India</option>
+                <option value="UAE">🇦🇪 UAE</option>
+              </select>
 
-            <div className="h-4 w-px bg-slate-200"></div>
+              <div className="h-4 w-px bg-slate-200"></div>
 
-            {/* Language Selector */}
-            <select 
-              value={currentLang}
-              onChange={(e) => handleLanguageChange(e.target.value)}
-              className="bg-transparent border-none outline-none text-sm font-medium text-slate-600 cursor-pointer"
-            >
-              <option value="en">🇺🇸 EN</option>
-              <option value="ar">🇦🇪 AR</option>
-              <option value="es">🇪🇸 ES</option>
-              <option value="fr">🇫🇷 FR</option>
-              <option value="de">🇩🇪 DE</option>
-            </select>
+              {/* Language Selector */}
+              <select 
+                value={currentLang}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm font-medium text-slate-600 cursor-pointer"
+              >
+                <option value="en">🇺🇸 EN</option>
+                <option value="ar">🇦🇪 AR</option>
+                <option value="es">🇪🇸 ES</option>
+                <option value="fr">🇫🇷 FR</option>
+                <option value="de">🇩🇪 DE</option>
+              </select>
+            </div>
+
+            {/* Desktop Auth */}
+            <div className="nav-right hidden md:flex items-center gap-3">
+              {authLoading ? (
+                <span className="text-slate-500 text-sm">Loading...</span>
+              ) : user ? (
+                <>
+                  <Link to="/dashboard" className="btn btn-blk btn-sm bg-slate-900 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-slate-800 transition-colors">Owner Dashboard</Link>
+                  <button onClick={handleLogout} className="btn btn-outline btn-sm border border-slate-300 px-3 py-1.5 rounded text-sm font-medium hover:bg-slate-50 transition-colors">Sign Out</button>
+                </>
+              ) : (
+                <button onClick={() => setIsLoginModalOpen(true)} className="btn btn-blk btn-sm bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors">Business Login</button>
+              )}
+            </div>
+
+            {/* Mobile Toggle Button */}
+            <button className="md:hidden p-2 -mr-2 text-slate-600 shrink-0 select-none" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              <Menu size={24} />
+            </button>
           </div>
+        )}
+      </div>
 
-          {/* Desktop Auth */}
-          <div className="nav-right hidden md:flex items-center gap-3">
-            {authLoading ? (
-              <span className="text-slate-500 text-sm">Loading...</span>
-            ) : user ? (
-              <>
-                <Link to="/dashboard" className="btn btn-blk btn-sm bg-slate-900 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-slate-800 transition-colors">Owner Dashboard</Link>
-                <button onClick={handleLogout} className="btn btn-outline btn-sm border border-slate-300 px-3 py-1.5 rounded text-sm font-medium hover:bg-slate-50 transition-colors">Sign Out</button>
-              </>
-            ) : (
-              <button onClick={() => setIsLoginModalOpen(true)} className="btn btn-blk btn-sm bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-700 transition-colors">Business Login</button>
-            )}
-          </div>
+      {showBanner && <div className="relative z-40"><PromotionBanner /></div>}
 
-          {/* Mobile Toggle Button */}
-          <button className="md:hidden p-2 -mr-2 text-slate-600 shrink-0 select-none" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            <Menu size={24} />
-          </button>
-        </div>
-      )}
-
-      {showBanner && <PromotionBanner />}
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && !isShop && (

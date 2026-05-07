@@ -12,13 +12,14 @@ export default function FrontendPlans() {
   const trialEnabled = siteSettings?.trialEnabled || false;
   const trialPlans = siteSettings?.trialPlans || ['Pro'];
   const hasUsedTrial = profile?.hasUsedTrial || false;
+  const isProfileLoading = !profile && user;
   
   // Use country specific plans if available, else fallback to Global or default
   const defaultPlans = [
-    { name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
-    { name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
-    { name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
-    { name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
+    { id: 'basic', name: 'Basic', price: 'Free', popular: false, badge: 'BASIC', features: ['Digital Profile Page', 'NFC Card Connectivity', '5 Business Services', 'Basic QR Code', 'Standard Support'] },
+    { id: 'pro', name: 'Pro', price: '$19', popular: true, badge: 'MOST POPULAR', features: ['Unlimited Services', 'AI Chatbot Integration', 'Lead Management System', 'Lead Capture Form', 'Referral Program', 'WhatsApp Integration', 'Digital Business Card', 'Appointment Booking', 'Advanced Analytics', 'Custom Branding'] },
+    { id: 'premium', name: 'Premium', price: '$49', popular: false, badge: 'PREMIUM', features: ['Everything in Pro', 'External Booking Links', 'Custom Domain Mapping', 'Custom Templates', 'E-commerce Shop', 'Analytics Dashboard', 'Premium Themes', 'SEO Tools', 'Team/Staff Management (2 Seats)', 'VIP Support', 'API Access'] },
+    { id: 'enterprise', name: 'Enterprise', price: '$199', popular: false, badge: 'ENTERPRISE', features: ['Team Management (10 Seats)', 'Corporate White-labeling', 'Advanced Admin Dashboard', 'Custom Domain Link', 'Dedicated Account Manager', 'Custom Integrations', 'Bulk Export Tools', 'Priority Development', 'All Premium Features'] }
   ];
   
   const plans = siteSettings?.countryPlans?.[selectedCountry] || siteSettings?.countryPlans?.['Global'] || defaultPlans;
@@ -27,6 +28,11 @@ export default function FrontendPlans() {
     if (!user) {
       setIsLoginModalOpen(true);
       return;
+    }
+
+    if (isProfileLoading) {
+        alert("Loading your account status...");
+        return;
     }
 
     if (plan.price === 'Free') {
@@ -46,7 +52,7 @@ export default function FrontendPlans() {
         console.error("Trial start error:", err);
         alert('Could not start trial. Please try again or create a profile first.');
       }
-    } else if (trialEnabled && trialPlans.includes(plan.name) && !hasUsedTrial) {
+    } else if (trialEnabled && (trialPlans.includes(plan.name) || trialPlans.includes(plan.id)) && !hasUsedTrial) {
         const confirmTrial = window.confirm(`Start your ${trialMonths}-month FREE trial of the ${plan.name} plan? No credit card required.`);
         if (confirmTrial) {
           try {
