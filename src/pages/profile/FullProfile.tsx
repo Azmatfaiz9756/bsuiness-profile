@@ -65,7 +65,8 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     const fetchProfile = async () => {
       if (!id) return;
       
-      const normalizedId = id.toLowerCase();
+      const cleanId = id.trim();
+      const normalizedId = cleanId.toLowerCase();
       
       // If we don't have it yet, set loading
       if (!profile) {
@@ -74,31 +75,37 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       
       try {
         let foundProfile = null;
-        // Try to fetch by UID (id) first (UID is case sensitive in Firebase but let's try direct first)
-        const docRef = doc(db, 'profiles', id);
+        console.log("Searching for profile with ID or Slug:", cleanId);
+
+        // 1. Try to fetch by UID (id) first
+        const docRef = doc(db, 'profiles', cleanId);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
+          console.log("Profile found by direct ID match");
           foundProfile = { ...docSnap.data(), id: docSnap.id };
         } else {
-          // Try fetching by UID but case-insensitive? No, UID is specific.
-          // Try searching by slug (slugs should be lowercase)
+          // 2. Try searching by slug
+          console.log("Not found by ID, searching by slug:", normalizedId);
           const q = query(collection(db, 'profiles'), where('slug', '==', normalizedId));
           const querySnapshot = await getDocs(q);
           
           if (!querySnapshot.empty) {
+            console.log("Profile found by lowercase slug match");
             foundProfile = { ...querySnapshot.docs[0].data(), id: querySnapshot.docs[0].id };
           } else {
-            // Try searching by original ID as slug just in case it was saved with mixed case
-            const qOrig = query(collection(db, 'profiles'), where('slug', '==', id));
+            // 3. Try searching by original ID as slug (mixed case)
+            const qOrig = query(collection(db, 'profiles'), where('slug', '==', cleanId));
             const snapOrig = await getDocs(qOrig);
             if (!snapOrig.empty) {
+              console.log("Profile found by mixed-case slug match");
               foundProfile = { ...snapOrig.docs[0].data(), id: snapOrig.docs[0].id };
             } else {
-              // Last resort: search by id field as fallback for some older profiles
-              const q2 = query(collection(db, 'profiles'), where('id', '==', id));
+              // 4. Last resort: search by id field as fallback for some older profiles
+              const q2 = query(collection(db, 'profiles'), where('id', '==', cleanId));
               const snap2 = await getDocs(q2);
               if (!snap2.empty) {
+                console.log("Profile found by 'id' field fallback");
                 foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
               }
             }
@@ -114,7 +121,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           // Increment views
           if (!isPreview) {
             try {
-               const pId = foundProfile.id || id;
+               const pId = foundProfile.id || cleanId;
                if (pId) {
                  const now = Date.now();
                  const storageKey = `last_view_${pId}`;
@@ -129,9 +136,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                    const updateRef = doc(db, 'profiles', pId);
                    await updateDoc(updateRef, { views: increment(1) });
                    localStorage.setItem(storageKey, now.toString());
-                   console.log("View recorded for", pId);
-                 } else {
-                   console.log("View throttled for", pId);
                  }
                }
             } catch (err) {
@@ -140,10 +144,11 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           }
 
         } else {
+          console.log("Profile not found in any Firebase search");
           // If no profile found in DB, we stay at null to show 404
           const existsInContext = profiles.find((p: any) => 
-            p.id === id || 
-            (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
+            p.id === cleanId || 
+            (p.slug && p.slug.toLowerCase() === normalizedId)
           );
           if (existsInContext) {
             setProfile(existsInContext);
@@ -154,13 +159,18 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       } catch (err) {
         console.error("Error fetching profile:", err);
         if (!profile) {
+          const cleanId = id.trim();
+          const normalizedId = cleanId.toLowerCase();
           const localProfile = profiles.find((p: any) => 
-            p.id === id || 
-            (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
-          ) || profiles[0];
-          setProfile(localProfile);
-          if (localProfile && localProfile.template) {
-            setTemplate(localProfile.template);
+            p.id === cleanId || 
+            (p.slug && p.slug.toLowerCase() === normalizedId)
+          ) || (profiles.length > 0 ? profiles[0] : null);
+          
+          if (localProfile) {
+            setProfile(localProfile);
+            if (localProfile.template) {
+              setTemplate(localProfile.template);
+            }
           }
         }
       } finally {

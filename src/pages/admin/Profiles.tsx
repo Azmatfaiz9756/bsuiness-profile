@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Link } from 'react-router-dom';
 import { Settings, X, Save, Edit3, Globe, Shield, Link as LinkIcon, Search } from 'lucide-react';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 
 export default function AdminProfiles() {
@@ -23,7 +23,7 @@ export default function AdminProfiles() {
         getDocs(collection(db, 'users'))
       ]);
       const pData = profilesSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true, hasProfile: true }));
-      const uData = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), isUserRecord: true }));
+      const uData = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data(), isDb: true, isUserRecord: true }));
       setDbProfiles(pData);
       setDbUsers(uData);
     } catch (e) {
@@ -38,32 +38,58 @@ export default function AdminProfiles() {
   }, [editingProfile]);
 
   const allProfiles = useMemo(() => {
-    const combined = [...staticProfiles];
+    // Start with static profiles from context
+    const combinedMap = new Map();
     
-    // Add logic to merge users and profiles
+    staticProfiles.forEach(p => {
+      combinedMap.set(p.id, { ...p, isStatic: true });
+      if (p.email) combinedMap.set(p.email.toLowerCase(), { ...p, isStatic: true });
+    });
+
     // 1. Add all users as potential profiles
     dbUsers.forEach(user => {
-      const existingIdx = combined.findIndex(p => p.id === user.id || (user.email && p.email === user.email));
-      if (existingIdx >= 0) {
-        combined[existingIdx] = { ...combined[existingIdx], ...user };
-      } else {
-        combined.push({ ...user, name: user.name || user.displayName || 'New User', status: 'Inactive' });
-      }
+      const existingById = combinedMap.get(user.id);
+      const existingByEmail = user.email ? combinedMap.get(user.email.toLowerCase()) : null;
+      
+      const base = existingById || existingByEmail || {};
+      combinedMap.set(user.id, { 
+        ...base, 
+        ...user, 
+        name: user.name || user.displayName || base.name || 'New User',
+        status: base.status || 'Inactive',
+        hasUserRecord: true
+      });
     });
 
     // 2. Merge with actual profiles
     dbProfiles.forEach(dbp => {
-      const existingIdx = combined.findIndex(p => p.id === dbp.id || (dbp.email && p.email === dbp.email));
-      if (existingIdx >= 0) {
-        combined[existingIdx] = { ...combined[existingIdx], ...dbp };
-      } else {
-        combined.push(dbp);
-      }
+      const existingById = combinedMap.get(dbp.id);
+      const existingByEmail = dbp.email ? combinedMap.get(dbp.email.toLowerCase()) : null;
+      
+      const base = existingById || existingByEmail || {};
+      combinedMap.set(dbp.id, { 
+        ...base, 
+        ...dbp, 
+        hasProfile: true,
+        isDb: true
+      });
     });
 
-    if (!searchTerm) return combined;
+    const combined = Array.from(combinedMap.values());
+    
+    // Remove duplicates by ID (Map already did most of it, but let's be sure)
+    const unique = [];
+    const seenIds = new Set();
+    for (const p of combined) {
+      if (!seenIds.has(p.id)) {
+        unique.push(p);
+        seenIds.add(p.id);
+      }
+    }
+
+    if (!searchTerm) return unique;
     const term = searchTerm.toLowerCase();
-    return combined.filter(p => 
+    return unique.filter(p => 
       (p.name && p.name.toLowerCase().includes(term)) || 
       (p.email && p.email.toLowerCase().includes(term)) ||
       (p.id && p.id.toLowerCase().includes(term)) ||
@@ -82,10 +108,30 @@ export default function AdminProfiles() {
     try {
       if (formData.isDb) {
         // Save to Firebase
-        const docRef = doc(db, 'profiles', formData.ownerId || formData.id);
-        const dataToSave = { ...formData };
+        const ownerId = formData.ownerId || formData.id;
+        const docRef = doc(db, 'profiles', ownerId);
+        const dataToSave = { 
+          ...formData,
+          ownerId: ownerId,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Ensure core fields exist
+        if (!dataToSave.slug) {
+          dataToSave.slug = ownerId.substring(0, 8).toLowerCase();
+        }
+        if (!dataToSave.name) {
+          dataToSave.name = formData.name || formData.displayName || 'New User';
+        }
+        if (!dataToSave.email && formData.email) {
+          dataToSave.email = formData.email;
+        }
+
         delete dataToSave.isDb;
-        await updateDoc(docRef, dataToSave);
+        delete dataToSave.isUserRecord;
+        delete dataToSave.hasProfile;
+        
+        await setDoc(docRef, dataToSave, { merge: true });
       } else {
         // Save to Static
         setStaticProfiles(staticProfiles.map((p: any) => p.id === formData.id ? formData : p));
@@ -107,22 +153,37 @@ export default function AdminProfiles() {
 
   return (
     <>
-      <div className="page-header">
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h2 style={{fontSize: 20, fontWeight: 800}}>Profile Management (Registered Users)</h2>
-          <p style={{fontSize: 13, color: 'var(--text3)', marginTop: 4}}>Manage SEO and details for users who registered.</p>
+          <h2 style={{fontSize: 20, fontWeight: 800}}>Profile Management</h2>
+          <p style={{fontSize: 13, color: 'var(--text3)', marginTop: 4}}>Manage SEO and details for all {dbUsers.length} registered users.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ background: '#f8fafc', padding: '8px 16px', borderRadius: 12, border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Users</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#1e293b' }}>{dbUsers.length}</div>
+          </div>
+          <div style={{ background: '#fffbeb', padding: '8px 16px', borderRadius: 12, border: '1px solid #fef3c7', textAlign: 'center' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#92400e', textTransform: 'uppercase' }}>Profiles</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#d97706' }}>{dbProfiles.length}</div>
+          </div>
         </div>
       </div>
 
       <div className="filters">
-        <div className="search-bar" style={{width: 240}}>
-           <span style={{color: 'var(--text3)'}}>🔍</span>
-           <input 
-             type="text" 
-             placeholder="Search profiles..." 
-             value={searchTerm}
-             onChange={(e) => setSearchTerm(e.target.value)}
-           />
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <div className="search-bar" style={{width: 300}}>
+             <span style={{color: 'var(--text3)'}}>🔍</span>
+             <input 
+               type="text" 
+               placeholder="Search by Name, Email, ID or Phone..." 
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+             />
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text3)' }}>
+            Showing {allProfiles.length} items
+          </div>
         </div>
         <button 
           onClick={fetchDbProfiles}
