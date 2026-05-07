@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { PaymentModal } from '../../components/PaymentModal';
 
 export default function FrontendPlans() {
-  const { siteSettings, user, setIsLoginModalOpen, selectedCountry } = useAppContext();
+  const { siteSettings, user, profile, setIsLoginModalOpen, selectedCountry } = useAppContext();
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
@@ -11,6 +11,7 @@ export default function FrontendPlans() {
   const trialPeriod = siteSettings?.trialPeriod || `${trialMonths} Month${trialMonths > 1 ? 's' : ''}`;
   const trialEnabled = siteSettings?.trialEnabled || false;
   const trialPlans = siteSettings?.trialPlans || ['Pro'];
+  const hasUsedTrial = profile?.hasUsedTrial || false;
   
   // Use country specific plans if available, else fallback to Global or default
   const defaultPlans = [
@@ -45,7 +46,7 @@ export default function FrontendPlans() {
         console.error("Trial start error:", err);
         alert('Could not start trial. Please try again or create a profile first.');
       }
-    } else if (trialEnabled && trialPlans.includes(plan.name)) {
+    } else if (trialEnabled && trialPlans.includes(plan.name) && !hasUsedTrial) {
         const confirmTrial = window.confirm(`Start your ${trialMonths}-month FREE trial of the ${plan.name} plan? No credit card required.`);
         if (confirmTrial) {
           try {
@@ -137,7 +138,7 @@ export default function FrontendPlans() {
             </div>
             
             <button onClick={() => handleStartTrial(plan)} className={`w-full justify-center py-2.5 rounded-lg text-sm font-bold transition-colors ${plan.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`}>
-              {plan.price === 'Free' ? 'Choose Basic' : (trialEnabled && trialPlans.includes(plan.name) ? 'Start Free Trial' : 'Buy Now')}
+              {plan.price === 'Free' ? 'Choose Basic' : (trialEnabled && trialPlans.includes(plan.name) && !hasUsedTrial ? 'Start Free Trial' : 'Buy Now')}
             </button>
           </div>
         ))}

@@ -217,17 +217,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
       {!isPreview && (
         <>
-          {profile?.whatsapp && (
-            <a 
-              href={`https://wa.me/${String(profile.whatsapp).replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noreferrer"
-              className="fixed bottom-24 right-4 w-12 h-12 bg-[#25D366] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 md:right-8 md:bottom-28 animate-pulse"
-              style={{ boxShadow: '0 10px 25px -5px rgba(37,211,102,0.4)' }}
-            >
-              <MessageCircle size={24} fill="currentColor" />
-            </a>
-          )}
           <button 
             onClick={() => setShowQR(true)}
             className="fixed bottom-24 left-4 w-12 h-12 bg-slate-900 text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all z-40 md:left-8 md:bottom-28"
