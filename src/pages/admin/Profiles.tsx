@@ -104,6 +104,38 @@ export default function AdminProfiles() {
     setEditTab('seo'); // Default to SEO tab per user request
   };
 
+  const handleQuickPlanUpdate = async (profile: any, newPlan: string) => {
+    try {
+      const ownerId = profile.ownerId || profile.id;
+      const docRef = doc(db, 'profiles', ownerId);
+      
+      const updateData: any = {
+        plan: newPlan,
+        updatedAt: new Date().toISOString(),
+        ownerId: ownerId,
+        id: ownerId,
+        email: profile.email || '',
+        name: profile.name || profile.displayName || 'New User',
+        status: 'Active'
+      };
+
+      if (!profile.slug) {
+        updateData.slug = ownerId.substring(0, 8).toLowerCase();
+      }
+
+      await setDoc(docRef, updateData, { merge: true });
+      
+      // Update local state to reflect change immediately
+      setDbProfiles(prev => prev.map(p => p.id === ownerId ? { ...p, ...updateData, hasProfile: true } : p));
+      setDbUsers(prev => prev.map(u => u.id === ownerId ? { ...u, plan: newPlan } : u));
+      
+      alert(`Plan successfully updated to ${newPlan} for ${updateData.name}`);
+    } catch (e) {
+      console.error("Plan update error:", e);
+      alert("Failed to update plan. Check console for details.");
+    }
+  };
+
   const handleSave = async () => {
     try {
       if (formData.isDb) {
@@ -228,9 +260,26 @@ export default function AdminProfiles() {
                   <span style={{ fontSize: 12, color: 'var(--text2)' }}>/{p.slug || p.id.toLowerCase()}</span>
                 </td>
                 <td>
-                     <span className={`badge ${p.plan === 'Business Pro' ? 'badge-gold' : p.plan === 'Premium' ? 'badge-blue' : 'badge-gray'}`}>
-                       {p.plan}
-                     </span>
+                   <select 
+                     value={p.plan || 'Basic'} 
+                     onChange={(e) => handleQuickPlanUpdate(p, e.target.value)}
+                     style={{ 
+                       padding: '4px 8px', 
+                       borderRadius: '6px', 
+                       fontSize: '11px', 
+                       fontWeight: 700,
+                       border: '1px solid #e2e8f0',
+                       background: p.plan === 'Enterprise Lifetime' ? '#fff7ed' : p.plan === 'Enterprise' ? '#f0f9ff' : p.plan === 'Premium' ? '#f5f3ff' : p.plan === 'Pro' ? '#ecfdf5' : '#fff',
+                       color: p.plan === 'Enterprise Lifetime' ? '#9a3412' : p.plan === 'Enterprise' ? '#0369a1' : p.plan === 'Premium' ? '#5b21b6' : p.plan === 'Pro' ? '#065f46' : '#64748b',
+                       cursor: 'pointer'
+                     }}
+                   >
+                     <option value="Basic">Basic</option>
+                     <option value="Pro">Pro</option>
+                     <option value="Premium">Premium</option>
+                     <option value="Enterprise">Enterprise</option>
+                     <option value="Enterprise Lifetime">Enterprise Lifetime</option>
+                   </select>
                 </td>
                 <td>{p.views}</td>
                 <td style={{display: 'flex', gap: 6}}>
@@ -460,7 +509,7 @@ export default function AdminProfiles() {
                {editTab === 'subscription' && (
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                    <div style={{ background: '#f0f9ff', padding: 16, borderRadius: 12, border: '1px solid #bae6fd' }}>
-                     <h4 style={{ margin: '0 0 8px', fontSize: 14, color: '#0369a1' }}>Current Plan Settings</h4>
+                     <h4 style={{ margin: '0 0 8px', fontSize: 14, color: '#0369a1' }}>Plan Configuration</h4>
                      <p style={{ margin: 0, fontSize: 12, color: '#075985' }}>Manually override user plans or manage their free trial status here.</p>
                    </div>
                    
