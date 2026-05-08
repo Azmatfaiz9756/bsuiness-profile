@@ -3142,26 +3142,74 @@ export default function OwnerDashboard() {
                     </div>
 
                     {!businessHours[day]?.closed && (
-                      <div className="flex items-center gap-3 ml-auto sm:ml-0">
-                        <input 
-                          type="time" 
-                          value={businessHours[day]?.open || '09:00'}
-                          onChange={(e) => setBusinessHours({
-                            ...businessHours,
-                            [day]: { ...businessHours[day], open: e.target.value }
-                          })}
-                          className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
-                        />
-                        <span className="text-slate-400 font-bold">to</span>
-                        <input 
-                          type="time" 
-                          value={businessHours[day]?.close || '18:00'}
-                          onChange={(e) => setBusinessHours({
-                            ...businessHours,
-                            [day]: { ...businessHours[day], close: e.target.value }
-                          })}
-                          className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
-                        />
+                      <div className="flex flex-col gap-2 ml-auto sm:ml-0">
+                        <div className="flex items-center gap-3 w-full">
+                          <input 
+                            type="time" 
+                            value={businessHours[day]?.open || '09:00'}
+                            onChange={(e) => setBusinessHours({
+                              ...businessHours,
+                              [day]: { ...businessHours[day], open: e.target.value }
+                            })}
+                            className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
+                          />
+                          <span className="text-slate-400 font-bold">to</span>
+                          <input 
+                            type="time" 
+                            value={businessHours[day]?.close || '18:00'}
+                            onChange={(e) => setBusinessHours({
+                              ...businessHours,
+                              [day]: { ...businessHours[day], close: e.target.value }
+                            })}
+                            className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
+                          />
+                          {businessHours[day]?.split ? (
+                            <div className="w-[30px]"></div>
+                          ) : (
+                            <button
+                              onClick={() => setBusinessHours({
+                                ...businessHours,
+                                [day]: { ...businessHours[day], split: true, open2: '16:00', close2: '22:00' }
+                              })}
+                              className="text-xs text-blue-600 font-bold hover:underline py-1 px-2 rounded bg-blue-50 ml-2"
+                            >
+                              + Shift 2
+                            </button>
+                          )}
+                        </div>
+                        {businessHours[day]?.split && (
+                          <div className="flex items-center gap-3">
+                            <input 
+                              type="time" 
+                              value={businessHours[day]?.open2 || '16:00'}
+                              onChange={(e) => setBusinessHours({
+                                ...businessHours,
+                                [day]: { ...businessHours[day], open2: e.target.value }
+                              })}
+                              className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
+                            />
+                            <span className="text-slate-400 font-bold">to</span>
+                            <input 
+                              type="time" 
+                              value={businessHours[day]?.close2 || '22:00'}
+                              onChange={(e) => setBusinessHours({
+                                ...businessHours,
+                                [day]: { ...businessHours[day], close2: e.target.value }
+                              })}
+                              className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
+                            />
+                            <button
+                              onClick={() => setBusinessHours({
+                                ...businessHours,
+                                [day]: { ...businessHours[day], split: false }
+                              })}
+                              className="text-slate-400 hover:text-red-500 transition-colors ml-2"
+                              title="Remove shift"
+                            >
+                              <X size={18} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
