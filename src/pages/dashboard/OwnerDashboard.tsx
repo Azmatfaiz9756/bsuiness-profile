@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
 
@@ -358,6 +358,15 @@ export default function OwnerDashboard() {
   const [campaignData, setCampaignData] = useState({ subject: '', message: '', imageUrl: '', type: 'WhatsApp' });
   const [campaignLoading, setCampaignLoading] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
+  const [businessHours, setBusinessHours] = useState<any>({
+    monday: { open: '09:00', close: '18:00', closed: false },
+    tuesday: { open: '09:00', close: '18:00', closed: false },
+    wednesday: { open: '09:00', close: '18:00', closed: false },
+    thursday: { open: '09:00', close: '18:00', closed: false },
+    friday: { open: '09:00', close: '18:00', closed: false },
+    saturday: { open: '09:00', close: '18:00', closed: true },
+    sunday: { open: '09:00', close: '18:00', closed: true }
+  });
   const [invitationEmail, setInvitationEmail] = useState('');
   const [invitationRole, setInvitationRole] = useState('Member (Customizable Profile)');
 
@@ -486,6 +495,21 @@ export default function OwnerDashboard() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  const saveBusinessHours = async () => {
+    if (!profile?.id) return;
+    try {
+      const { updateDoc, doc } = await import('firebase/firestore');
+      await updateDoc(doc(db, 'profiles', profile.id), {
+        businessHours: businessHours,
+        updatedAt: new Date().toISOString()
+      });
+      showToast('Business hours saved successfully!');
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to save business hours');
+    }
+  };
+
   // Fetch team profiles for Enterprise users
   useEffect(() => {
     if (sidebarTab === 'team' && profile?.id && (profile?.plan === 'Enterprise' || profile?.plan === 'Enterprise Lifetime' || user?.email?.toLowerCase() === 'azmatfaiz9756@gmail.com')) {
@@ -598,8 +622,12 @@ export default function OwnerDashboard() {
         const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
           const data = docSnap.data();
-          
-          // Check if this is a "partial" profile (missing core fields like name or slug)
+          const pWithId = { id: docSnap.id, ...data };
+          setProfile(pWithId);
+          setFormData(data);
+          if (data.businessHours) {
+            setBusinessHours(data.businessHours);
+          }
           if (!data.name || !data.slug || !data.ownerId) {
             console.log("Partial profile detected, filling in defaults...");
             const mergeData = {
@@ -973,6 +1001,9 @@ export default function OwnerDashboard() {
                   <Users size={20} /> <span className="flex-1 text-left">Job Applications</span>
                 </button>
               )}
+              <button onClick={() => { setSidebarTab('hours'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'hours' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Clock size={20} /> <span className="flex-1 text-left">Business Hours</span>
+              </button>
               {canSeeAiAgent && (
                 <button onClick={() => { setSidebarTab('chatbot'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'chatbot' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
                   <MessageSquare size={20} /> <span className="flex-1 text-left">Smart AI Chatbot</span>
@@ -1053,6 +1084,9 @@ export default function OwnerDashboard() {
                   <Calendar size={18} /> <span className="flex-1 text-left tracking-tight">Leads & Bookings</span>
                 </button>
               )}
+              <button onClick={() => setSidebarTab('hours')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'hours' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Clock size={18} /> <span className="flex-1 text-left tracking-tight">Business Hours</span>
+              </button>
             </div>
 
             <div className="flex flex-col gap-1">
@@ -3066,6 +3100,72 @@ export default function OwnerDashboard() {
                  <div className="bg-slate-50 border border-slate-200 p-8 text-center rounded-xl">
                    <p className="text-slate-500 font-medium">No job applications have been strictly received directly yet. Once a candidate submits their resume from your profile, it will appear here.</p>
                  </div>
+              </div>
+            </div>
+          )}
+
+          {sidebarTab === 'hours' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900">Business Hours & Timetable</h2>
+                  <p className="text-slate-500 text-sm">Set your weekly operating schedule and shifts.</p>
+                </div>
+                <button 
+                  onClick={saveBusinessHours}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/40"
+                >
+                  Save Schedule
+                </button>
+              </div>
+
+              <div className="grid gap-4">
+                {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
+                  <div key={day} className="bg-white border border-slate-200 p-4 rounded-2xl flex flex-wrap items-center gap-6 shadow-sm">
+                    <div className="w-32">
+                      <span className="text-lg font-bold text-slate-900 capitalize">{day}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={!businessHours[day]?.closed}
+                          onChange={(e) => setBusinessHours({
+                            ...businessHours,
+                            [day]: { ...businessHours[day], closed: !e.target.checked }
+                          })}
+                          className="w-5 h-5 rounded border-slate-300 bg-slate-50 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-slate-700">{businessHours[day]?.closed ? 'Closed' : 'Open'}</span>
+                      </label>
+                    </div>
+
+                    {!businessHours[day]?.closed && (
+                      <div className="flex items-center gap-3 ml-auto sm:ml-0">
+                        <input 
+                          type="time" 
+                          value={businessHours[day]?.open || '09:00'}
+                          onChange={(e) => setBusinessHours({
+                            ...businessHours,
+                            [day]: { ...businessHours[day], open: e.target.value }
+                          })}
+                          className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
+                        />
+                        <span className="text-slate-400 font-bold">to</span>
+                        <input 
+                          type="time" 
+                          value={businessHours[day]?.close || '18:00'}
+                          onChange={(e) => setBusinessHours({
+                            ...businessHours,
+                            [day]: { ...businessHours[day], close: e.target.value }
+                          })}
+                          className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl p-2.5 outline-none focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}

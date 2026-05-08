@@ -51,6 +51,7 @@ import AppointmentBooking from "../components/AppointmentBooking";
 import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
 import AddToHomeScreen from "../../../components/AddToHomeScreen";
+import VerifiedBadge from "../components/VerifiedBadge";
 
 export default function MinimalClean({
   profile,
@@ -379,7 +380,7 @@ export default function MinimalClean({
               profile.plan === "Pro" ||
               profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
-                <BadgeCheck size={24} color="#2563eb" fill="#2563eb" />
+                <VerifiedBadge size={28} />
                 <style>{`
                   .lucide-badge-check path:nth-child(1) { fill: #2563eb; }
                   .lucide-badge-check path:nth-child(2) { stroke: white; }
@@ -1550,10 +1551,7 @@ export default function MinimalClean({
               profile.plan === "Pro" ||
               profile.plan?.includes("Enterprise")) && (
               <span style={{ display: "inline-flex", marginLeft: 4 }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#1D9BF0"/>
-                  <path d="M8 12L11 15L16 9" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <VerifiedBadge size={28} />
               </span>
             )}
                 </div>
