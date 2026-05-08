@@ -64,6 +64,7 @@ export default function ExecutiveDark({
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
   const [activeTab, setActiveTab] = useState('home');
+  const [productQuantities, setProductQuantities] = useState<Record<number, number>>({});
   const isOwner = user?.uid === profile.uid;
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -1271,9 +1272,23 @@ export default function ExecutiveDark({
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
                               <div style={{ fontSize: 14, fontWeight: 900, color: '#b45309' }}>{prod.price}</div>
                             </div>
-                            <a href={prod.link || `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`} target="_blank" rel="noreferrer" style={{ display: 'block', background: prod.link ? '#b45309' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', marginTop: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              {prod.link ? 'Buy Now' : 'WhatsApp'}
-                            </a>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', background: '#333', borderRadius: 8, overflow: 'hidden' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: Math.max(1, (prev[i] || 1) - 1) })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#888', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >-</button>
+                                <div style={{ fontSize: 13, fontWeight: 'bold', width: 20, textAlign: 'center', color: '#fff' }}>{productQuantities[i] || 1}</div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: (prev[i] || 1) + 1 })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#888', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >+</button>
+                              </div>
+                              <a href={prod.link ? (() => { try { const u = new URL(prod.link); if(!u.searchParams.has('quantity')) u.searchParams.append('quantity', String(productQuantities[i] || 1)); return u.toString() } catch(e) { return prod.link } })() : `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I would like to order: ${prod.name} (Quantity: ${productQuantities[i] || 1})`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ flex: 1, background: prod.link ? '#b45309' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                {prod.link ? 'Buy' : 'WA'}
+                              </a>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -1367,43 +1382,23 @@ export default function ExecutiveDark({
                             >
                               {prod.price}
                             </div>
-                            {prod.link ? (
-                              <a
-                                href={prod.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  background: "#333",
-                                  color: "#fff",
-                                  border: "none",
-                                  padding: "6px 16px",
-                                  borderRadius: 4,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  textDecoration: "none",
-                                }}
-                              >
-                                Buy Now
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', background: '#333', borderRadius: 8, overflow: 'hidden' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: Math.max(1, (prev[i] || 1) - 1) })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#888', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >-</button>
+                                <div style={{ fontSize: 13, fontWeight: 'bold', width: 20, textAlign: 'center', color: '#fff' }}>{productQuantities[i] || 1}</div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: (prev[i] || 1) + 1 })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#888', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >+</button>
+                              </div>
+                              <a href={prod.link ? (() => { try { const u = new URL(prod.link); if(!u.searchParams.has('quantity')) u.searchParams.append('quantity', String(productQuantities[i] || 1)); return u.toString() } catch(e) { return prod.link } })() : `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I would like to order: ${prod.name} (Quantity: ${productQuantities[i] || 1})`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ flex: 1, background: prod.link ? '#b45309' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                {prod.link ? 'Buy Now' : 'WhatsApp'}
                               </a>
-                            ) : (
-                              <a
-                                href={`https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  background: "#25D366",
-                                  color: "#fff",
-                                  border: "none",
-                                  padding: "6px 16px",
-                                  borderRadius: 4,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  textDecoration: "none",
-                                }}
-                              >
-                                WhatsApp
-                              </a>
-                            )}
+                            </div>
                           </div>
                         </div>
                       </div>

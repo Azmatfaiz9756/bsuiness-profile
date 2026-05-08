@@ -72,6 +72,7 @@ export default function ClassicModern({
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
   const [activeTab, setActiveTab] = useState('home');
+  const [productQuantities, setProductQuantities] = useState<Record<number, number>>({});
   const isOwner = user?.uid === profile.uid;
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -1916,9 +1917,23 @@ export default function ClassicModern({
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
                               <div style={{ fontSize: 14, fontWeight: 900, color: '#2563eb' }}>{prod.price}</div>
                             </div>
-                            <a href={prod.link || `https://wa.me/${profile.phone?.replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`} target="_blank" rel="noreferrer" style={{ display: 'block', background: prod.link ? '#0f172a' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', marginTop: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              {prod.link ? 'Buy Now' : 'WhatsApp'}
-                            </a>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', borderRadius: 8, overflow: 'hidden' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: Math.max(1, (prev[i] || 1) - 1) })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#64748b', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >-</button>
+                                <div style={{ fontSize: 13, fontWeight: 'bold', width: 20, textAlign: 'center' }}>{productQuantities[i] || 1}</div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: (prev[i] || 1) + 1 })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#64748b', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >+</button>
+                              </div>
+                              <a href={prod.link ? (() => { try { const u = new URL(prod.link); if(!u.searchParams.has('quantity')) u.searchParams.append('quantity', String(productQuantities[i] || 1)); return u.toString() } catch(e) { return prod.link } })() : `https://wa.me/${profile.phone?.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I would like to order: ${prod.name} (Quantity: ${productQuantities[i] || 1})`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ flex: 1, background: prod.link ? '#0f172a' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                {prod.link ? 'Buy' : 'WA'}
+                              </a>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -2015,43 +2030,23 @@ export default function ClassicModern({
                               >
                                 {prod.price}
                               </div>
-                              {prod.link ? (
-                                <a
-                                  href={prod.link}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  style={{
-                                    background: "#1a1a2e",
-                                    color: "#fff",
-                                    border: "none",
-                                    padding: "6px 16px",
-                                    borderRadius: 8,
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    textDecoration: "none",
-                                  }}
-                                >
-                                  Buy Now
-                                </a>
-                              ) : (
-                                <a
-                                  href={`https://wa.me/${profile.phone?.replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  style={{
-                                    background: "#25D366",
-                                    color: "#fff",
-                                    border: "none",
-                                    padding: "6px 16px",
-                                    borderRadius: 8,
-                                    fontSize: 13,
-                                    fontWeight: 600,
-                                    textDecoration: "none",
-                                  }}
-                                >
-                                  Order via WhatsApp
-                                </a>
-                              )}
+                            </div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', background: '#f1f5f9', borderRadius: 8, overflow: 'hidden' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: Math.max(1, (prev[i] || 1) - 1) })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#64748b', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >-</button>
+                                <div style={{ fontSize: 13, fontWeight: 'bold', width: 20, textAlign: 'center' }}>{productQuantities[i] || 1}</div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: (prev[i] || 1) + 1 })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#64748b', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >+</button>
+                              </div>
+                              <a href={prod.link ? (() => { try { const u = new URL(prod.link); if(!u.searchParams.has('quantity')) u.searchParams.append('quantity', String(productQuantities[i] || 1)); return u.toString() } catch(e) { return prod.link } })() : `https://wa.me/${profile.phone?.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I would like to order: ${prod.name} (Quantity: ${productQuantities[i] || 1})`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ flex: 1, background: prod.link ? '#0f172a' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 800, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                {prod.link ? 'Buy Now' : 'Order via WhatsApp'}
+                              </a>
                             </div>
                           </div>
                         </div>

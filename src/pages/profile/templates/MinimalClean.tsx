@@ -62,6 +62,7 @@ export default function MinimalClean({
 }) {
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [activeTab, setActiveTab] = useState<string | null>('home');
+  const [productQuantities, setProductQuantities] = useState<Record<number, number>>({});
   const isOwner = user?.uid === profile.uid;
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
@@ -1161,9 +1162,23 @@ export default function MinimalClean({
                             <div style={{ fontSize: 14, fontWeight: 700, color: '#09090b', marginBottom: 4 }}>{prod.name}</div>
                             <div style={{ fontSize: 12, color: '#52525b', marginBottom: 12, flex: 1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{prod.description}</div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: '#09090b', marginBottom: 12 }}>{prod.price}</div>
-                            <a href={prod.link || `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=Hi, I would like to order: ${prod.name}`} target="_blank" rel="noreferrer" style={{ display: 'block', background: prod.link ? '#09090b' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', marginTop: 'auto' }}>
-                              {prod.link ? 'Buy Now' : 'WhatsApp'}
-                            </a>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', background: '#f4f4f5', borderRadius: 8, overflow: 'hidden' }}>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: Math.max(1, (prev[i] || 1) - 1) })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#52525b', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >-</button>
+                                <div style={{ fontSize: 13, fontWeight: 'bold', width: 20, textAlign: 'center', color: '#09090b' }}>{productQuantities[i] || 1}</div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setProductQuantities(prev => ({ ...prev, [i]: (prev[i] || 1) + 1 })) }}
+                                  style={{ padding: '6px 10px', fontSize: 16, fontWeight: 'bold', color: '#52525b', background: 'transparent', border: 'none', cursor: 'pointer' }}
+                                >+</button>
+                              </div>
+                              <a href={prod.link ? (() => { try { const u = new URL(prod.link); if(!u.searchParams.has('quantity')) u.searchParams.append('quantity', String(productQuantities[i] || 1)); return u.toString() } catch(e) { return prod.link } })() : `https://wa.me/${String(profile.phone || '').replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I would like to order: ${prod.name} (Quantity: ${productQuantities[i] || 1})`)}`} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ flex: 1, background: prod.link ? '#09090b' : '#25D366', color: '#fff', textAlign: 'center', padding: '8px 0', borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                                {prod.link ? 'Buy Now' : 'WhatsApp'}
+                              </a>
+                            </div>
                           </div>
                         </div>
                       ))}

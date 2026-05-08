@@ -33,6 +33,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const [template, setTemplate] = useState(initialProfile?.template || 'classic');
   const [loading, setLoading] = useState(!initialProfile);
   const [showQR, setShowQR] = useState(false);
+  const [qrMode, setQrMode] = useState<'online' | 'offline'>('online');
 
   // Handle pull-to-refresh: disable on profile ONLY as requested
   useEffect(() => {
@@ -279,13 +280,28 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                 </button>
                 
                 <h3 className="text-xl font-black text-slate-800 mb-2">Scan to Connect</h3>
-                <p className="text-sm font-medium text-slate-500 mb-8 text-center leading-relaxed">
-                  Point your camera at this QR code to view and save {profile?.name}'s profile.
+                <p className="text-sm font-medium text-slate-500 mb-4 text-center leading-relaxed">
+                  {qrMode === 'online' ? `Point your camera at this QR code to view ${profile?.name}'s profile.` : `Scan to save ${profile?.name}'s contact details directly (No internet required).`}
                 </p>
 
-                <div className="bg-white p-4 rounded-3xl shadow-sm border-2 border-slate-100 mb-8">
+                <div className="flex bg-slate-100 p-1 rounded-xl mb-6 w-full max-w-[240px]">
+                  <button 
+                    onClick={() => setQrMode('online')} 
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${qrMode === 'online' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Online View
+                  </button>
+                  <button 
+                    onClick={() => setQrMode('offline')} 
+                    className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${qrMode === 'offline' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Offline Save
+                  </button>
+                </div>
+
+                <div className="bg-white p-4 rounded-3xl shadow-sm border-2 border-slate-100 mb-8 transition-opacity duration-300">
                   <QRCodeSVG 
-                    value={window.location.href} 
+                    value={qrMode === 'online' ? window.location.href : `BEGIN:VCARD\nVERSION:3.0\nN:${profile?.name || ''}\nFN:${profile?.name || ''}\nORG:${profile?.company || ''}\nTITLE:${profile?.title || ''}\nTEL;TYPE=WORK,VOICE:${profile?.phone || ''}\nEMAIL;TYPE=PREF,INTERNET:${profile?.email || ''}\nURL:${profile?.website || window.location.href}\nNOTE:${(profile?.bio || '').replace(/\\n|\n/g, '\\n')}\nEND:VCARD`} 
                     size={200}
                     bgColor={"#ffffff"}
                     fgColor={"#0f172a"}
