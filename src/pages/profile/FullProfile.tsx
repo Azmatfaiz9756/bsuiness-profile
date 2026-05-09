@@ -34,6 +34,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const [loading, setLoading] = useState(!initialProfile);
   const [showQR, setShowQR] = useState(false);
   const [qrMode, setQrMode] = useState<'online' | 'offline'>('online');
+  const [localIsRtl, setLocalIsRtl] = useState(initialProfile?.isRtl || false);
+
+  useEffect(() => {
+    if (profile?.isRtl !== undefined) {
+      setLocalIsRtl(profile.isRtl);
+    }
+  }, [profile?.isRtl]);
 
   // Handle pull-to-refresh: disable on profile ONLY as requested
   useEffect(() => {
@@ -251,9 +258,25 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           <div className="w-12 h-12 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"></div>
         </div>
       }>
-        {template === 'classic' && <ClassicModern profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-        {template === 'executive' && <ExecutiveDark profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-        {template === 'minimal' && <MinimalClean profile={profile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+        {(() => {
+          const displayProfile = { ...profile, isRtl: localIsRtl };
+          return (
+            <>
+              <button 
+                onClick={() => setLocalIsRtl(!localIsRtl)}
+                className="fixed top-24 right-4 z-40 bg-white/90 backdrop-blur-sm border border-slate-200 px-3 py-1.5 rounded-full shadow-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white transition-all active:scale-95 md:right-8 md:top-28"
+                style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+              >
+                <Globe size={14} className="text-blue-600" />
+                {localIsRtl ? 'English' : 'العربية'}
+              </button>
+              
+              {template === 'classic' && <ClassicModern profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+              {template === 'executive' && <ExecutiveDark profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+              {template === 'minimal' && <MinimalClean profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+            </>
+          );
+        })()}
       </Suspense>
 
       {!isPreview && (

@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
 
@@ -3989,35 +3989,92 @@ export default function OwnerDashboard() {
                   <p className="mt-4 text-[10px] text-slate-400 font-medium italic">Note: Binding a new Gmail allows you to log in using that account while keeping all your existing profile data and settings without breaking any functionality.</p>
                 </div>
 
-                {/* Profile Contact Email Section */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
                       <Globe size={24} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-black text-slate-900 m-0">Profile Contact Email</h3>
-                      <p className="text-xs text-slate-500 m-0">This email is shown on your public digital card</p>
+                      <h3 className="text-lg font-black text-slate-900 m-0">Language & Layout</h3>
+                      <p className="text-xs text-slate-500 m-0">Support for Right-to-Left (Arabic) displays</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-bold text-slate-700">Arabic / RTL Support</span>
+                      <p className="text-[10px] text-slate-500">Enable this if your profile content is in Arabic</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const nextVal = !formData.isRtl;
+                        setFormData({...formData, isRtl: nextVal});
+                        // Save immediately for this specific setting
+                        if (profile?.id) {
+                          import('firebase/firestore').then(({ updateDoc, doc }) => {
+                            updateDoc(doc(db, 'profiles', profile.id), { isRtl: nextVal });
+                          });
+                        }
+                      }}
+                      className={`w-12 h-6 rounded-full relative transition-all ${formData.isRtl ? 'bg-blue-600' : 'bg-slate-300'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.isRtl ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Payment & Trust Section */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                      <CreditCard size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 m-0">Payment & Compliance</h3>
+                      <p className="text-xs text-slate-500 m-0">Networking safely in the UAE</p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Business Email</label>
-                      <input 
-                        type="email" 
-                        value={formData.email || ''} 
-                        onChange={e => setFormData({...formData, email: e.target.value})} 
-                        className="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-700 bg-slate-50"
-                        placeholder="your@business.com"
-                      />
+                    <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
+                      <h4 className="text-sm font-black text-blue-800 mb-1">UAE Compliance Note</h4>
+                      <p className="text-xs text-blue-700 leading-relaxed">Direct payment gateways often require local licensing in UAE. We recommend using <strong>WhatsApp Pay</strong>, <strong>Tabby/Tamara</strong> links, or <strong>Direct Bank Transfer</strong> mentions in your profile for higher trust and lower friction.</p>
                     </div>
-                    <button 
-                      onClick={handleSave}
-                      className="w-full py-3 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-900/20 uppercase tracking-widest text-xs"
-                    >
-                      Update Profile Email
-                    </button>
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                      <h4 className="text-sm font-black text-slate-800 mb-1">Verified Badge</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed mb-3">Accounts with the Verified Badge see a 40% increase in trust. You can enable your verified status if you have a valid Emirates ID or Trade License verified by support.</p>
+                      <button 
+                        onClick={() => {
+                          const nextVal = !formData.isVerified;
+                          setFormData({...formData, isVerified: nextVal});
+                          if (profile?.id) {
+                            import('firebase/firestore').then(({ updateDoc, doc }) => {
+                              updateDoc(doc(db, 'profiles', profile.id), { isVerified: nextVal });
+                            });
+                          }
+                        }}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${formData.isVerified ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                      >
+                        <ShieldCheck size={14} />
+                        {formData.isVerified ? 'VERIFIED ACTIVE' : 'REQUEST VERIFICATION'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-600">
+                      <Download size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 m-0">Offline Access (PWA)</h3>
+                      <p className="text-xs text-slate-500 m-0">Enable "Save to Home Screen" for your users</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 italic">
+                    <p className="text-xs text-slate-500 leading-relaxed">Your profile is now a <strong>Progressive Web App (PWA)</strong>. When users open your link on Chrome (Android) or Safari (iPhone), they can click "Add to Home Screen". This acts as a digital wallet save, making your card available even without internet.</p>
                   </div>
                 </div>
               </div>

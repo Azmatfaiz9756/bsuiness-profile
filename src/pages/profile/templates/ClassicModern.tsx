@@ -279,6 +279,7 @@ export default function ClassicModern({
 
   return (
     <div
+      dir={profile.isRtl ? 'rtl' : 'ltr'}
       style={{
         background: "#f0f2f5",
         minHeight: "100vh",

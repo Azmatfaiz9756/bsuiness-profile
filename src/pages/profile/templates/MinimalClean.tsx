@@ -181,6 +181,7 @@ export default function MinimalClean({
 
   return (
     <div
+      dir={profile.isRtl ? 'rtl' : 'ltr'}
       style={{
         background: "#fafafa",
         minHeight: "100vh",

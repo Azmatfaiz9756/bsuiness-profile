@@ -175,6 +175,7 @@ export default function ExecutiveDark({
 
   return (
     <div
+      dir={profile.isRtl ? 'rtl' : 'ltr'}
       style={{
         background: "#000000",
         minHeight: "100vh",
