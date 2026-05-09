@@ -104,7 +104,7 @@ export default function App() {
   }, []);
 
   if (isCheckingDomain) {
-    return <div className="h-screen w-full flex items-center justify-center bg-[#0f172a]"><div className="w-8 h-8 border-4 border-slate-800 border-t-blue-500 rounded-full animate-spin"></div></div>;
+    return <div className="h-screen w-full flex items-center justify-center bg-white"><div className="w-8 h-8 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div></div>;
   }
 
   // If we are on a custom domain, ONLY show the profile
