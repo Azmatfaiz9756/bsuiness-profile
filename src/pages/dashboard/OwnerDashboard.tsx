@@ -1022,6 +1022,9 @@ export default function OwnerDashboard() {
                   <Gift size={20} /> <span className="flex-1 text-left">Referral Program</span>
                 </button>
               )}
+              <button onClick={() => { setSidebarTab('account'); setIsMobileMenuOpen(false); }} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'account' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white bg-slate-800/50'}`}>
+                <Settings size={20} /> <span className="flex-1 text-left">Account & Security</span>
+              </button>
             </div>
           </div>
         )}
@@ -1128,6 +1131,9 @@ export default function OwnerDashboard() {
               </button>
               <button onClick={() => setSidebarTab('referrals')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'referrals' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
                 <Gift size={18} /> <span className="flex-1 text-left tracking-tight">Referrals</span>
+              </button>
+              <button onClick={() => setSidebarTab('account')} className={`px-4 py-3 flex items-center gap-3 text-sm font-semibold rounded-xl transition-all ${sidebarTab === 'account' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+                <Settings size={18} /> <span className="flex-1 text-left tracking-tight">Account & Security</span>
               </button>
             </div>
           </div>
@@ -3929,6 +3935,93 @@ export default function OwnerDashboard() {
                  </>
                )}
              </div>
+          )}
+
+          {sidebarTab === 'account' && (
+            <div className="p-4 md:p-8 max-w-4xl animate-fade-in">
+              <div className="mb-8">
+                <h2 className="text-2xl font-black text-slate-900 m-0">Account & Security</h2>
+                <p className="text-slate-500 m-0 mt-1 text-sm">Manage your login methods and profile email</p>
+              </div>
+
+              <div className="space-y-6">
+                {/* Email Binding Section */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                      <Mail size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 m-0">Login Email (Gmail)</h3>
+                      <p className="text-xs text-slate-500 m-0">Connected Google Account for authentication</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Account</span>
+                      <span className="text-sm font-bold text-slate-700">{user?.email || 'No email bound'}</span>
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        const { GoogleAuthProvider, linkWithPopup } = await import('firebase/auth');
+                        const provider = new GoogleAuthProvider();
+                        try {
+                          if (!user) return;
+                          await linkWithPopup(user, provider);
+                          showToast('New Gmail bound successfully!');
+                        } catch (err: any) {
+                          if (err.code === 'auth/credential-already-in-use') {
+                            showToast('This Gmail is already linked to another account.');
+                          } else if (err.code === 'auth/provider-already-linked') {
+                            showToast('You already have a Google account linked. To change it, please contact support.');
+                          } else {
+                            showToast(err.message || 'Action failed.');
+                          }
+                        }
+                      }}
+                      className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 text-xs font-black rounded-xl hover:bg-slate-50 transition-all shadow-sm uppercase tracking-widest"
+                    >
+                      Bind New Gmail
+                    </button>
+                  </div>
+                  
+                  <p className="mt-4 text-[10px] text-slate-400 font-medium italic">Note: Binding a new Gmail allows you to log in using that account while keeping all your existing profile data and settings without breaking any functionality.</p>
+                </div>
+
+                {/* Profile Contact Email Section */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                      <Globe size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-slate-900 m-0">Profile Contact Email</h3>
+                      <p className="text-xs text-slate-500 m-0">This email is shown on your public digital card</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Business Email</label>
+                      <input 
+                        type="email" 
+                        value={formData.email || ''} 
+                        onChange={e => setFormData({...formData, email: e.target.value})} 
+                        className="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-slate-700 bg-slate-50"
+                        placeholder="your@business.com"
+                      />
+                    </div>
+                    <button 
+                      onClick={handleSave}
+                      className="w-full py-3 bg-blue-600 text-white font-black rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-900/20 uppercase tracking-widest text-xs"
+                    >
+                      Update Profile Email
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {sidebarTab === 'referrals' && (
