@@ -1,9 +1,9 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
-const ClassicModern = lazy(() => import('./templates/ClassicModern'));
-const ExecutiveDark = lazy(() => import('./templates/ExecutiveDark'));
-const MinimalClean = lazy(() => import('./templates/MinimalClean'));
+import ClassicModern from './templates/ClassicModern';
+import ExecutiveDark from './templates/ExecutiveDark';
+import MinimalClean from './templates/MinimalClean';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
@@ -186,41 +186,37 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     fetchProfile();
   }, [id, profiles]);
 
-  if (loading) {
+  if (loading && !profile) {
     return (
-      <div style={{ 
-        height: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: '#0f172a', 
-        color: '#fff' 
-      }}>
+      <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-4">
         <div className="relative">
           <div className="w-16 h-16 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full border-4 border-slate-800 border-b-blue-400 animate-spin-reverse opacity-50"></div>
+            <div className="w-8 h-8 rounded-full border-4 border-slate-800 border-b-blue-400 animate-spin opacity-50" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
           </div>
         </div>
-        <div style={{ marginTop: 32, fontSize: 13, fontWeight: 800, letterSpacing: '0.2em', color: '#64748b', textTransform: 'uppercase' }}>
+        <div className="mt-8 text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 animate-pulse">
           Initializing Profile
         </div>
-        <style>{`
-          .animate-spin-reverse {
-            animation: spin-reverse 1.5s linear infinite;
-          }
-          @keyframes spin-reverse {
-            from { transform: rotate(360deg); }
-            to { transform: rotate(0deg); }
-          }
-        `}</style>
       </div>
     );
   }
 
   if (!profile) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#fff' }}>Profile Not Found</div>;
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6 text-center text-white">
+        <div>
+          <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-500">
+            <X size={32} />
+          </div>
+          <h2 className="text-xl font-black uppercase tracking-tight">Profile Not Found</h2>
+          <p className="text-slate-500 mt-2 text-sm max-w-xs mx-auto">This profile might have been moved, deleted, or the URL is incorrect.</p>
+          <Link to="/" className="mt-8 inline-block px-8 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-900/20 hover:bg-blue-700 transition-all">
+            Return Home
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -253,11 +249,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         </div>
       )}
 
-      <Suspense fallback={
-        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
-          <div className="w-12 h-12 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"></div>
-        </div>
-      }>
         {(() => {
           const displayProfile = { ...profile, isRtl: localIsRtl };
           return (
@@ -277,7 +268,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
             </>
           );
         })()}
-      </Suspense>
 
       {!isPreview && (
         <>

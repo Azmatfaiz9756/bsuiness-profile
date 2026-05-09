@@ -52,7 +52,7 @@ const RedirectHandler: React.FC = () => {
   }, [serial, navigate]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+    <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-5">
       {!error ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -60,12 +60,11 @@ const RedirectHandler: React.FC = () => {
           className="flex flex-col items-center gap-6"
         >
           <div className="relative">
-            <div className="absolute inset-0 bg-indigo-200 blur-2xl rounded-full opacity-20 animate-pulse"></div>
-            <Loader2 size={48} className="text-indigo-600 animate-spin relative z-10" />
+            <div className="w-16 h-16 rounded-full border-4 border-slate-800 border-t-blue-500 animate-spin"></div>
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-black text-slate-900 mb-2">Syncing your connection...</h1>
-            <p className="text-slate-500 font-medium">Please wait while we redirect you to the digital card.</p>
+            <h1 className="text-2xl font-black text-white mb-2">Syncing your connection...</h1>
+            <p className="text-slate-400 font-medium">Please wait while we redirect you to the digital card.</p>
           </div>
         </motion.div>
       ) : (
