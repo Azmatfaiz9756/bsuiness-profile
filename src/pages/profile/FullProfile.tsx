@@ -1,13 +1,13 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
-const ClassicModern = lazy(() => import('./templates/ClassicModern'));
-const ExecutiveDark = lazy(() => import('./templates/ExecutiveDark'));
-const MinimalClean = lazy(() => import('./templates/MinimalClean'));
+import ClassicModern from './templates/ClassicModern';
+import ExecutiveDark from './templates/ExecutiveDark';
+import MinimalClean from './templates/MinimalClean';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode, X, Share2, Download } from 'lucide-react';
+import { QrCode, X, Share2, Download, Globe } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { PromotionBanner } from '../../components/PromotionBanner';
 
@@ -240,37 +240,31 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                 onClick={() => setTemplate(tName)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border-2 ${template === tName ? 'bg-blue-600 text-white border-blue-600' : 'bg-transparent text-slate-400 border-slate-700 hover:border-slate-500'}`}
              >
-               {tName.toUpperCase()}
+                {tName.toUpperCase()}
              </button>
            ))}
         </div>
       )}
 
-        <Suspense fallback={
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-             <div className="w-8 h-8 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
-          </div>
-        }>
-          {(() => {
-            const displayProfile = { ...profile, isRtl: localIsRtl };
-            return (
-              <>
-                <button 
-                  onClick={() => setLocalIsRtl(!localIsRtl)}
-                  className="fixed top-24 right-4 z-40 bg-white/90 backdrop-blur-sm border border-slate-200 px-3 py-1.5 rounded-full shadow-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white transition-all active:scale-95 md:right-8 md:top-28"
-                  style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                >
-                  <Globe size={14} className="text-blue-600" />
-                  {localIsRtl ? 'English' : 'العربية'}
-                </button>
-                
-                {template === 'classic' && <ClassicModern profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-                {template === 'executive' && <ExecutiveDark profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-                {template === 'minimal' && <MinimalClean profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
-              </>
-            );
-          })()}
-        </Suspense>
+      {(() => {
+        const displayProfile = { ...profile, isRtl: localIsRtl };
+        return (
+          <>
+            <button 
+              onClick={() => setLocalIsRtl(!localIsRtl)}
+              className="fixed top-24 right-4 z-40 bg-white/90 backdrop-blur-sm border border-slate-200 px-3 py-1.5 rounded-full shadow-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-white transition-all active:scale-95 md:right-8 md:top-28"
+              style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+            >
+              <Globe size={14} className="text-blue-600" />
+              {localIsRtl ? 'English' : 'العربية'}
+            </button>
+            
+            {template === 'classic' && <ClassicModern profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+            {template === 'executive' && <ExecutiveDark profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+            {template === 'minimal' && <MinimalClean profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+          </>
+        );
+      })()}
 
       {!isPreview && (
         <>
