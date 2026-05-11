@@ -248,9 +248,15 @@ export default function AdminProfiles() {
                     </div>
                     <div>
                       <div style={{fontWeight: 600, color: 'var(--text)'}}>{p.name}</div>
-                      <div style={{fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 5}}>
+                      <div style={{fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap'}}>
                         {p.email}
                         {!p.hasProfile && <span style={{fontSize: 9, background: '#fef3c7', color: '#92400e', padding: '1px 4px', borderRadius: 4, fontWeight: 700}}>NO PROFILE</span>}
+                        {p.trialActive && <span style={{fontSize: 9, background: '#dcfce7', color: '#166534', padding: '1px 4px', borderRadius: 4, fontWeight: 700}}>TRIAL ACTIVE</span>}
+                        {p.trialActive && p.trialEndsAt && (
+                          <span style={{fontSize: 9, color: '#64748b'}}>
+                            Ends: {new Date(p.trialEndsAt).toLocaleDateString()}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -282,7 +288,25 @@ export default function AdminProfiles() {
                    </select>
                 </td>
                 <td>{p.views}</td>
-                <td style={{display: 'flex', gap: 6}}>
+                <td style={{display: 'flex', gap: 6, flexWrap: 'wrap'}}>
+                  <button onClick={() => {
+                    const thirtyDaysFromNow = new Date();
+                    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+                    handleQuickPlanUpdate(p, 'Enterprise'); // Sets plan to Enterprise for trial
+                    // We also need to update trial fields specifically
+                    const ownerId = p.ownerId || p.id;
+                    updateDoc(doc(db, 'profiles', ownerId), {
+                      trialActive: true,
+                      hasUsedTrial: true,
+                      trialEndsAt: thirtyDaysFromNow.toISOString(),
+                      updatedAt: new Date().toISOString()
+                    }).then(() => {
+                      alert('1 Month Enterprise Trial Activated!');
+                      fetchDbProfiles();
+                    });
+                  }} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>
+                    <Shield size={14} /> 1m Trial
+                  </button>
                   <button onClick={() => handleEditClick(p)} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Edit3 size={14} /> Edit / SEO</button>
                   <Link to={`/profile/${p.slug || p.id}`} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={14} /> Live View</Link>
                 </td>

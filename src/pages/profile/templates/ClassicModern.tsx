@@ -60,6 +60,7 @@ import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
 import AddToHomeScreen from "../../../components/AddToHomeScreen";
 import VerifiedBadge from "../components/VerifiedBadge";
+import { useTranslation } from "../../../lib/translations";
 
 export default function ClassicModern({
   profile,
@@ -68,6 +69,7 @@ export default function ClassicModern({
   profile: any;
   onExit?: () => void;
 }) {
+  const t = useTranslation(profile.isRtl);
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState('');
@@ -322,6 +324,7 @@ export default function ClassicModern({
       </style>
       <div
         className="shell"
+        dir={profile.isRtl ? 'rtl' : 'ltr'}
         style={{
           background: "#fff",
           maxWidth: 480,
@@ -552,7 +555,7 @@ export default function ClassicModern({
           
           <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "#f8fafc", padding: "4px 12px", borderRadius: 20, border: "1px solid #e2e8f0" }}>
              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.4)" }}></span>
-             <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
+             <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} {t.visits}</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 12 }}>
@@ -575,16 +578,16 @@ export default function ClassicModern({
               </div>
               {isRatingSubmitted ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>Thank you for your rating!</span>
+                  <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>{t.thankYouRating}</span>
                   <button 
                     onClick={() => setIsRatingSubmitted(false)}
                     style={{ background: 'none', border: 'none', color: '#1a56db', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
                   >
-                    Edit
+                    {t.edit}
                   </button>
                 </div>
               ) : (
-                <span style={{ fontSize: 11, color: '#6b7280' }}>Click a star to rate {profile.name}</span>
+                <span style={{ fontSize: 11, color: '#6b7280' }}>{t.ratingText} {profile.name}</span>
               )}
             </div>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#4b5563', marginLeft: 6 }}>
@@ -836,7 +839,7 @@ export default function ClassicModern({
                   animation: "pulse-green 2s infinite"
                 }}
               >
-                <Wallet size={24} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
+                <Wallet size={24} /> {t.pay} {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
               </button>
             )}
             
@@ -861,7 +864,7 @@ export default function ClassicModern({
                   minWidth: '140px'
                 }}
               >
-                <UserPlus size={18} /> Exchange
+                <UserPlus size={18} /> {t.exchange}
               </button>
               <button
                 onClick={() => processVcfDownload()}
@@ -883,7 +886,7 @@ export default function ClassicModern({
                   minWidth: '140px'
                 }}
               >
-                <Download size={18} /> Save Contact
+                <Download size={18} /> {t.saveContact}
               </button>
               <button
                 onClick={() => setShowShareModal(true)}
@@ -904,7 +907,7 @@ export default function ClassicModern({
                   minWidth: '140px'
                 }}
               >
-                <Send size={16} /> Share
+                <Send size={16} /> {t.share}
               </button>
             </div>
           </div>
@@ -939,10 +942,10 @@ export default function ClassicModern({
                 transition: "all 0.3s ease"
               }}
             >
-              <Users size={20} /> {isFollowed ? "Following Business" : "Follow Business Updates"}
+              <Users size={20} /> {isFollowed ? t.following : t.followBusiness}
             </button>
             <p style={{ textAlign: 'center', fontSize: 10, color: '#94a3b8', marginTop: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
-              Get one-click WhatsApp & Push notifications
+              {t.getNotifications}
             </p>
           </div>
 

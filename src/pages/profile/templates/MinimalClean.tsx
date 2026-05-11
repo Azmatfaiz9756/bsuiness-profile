@@ -52,6 +52,7 @@ import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
 import AddToHomeScreen from "../../../components/AddToHomeScreen";
 import VerifiedBadge from "../components/VerifiedBadge";
+import { useTranslation } from "../../../lib/translations";
 
 export default function MinimalClean({
   profile,
@@ -60,6 +61,7 @@ export default function MinimalClean({
   profile: any;
   onExit: () => void;
 }) {
+  const t = useTranslation(profile.isRtl);
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [activeTab, setActiveTab] = useState<string | null>('home');
   const [productQuantities, setProductQuantities] = useState<Record<number, number>>({});
@@ -72,10 +74,10 @@ export default function MinimalClean({
   const hasPayments = (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName;
 
   const navItems = [
-    { id: 'home', label: 'Home', icon: <Contact2 size={18} />, show: true },
-    { id: 'services', label: 'Services', icon: <Sparkles size={18} />, show: profile.services && profile.services.length > 0 },
-    { id: 'shop', label: 'Store', icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
-    { id: 'bank', label: 'Bank', icon: <Building size={18} />, show: hasPayments },
+    { id: 'home', label: t.home, icon: <Contact2 size={18} />, show: true },
+    { id: 'services', label: t.services, icon: <Sparkles size={18} />, show: profile.services && profile.services.length > 0 },
+    { id: 'shop', label: t.store, icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
+    { id: 'bank', label: t.bank, icon: <Building size={18} />, show: hasPayments },
   ].filter(item => item.show);
 
   const toggleAudio = () => {
@@ -208,6 +210,7 @@ export default function MinimalClean({
       </style>
       <div
         className="shell"
+        dir={profile.isRtl ? 'rtl' : 'ltr'}
         style={{
           background: "#fff",
           maxWidth: 480,
@@ -399,7 +402,7 @@ export default function MinimalClean({
           
           <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "#f4f4f5", padding: "4px 12px", borderRadius: 20, border: "1px solid #e4e4e7" }}>
              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px rgba(16,185,129,0.4)" }}></span>
-             <span style={{ fontSize: 12, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
+             <span style={{ fontSize: 12, fontWeight: 700, color: "#52525b", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} {t.visits}</span>
           </div>
 
           {activeTab === 'home' && (
@@ -464,7 +467,7 @@ export default function MinimalClean({
                   letterSpacing: 2
                 }}
               >
-                <Wallet size={20} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
+                <Wallet size={20} /> {t.pay} {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
               </button>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 32 }}>
@@ -490,7 +493,7 @@ export default function MinimalClean({
                     boxShadow: "0 4px 12px rgba(37,99,235,0.2)",
                   }}
                 >
-                  <Download size={16} /> Save Contact
+                  <Download size={16} /> {t.saveContact}
                 </button>
                 <button
                   onClick={() => setShowShareModal(true)}
@@ -511,7 +514,7 @@ export default function MinimalClean({
                     gap: 8,
                   }}
                 >
-                  <Share2 size={16} /> Share Profile
+                  <Share2 size={16} /> {t.share}
                 </button>
               </div>
             </div>
@@ -535,7 +538,7 @@ export default function MinimalClean({
                   border: "1px solid #e4e4e7",
                 }}
               >
-                <Share2 size={16} /> Refer & Earn Rewards
+                <Share2 size={16} /> {t.referEarn}
               </Link>
             )}
           </div>
@@ -557,7 +560,7 @@ export default function MinimalClean({
                 >
                   <MapPin size={20} color="#52525b" style={{ flexShrink: 0, marginTop: 2 }} />
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: 1 }}>{t.address}</div>
                     <div style={{ fontSize: 14, lineHeight: 1.5, color: "#27272a" }}>
                       {profile.address_street ? (
                         <>
@@ -592,7 +595,7 @@ export default function MinimalClean({
                     boxSizing: "border-box",
                   }}
                 >
-                  <MapPin size={18} /> Get Directions
+                  <MapPin size={18} /> {t.getDirections}
                 </a>
               </>
             )}
@@ -611,7 +614,7 @@ export default function MinimalClean({
         >
           <div style={{ marginBottom: 32 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#a1a1aa", letterSpacing: 1, textTransform: "uppercase", marginBottom: 16 }}>
-              Contact
+              {t.contact}
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <a
@@ -770,7 +773,7 @@ export default function MinimalClean({
                         {profile.address_street}{profile.address_city ? `, ${profile.address_city}` : ''}
                       </>
                     ) : (
-                      profile.address || 'Visit Us'
+                      profile.address || t.visitUs
                     )}
                   </span>
                   <span style={{ color: "#a1a1aa" }}>
@@ -796,7 +799,7 @@ export default function MinimalClean({
                     style={{ display: "flex", alignItems: "center", gap: 12 }}
                   >
                     <FileText size={20} />{" "}
-                    {profile.documentButtonText || "Business Document"}
+                    {profile.documentButtonText || t.businessDocument}
                   </span>
                   <span style={{ color: "#a1a1aa" }}>
                     <ArrowDownToLine size={16} />

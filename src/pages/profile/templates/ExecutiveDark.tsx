@@ -52,6 +52,7 @@ import LeadCapture from "../components/LeadCapture";
 import ProfileChatbot from "../components/ProfileChatbot";
 import AddToHomeScreen from "../../../components/AddToHomeScreen";
 import VerifiedBadge from "../components/VerifiedBadge";
+import { useTranslation } from "../../../lib/translations";
 
 export default function ExecutiveDark({
   profile,
@@ -60,6 +61,7 @@ export default function ExecutiveDark({
   profile: any;
   onExit: () => void;
 }) {
+  const t = useTranslation(profile.isRtl);
   const { jobOpenings, siteSettings, user, profiles, setIsLoginModalOpen } = useAppContext();
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharePhone, setSharePhone] = useState("");
@@ -75,10 +77,10 @@ export default function ExecutiveDark({
   };
 
   const navItems = [
-    { id: 'home', label: 'Home', icon: <Contact2 size={18} />, show: true },
-    { id: 'services', label: 'Services', icon: <Globe size={18} />, show: profile.services && profile.services.length > 0 },
-    { id: 'shop', label: 'Store', icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
-    { id: 'bank', label: 'Bank', icon: <Building size={18} />, show: (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName },
+    { id: 'home', label: t.home, icon: <Contact2 size={18} />, show: true },
+    { id: 'services', label: t.services, icon: <Globe size={18} />, show: profile.services && profile.services.length > 0 },
+    { id: 'shop', label: t.store, icon: <ShoppingBag size={18} />, show: profile.products && profile.products.length > 0 },
+    { id: 'bank', label: t.bank, icon: <Building size={18} />, show: (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName },
   ].filter(item => item.show);
 
   const toggleAudio = () => {
@@ -202,6 +204,7 @@ export default function ExecutiveDark({
       </style>
       <div
         className="shell"
+        dir={profile.isRtl ? 'rtl' : 'ltr'}
         style={{
           background: "#111111",
           maxWidth: 480,
@@ -421,7 +424,7 @@ export default function ExecutiveDark({
           
           <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, background: "#111", padding: "4px 12px", borderRadius: 20, border: "1px solid #333" }}>
              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }}></span>
-             <span style={{ fontSize: 11, fontWeight: 700, color: "#ccc", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} Visits</span>
+             <span style={{ fontSize: 11, fontWeight: 700, color: "#ccc", textTransform: "uppercase", letterSpacing: 1 }}>{profile.views || 0} {t.visits}</span>
           </div>
 
           {activeTab === 'home' && (
@@ -579,7 +582,7 @@ export default function ExecutiveDark({
                   letterSpacing: 2
                 }}
               >
-                <Wallet size={20} /> PAY {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
+                <Wallet size={20} /> {t.pay} {profile.quickPayCurrency || 'AED'} {profile.quickPayAmount}
               </button>
             )}
             
@@ -606,7 +609,7 @@ export default function ExecutiveDark({
                     letterSpacing: 1
                   }}
                 >
-                  <Share2 size={16} /> Refer & Earn
+                  <Share2 size={16} /> {t.referEarn}
                 </Link>
               )}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 24 }}>
@@ -634,7 +637,7 @@ export default function ExecutiveDark({
                     letterSpacing: 1
                   }}
                 >
-                  <Download size={16} /> Save Contact
+                  <Download size={16} /> {t.saveContact}
                 </button>
                 <button
                   onClick={() => setShowShareModal(true)}
@@ -657,7 +660,7 @@ export default function ExecutiveDark({
                     letterSpacing: 1
                   }}
                 >
-                  <Share2 size={16} /> Share Profile
+                  <Share2 size={16} /> {t.share}
                 </button>
               </div>
             </div>
@@ -681,7 +684,7 @@ export default function ExecutiveDark({
                 >
                   <MapPin size={20} color="#b45309" style={{ flexShrink: 0, marginTop: 2 }} />
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>Address</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1 }}>{t.address}</div>
                     <div style={{ fontSize: 14, lineHeight: 1.5 }}>
                       {profile.address_street ? (
                         <>
@@ -716,7 +719,7 @@ export default function ExecutiveDark({
                     boxSizing: "border-box",
                   }}
                 >
-                  <MapPin size={18} /> Get Directions
+                  <MapPin size={18} /> {t.getDirections}
                 </a>
               </>
             )}
@@ -741,7 +744,7 @@ export default function ExecutiveDark({
                 }}
               >
                 <FileText size={18} />{" "}
-                {profile.documentButtonText || "Download Document"}
+                {profile.documentButtonText || t.downloadDoc}
               </a>
             )}
             {Array.isArray(profile?.customButtons) &&

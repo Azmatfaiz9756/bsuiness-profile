@@ -10,6 +10,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Share2, Download, Globe } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { PromotionBanner } from '../../components/PromotionBanner';
+import { useTranslation } from '../../lib/translations';
 
 interface FullProfileProps {
   forcedId?: string;
@@ -35,6 +36,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const [showQR, setShowQR] = useState(false);
   const [qrMode, setQrMode] = useState<'online' | 'offline'>('online');
   const [localIsRtl, setLocalIsRtl] = useState(initialProfile?.isRtl || false);
+  const t = useTranslation(localIsRtl);
 
   useEffect(() => {
     if (profile?.isRtl !== undefined) {
@@ -201,15 +203,15 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6 text-center text-white">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center text-slate-900">
         <div>
-          <div className="w-16 h-16 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-500">
+          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-slate-400 border border-slate-100">
             <X size={32} />
           </div>
-          <h2 className="text-xl font-black uppercase tracking-tight">Profile Not Found</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-slate-900">{t.profileNotFound || "Profile Not Found"}</h2>
           <p className="text-slate-500 mt-2 text-sm max-w-xs mx-auto">This profile might have been moved, deleted, or the URL is incorrect.</p>
-          <Link to="/" className="mt-8 inline-block px-8 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-900/20 hover:bg-blue-700 transition-all">
-            Return Home
+          <Link to="/" className="mt-8 inline-block px-10 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">
+            {t.returnHome || "Return Home"}
           </Link>
         </div>
       </div>
@@ -289,9 +291,9 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                   <X size={18} />
                 </button>
                 
-                <h3 className="text-xl font-black text-slate-800 mb-2">Scan to Connect</h3>
+                <h3 className="text-xl font-black text-slate-800 mb-2">{t.scanToConnect || "Scan to Connect"}</h3>
                 <p className="text-sm font-medium text-slate-500 mb-4 text-center leading-relaxed">
-                  {qrMode === 'online' ? `Point your camera at this QR code to view ${profile?.name}'s profile.` : `Scan to save ${profile?.name}'s contact details directly (No internet required).`}
+                  {qrMode === 'online' ? t.scanOnlineTip || `Point your camera at this QR code to view ${profile?.name}'s profile.` : t.scanOfflineTip || `Scan to save ${profile?.name}'s contact details directly (No internet required).`}
                 </p>
 
                 <div className="flex bg-slate-100 p-1 rounded-xl mb-6 w-full max-w-[240px]">
@@ -299,13 +301,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                     onClick={() => setQrMode('online')} 
                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${qrMode === 'online' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    Online View
+                    {t.onlineView || "Online View"}
                   </button>
                   <button 
                     onClick={() => setQrMode('offline')} 
                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${qrMode === 'offline' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    Offline Save
+                    {t.offlineSave || "Offline Save"}
                   </button>
                 </div>
 
@@ -336,7 +338,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                     className="flex-1 bg-blue-50 text-blue-600 font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
                   >
                     <Share2 size={18} />
-                    <span>Share</span>
+                    <span>{t.share || "Share"}</span>
                   </button>
                   <button 
                     onClick={() => {
@@ -352,7 +354,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                     className="flex-1 bg-slate-900 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
                   >
                     <Download size={18} />
-                    <span>Save</span>
+                    <span>{t.save || "Save"}</span>
                   </button>
                 </div>
               </div>
