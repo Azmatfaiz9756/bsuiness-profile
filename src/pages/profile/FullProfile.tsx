@@ -24,13 +24,32 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const isPreview = new URLSearchParams(location.search).get('preview') === 'true';
 
   const { profiles } = useAppContext();
-  
-      // Try to find profile in context immediately to avoid flicker
-  const initialProfile = profiles.find((p: any) => 
-    p.id === id || 
-    (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
-  );
-  const [profile, setProfile] = useState<any>(initialProfile || null);
+
+  // Optimized profile lookup with aggressive local caching
+  const getInitialProfile = () => {
+    // 1. Try global context first
+    const fromContext = profiles.find((p: any) => 
+      p.id === id || 
+      (p.slug && p.slug.toLowerCase() === id?.toLowerCase())
+    );
+    if (fromContext) return fromContext;
+
+    // 2. Try persistent local cache for instant second-load
+    if (id) {
+      const cached = localStorage.getItem(`vibe_cache_${id.trim().toLowerCase()}`);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    return null;
+  };
+
+  const initialProfile = getInitialProfile();
+  const [profile, setProfile] = useState<any>(initialProfile);
   const [template, setTemplate] = useState(initialProfile?.template || 'classic');
   const [loading, setLoading] = useState(!initialProfile);
   const [showQR, setShowQR] = useState(false);
@@ -85,46 +104,41 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       try {
         let foundProfile = null;
         
-        // 1 & 2. Try direct ID or slug lowercase
+        // 1. Try direct ID first (Fastest path)
         const docRef = doc(db, 'profiles', cleanId);
-        const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId));
-        
-        const [docSnap, slugLowerSnap] = await Promise.all([
-          getDoc(docRef),
-          getDocs(qSlugLowerCase)
-        ]);
+        const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          console.log("Profile found by direct ID match");
           foundProfile = { ...docSnap.data(), id: docSnap.id };
-        } else if (!slugLowerSnap.empty) {
-          console.log("Profile found by lowercase slug match");
-          foundProfile = { ...slugLowerSnap.docs[0].data(), id: slugLowerSnap.docs[0].id };
         } else {
-          // 3. Try searching by original ID as slug (mixed case)
-          const qOrig = query(collection(db, 'profiles'), where('slug', '==', cleanId));
-          const snapOrig = await getDocs(qOrig);
-          if (!snapOrig.empty) {
-            console.log("Profile found by mixed-case slug match");
-            foundProfile = { ...snapOrig.docs[0].data(), id: snapOrig.docs[0].id };
+          // 2. Try search by slug lowercase only if ID failed
+          const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId), limit(1));
+          const slugLowerSnap = await getDocs(qSlugLowerCase);
+          
+          if (!slugLowerSnap.empty) {
+            foundProfile = { ...slugLowerSnap.docs[0].data(), id: slugLowerSnap.docs[0].id };
           } else {
-            // 4. Last resort: search by id field as fallback for some older profiles
-            const q2 = query(collection(db, 'profiles'), where('id', '==', cleanId));
-            const snap2 = await getDocs(q2);
-            if (!snap2.empty) {
-              console.log("Profile found by 'id' field fallback");
-              foundProfile = { ...snap2.docs[0].data(), id: snap2.docs[0].id };
+            // 3. Fallback searches (Rare cases)
+            const qFallback = query(collection(db, 'profiles'), where('id', '==', cleanId), limit(1));
+            const fallbackSnap = await getDocs(qFallback);
+            if (!fallbackSnap.empty) {
+              foundProfile = { ...fallbackSnap.docs[0].data(), id: fallbackSnap.docs[0].id };
             }
           }
         }
 
         if (foundProfile) {
+          // Success: Update state and cache
           setProfile(foundProfile);
-          if (foundProfile.template) {
-            setTemplate(foundProfile.template);
+          if (foundProfile.template) setTemplate(foundProfile.template);
+          
+          // Persistence for instant "tap to open" feel next time
+          localStorage.setItem(`vibe_cache_${normalizedId}`, JSON.stringify(foundProfile));
+          if (foundProfile.id) {
+            localStorage.setItem(`vibe_cache_${foundProfile.id.toLowerCase()}`, JSON.stringify(foundProfile));
           }
           
-          // Increment views
+          // Increment views (Delayed background task)
           if (!isPreview) {
             try {
                const pId = foundProfile.id || cleanId;
@@ -311,7 +325,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
                 <div className="bg-white p-4 rounded-3xl shadow-sm border-2 border-slate-100 mb-8 transition-opacity duration-300">
                   <QRCodeSVG 
-                    value={qrMode === 'online' ? window.location.href : `BEGIN:VCARD\nVERSION:3.0\nN:${profile?.name || ''}\nFN:${profile?.name || ''}\nORG:${profile?.company || ''}\nTITLE:${profile?.title || ''}\nTEL;TYPE=WORK,VOICE:${profile?.phone || ''}\nEMAIL;TYPE=PREF,INTERNET:${profile?.email || ''}\nURL:${profile?.website || window.location.href}\nNOTE:${(profile?.bio || '').replace(/\\n|\n/g, '\\n')}\nEND:VCARD`} 
+                    value={qrMode === 'online' ? window.location.origin + window.location.pathname : `BEGIN:VCARD\nVERSION:3.0\nN:${profile?.name || ''}\nFN:${profile?.name || ''}\nORG:${profile?.company || ''}\nTITLE:${profile?.title || ''}\nTEL;TYPE=WORK,VOICE:${profile?.phone || ''}\nEMAIL;TYPE=PREF,INTERNET:${profile?.email || ''}\nURL:${profile?.website || window.location.origin + window.location.pathname}\nNOTE:${(profile?.bio || '').replace(/\\n|\n/g, '\\n')}\nEND:VCARD`} 
                     size={200}
                     bgColor={"#ffffff"}
                     fgColor={"#0f172a"}

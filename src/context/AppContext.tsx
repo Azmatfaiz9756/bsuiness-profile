@@ -77,9 +77,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user]);
 
   useEffect(() => {
-    // Fetch few active profiles for initial context/previews
+    // Fetch active profiles for context
     import('firebase/firestore').then(({ limit, query, collection, where, onSnapshot }) => {
-      const q = query(collection(db, 'profiles'), where('status', '==', 'Active'), limit(12));
+      const q = query(collection(db, 'profiles'), where('status', '==', 'Active'), limit(24));
       const unsub = onSnapshot(q, (snapshot) => {
         const items = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -88,8 +88,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         setProfiles(items);
       }, (err) => handleFirestoreError(err, OperationType.LIST, 'profiles (active)'));
       return unsub;
-    }).then(unsub => {
-       // Need to handle unsub properly if component unmounts quickly
     });
   }, []);
   
@@ -357,9 +355,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
            if (config && config.welcomeBonus) {
              setWalletBalance(prev => prev + Number(config.welcomeBonus));
              localStorage.setItem(`dbc_bonus_${u.uid}`, 'true');
-             setTimeout(() => {
-               alert(`Welcome! You've received a joining bonus of ${config.currency} ${config.welcomeBonus} in your wallet!`);
-             }, 1000);
+             // No blocking alert for faster experience
            }
         }
       }

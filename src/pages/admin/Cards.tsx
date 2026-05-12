@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, where, setDoc, getDoc } from 'firebase/firestore';
 import { Plus, Search, Trash2, ExternalLink, QrCode, Download, Link as LinkIcon, Save, RefreshCw } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { toast } from 'react-hot-toast';
@@ -37,7 +37,11 @@ const AdminCards: React.FC = () => {
     try {
       const q = query(collection(db, 'profiles'), orderBy('name', 'asc'));
       const querySnapshot = await getDocs(q);
-      const profileList = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+      const profileList = querySnapshot.docs.map(doc => ({ 
+  id: doc.id, 
+  name: doc.data().name,
+  slug: doc.data().slug
+}));
       setProfiles(profileList);
     } catch (error) {
       console.error('Error fetching profiles:', error);
@@ -55,7 +59,8 @@ const AdminCards: React.FC = () => {
       const baseUrl = window.location.origin;
       const dynamicUrl = `${baseUrl}/q/${newCardSerial}`;
       
-      await addDoc(collection(db, 'cards'), {
+      // Use setDoc with the serial as ID for faster fetching in RedirectHandler
+      await setDoc(doc(db, 'cards', newCardSerial), {
         serial: newCardSerial,
         dynamicUrl,
         status: 'Stock',
@@ -75,8 +80,13 @@ const AdminCards: React.FC = () => {
 
   const handleUpdateLink = async (cardId: string, profileId: string) => {
     try {
+      // Find the profile slug to save it on the card for direct redirection
+      const linkedProfile = profiles.find(p => p.id === profileId);
+      const profileSlug = linkedProfile?.slug || '';
+
       await updateDoc(doc(db, 'cards', cardId), {
         profileId: profileId,
+        profileSlug: profileSlug,
         status: profileId ? 'Active' : 'Stock',
         updatedAt: serverTimestamp()
       });
@@ -110,7 +120,8 @@ const AdminCards: React.FC = () => {
       for(let i=1; i<=count; i++) {
         const serial = `${prefix}-${i.toString().padStart(3, '0')}`;
         const baseUrl = window.location.origin;
-        await addDoc(collection(db, 'cards'), {
+        // Use setDoc with serial as ID
+        await setDoc(doc(db, 'cards', serial), {
           serial,
           dynamicUrl: `${baseUrl}/q/${serial}`,
           status: 'Stock',

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { motion } from 'motion/react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 const RedirectHandler: React.FC = () => {
   const { serial } = useParams<{ serial: string }>();
@@ -14,24 +14,43 @@ const RedirectHandler: React.FC = () => {
     const resolveRedirect = async () => {
       if (!serial) return;
 
+      // Check local cache for instant redirect
+      const cachedDest = localStorage.getItem(`vibe_redir_${serial}`);
+      if (cachedDest) {
+        if (cachedDest.startsWith('http')) {
+          window.location.href = cachedDest;
+        } else {
+          navigate(cachedDest, { replace: true });
+        }
+        // Still run the background check to keep it fresh
+      }
+
       try {
-        const q = query(
-          collection(db, 'cards'), 
-          where('serial', '==', serial),
-          limit(1)
-        );
+        // FAST PATH: Try direct document fetch by serial ID first
+        const cardRef = doc(db, 'cards', serial);
+        let cardSnap = await getDoc(cardRef);
+        let cardData = cardSnap.exists() ? cardSnap.data() : null;
+
+        // SLOW PATH Fallback: If not found by ID, query by field (for older cards)
+        if (!cardData) {
+          const q = query(
+            collection(db, 'cards'), 
+            where('serial', '==', serial),
+            limit(1)
+          );
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+            cardData = snapshot.docs[0].data();
+          }
+        }
         
-        const snapshot = await getDocs(q);
-        
-        if (snapshot.empty) {
+        if (!cardData) {
           setError('Invalid card serial number.');
           return;
         }
 
-        const cardData = snapshot.docs[0].data();
-        
-        if (!cardData.profileId) {
-          setError('This card has not been activated yet. Please contact the owner.');
+        if (!cardData.profileId && !cardData.targetUrl) {
+          setError('This card has not been activated yet.');
           return;
         }
 
@@ -40,8 +59,18 @@ const RedirectHandler: React.FC = () => {
           return;
         }
 
-        // Redirect to the profile
-        navigate(`/${cardData.profileId}`, { replace: true });
+        // Determine destination: direct URL or profile slug/ID
+        const destination = cardData.targetUrl || `/${cardData.profileSlug || cardData.profileId}`;
+        
+        // Cache for next time
+        localStorage.setItem(`vibe_redir_${serial}`, destination);
+
+        // Immediate redirection
+        if (destination.startsWith('http')) {
+          window.location.href = destination;
+        } else {
+          navigate(destination, { replace: true });
+        }
       } catch (err) {
         console.error('Redirect error:', err);
         setError('Something went wrong. Please try again.');
