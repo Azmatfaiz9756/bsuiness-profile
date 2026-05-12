@@ -157,6 +157,24 @@ export default function MinimalClean({
     );
   };
 
+  const formatSocialUrl = (platform: string, value: string) => {
+    if (!value) return "";
+    if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("www.")) {
+      return value.startsWith("www.") ? `https://${value}` : value;
+    }
+    
+    switch (platform.toLowerCase()) {
+      case 'linkedin': return `https://linkedin.com/in/${value}`;
+      case 'twitter': return `https://twitter.com/${value}`;
+      case 'instagram': return `https://instagram.com/${value}`;
+      case 'tiktok': return `https://tiktok.com/@${value.replace('@', '')}`;
+      case 'facebook': return `https://facebook.com/${value}`;
+      case 'youtube': return `https://youtube.com/${value.includes('@') ? value : '@' + value}`;
+      case 'github': return `https://github.com/${value}`;
+      default: return value;
+    }
+  };
+
   const downloadQR = () => {
     const svg = document.getElementById("profile-qr-minimal");
     if (!svg) return;
@@ -852,7 +870,7 @@ export default function MinimalClean({
 
               {profile.socials?.linkedin && (
                 <a
-                  href={`https://linkedin.com/in/${profile?.socials?.linkedin}`}
+                  href={formatSocialUrl('linkedin', profile?.socials?.linkedin)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -876,7 +894,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.twitter && (
                 <a
-                  href={`https://twitter.com/${profile?.socials?.twitter}`}
+                  href={formatSocialUrl('twitter', profile?.socials?.twitter)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -900,7 +918,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.instagram && (
                 <a
-                  href={`https://instagram.com/${profile?.socials?.instagram}`}
+                  href={formatSocialUrl('instagram', profile?.socials?.instagram)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -924,7 +942,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.tiktok && (
                 <a
-                  href={`https://tiktok.com/${profile?.socials?.tiktok}`}
+                  href={formatSocialUrl('tiktok', profile?.socials?.tiktok)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -948,7 +966,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.facebook && (
                 <a
-                  href={`https://facebook.com/${profile?.socials?.facebook}`}
+                  href={formatSocialUrl('facebook', profile?.socials?.facebook)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -972,7 +990,7 @@ export default function MinimalClean({
               )}
               {profile.socials?.youtube && (
                 <a
-                  href={`https://youtube.com/${profile?.socials?.youtube}`}
+                  href={formatSocialUrl('youtube', profile?.socials?.youtube)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -1023,7 +1041,7 @@ export default function MinimalClean({
           </div>
 
           {activeTab === 'home' && profile.hours && Object.keys(profile.hours).length > 0 && (
-            <AccordionItem id="hours" title="Business Hours">
+            <AccordionItem id="hours" title={t.businessHours}>
               <div
                 style={{
                   padding: 20,
@@ -1058,11 +1076,11 @@ export default function MinimalClean({
                       }}
                     >
                       <span style={{ fontWeight: 600, color: "#09090b" }}>
-                        {day}
+                        {(t as any)[day]}
                       </span>
                       <span style={{ color: h.closed ? "#ef4444" : "#52525b" }}>
                         {h.closed ? (
-                          "Closed"
+                          t.closed
                         ) : (
                           <>
                             {h.open} - {h.close}
@@ -1080,7 +1098,7 @@ export default function MinimalClean({
           )}
 
           {(activeTab === 'home' || activeTab === 'services') && Array.isArray(profile.services) && profile.services.length > 0 && (
-            <AccordionItem id="services" title="Services">
+            <AccordionItem id="services" title={t.services}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
@@ -1222,7 +1240,7 @@ export default function MinimalClean({
                 </div>
               )}
               {activeTab === 'home' && (
-                <AccordionItem id="shop" title="Products">
+                <AccordionItem id="shop" title={t.products}>
                   <div
                     style={{ display: "flex", flexDirection: "column", gap: 16 }}
                   >
@@ -1420,7 +1438,7 @@ export default function MinimalClean({
           )}
 
           {activeTab === 'home' && Array.isArray(profile.testimonials) && profile.testimonials.length > 0 && (
-            <AccordionItem id="reviews" title="Reviews">
+            <AccordionItem id="reviews" title={t.reviews}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
@@ -1495,7 +1513,7 @@ export default function MinimalClean({
           )}
 
           {activeTab === 'home' && Array.isArray(profile.faqs) && profile.faqs.length > 0 && (
-            <AccordionItem id="faq" title="FAQ">
+            <AccordionItem id="faq" title={t.faqs}>
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 12 }}
               >
@@ -1535,7 +1553,7 @@ export default function MinimalClean({
 
 
           {(activeTab === 'home' || activeTab === 'bank') && (
-          <AccordionItem id="platform" title="Platform Details">
+          <AccordionItem id="platform" title={t.platformDetails}>
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div>
                 <div

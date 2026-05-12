@@ -289,24 +289,39 @@ export default function AdminProfiles() {
                 </td>
                 <td>{p.views}</td>
                 <td style={{display: 'flex', gap: 6, flexWrap: 'wrap'}}>
-                  <button onClick={() => {
-                    const thirtyDaysFromNow = new Date();
-                    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-                    handleQuickPlanUpdate(p, 'Enterprise'); // Sets plan to Enterprise for trial
-                    // We also need to update trial fields specifically
-                    const ownerId = p.ownerId || p.id;
-                    updateDoc(doc(db, 'profiles', ownerId), {
-                      trialActive: true,
-                      hasUsedTrial: true,
-                      trialEndsAt: thirtyDaysFromNow.toISOString(),
-                      updatedAt: new Date().toISOString()
-                    }).then(() => {
-                      alert('1 Month Enterprise Trial Activated!');
-                      fetchDbProfiles();
-                    });
-                  }} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>
-                    <Shield size={14} /> 1m Trial
-                  </button>
+                  {p.trialActive ? (
+                    <button onClick={() => {
+                      const ownerId = p.ownerId || p.id;
+                      updateDoc(doc(db, 'profiles', ownerId), {
+                        trialActive: false,
+                        updatedAt: new Date().toISOString()
+                      }).then(() => {
+                        alert('Trial deactivated.');
+                        fetchDbProfiles();
+                      });
+                    }} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#fee2e2', color: '#b91c1c', border: '1px solid #fecaca' }}>
+                      <X size={14} /> Stop Trial
+                    </button>
+                  ) : (
+                    <button onClick={() => {
+                      const thirtyDaysFromNow = new Date();
+                      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+                      handleQuickPlanUpdate(p, 'Enterprise'); // Sets plan to Enterprise for trial
+                      // We also need to update trial fields specifically
+                      const ownerId = p.ownerId || p.id;
+                      updateDoc(doc(db, 'profiles', ownerId), {
+                        trialActive: true,
+                        hasUsedTrial: true,
+                        trialEndsAt: thirtyDaysFromNow.toISOString(),
+                        updatedAt: new Date().toISOString()
+                      }).then(() => {
+                        alert('1 Month Enterprise Trial Activated!');
+                        fetchDbProfiles();
+                      });
+                    }} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>
+                      <Shield size={14} /> 1m Trial
+                    </button>
+                  )}
                   <button onClick={() => handleEditClick(p)} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Edit3 size={14} /> Edit / SEO</button>
                   <Link to={`/profile/${p.slug || p.id}`} className="action-btn" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={14} /> Live View</Link>
                 </td>

@@ -177,18 +177,18 @@ export default function ClassicModern({
   const hasPayments = (profile.paymentLinks && profile.paymentLinks.length > 0) || (profile.bankAccounts && profile.bankAccounts.length > 0) || profile.bankName;
 
   const navItems = [
-    { id: 'home', label: 'Home', icon: <Contact2 size={20} />, show: true },
-    { id: 'services', label: 'Services', icon: <Sparkles size={20} />, show: profile.services && profile.services.length > 0 },
-    { id: 'shop', label: 'Store', icon: <ShoppingBag size={20} />, show: profile.products && profile.products.length > 0 },
-    { id: 'bank', label: 'Bank', icon: <Building size={20} />, show: hasPayments },
-    { id: 'jobs', label: 'Hiring', icon: <Briefcase size={20} />, show: profileJobs.length > 0 },
-    { id: 'inquiry', label: 'Inquiry', icon: <Mail size={20} />, show: true }
+    { id: 'home', label: t.home, icon: <Contact2 size={20} />, show: true },
+    { id: 'services', label: t.services, icon: <Sparkles size={20} />, show: profile.services && profile.services.length > 0 },
+    { id: 'shop', label: t.store, icon: <ShoppingBag size={20} />, show: profile.products && profile.products.length > 0 },
+    { id: 'bank', label: t.bank, icon: <Building size={20} />, show: hasPayments },
+    { id: 'jobs', label: t.jobs, icon: <Briefcase size={20} />, show: profileJobs.length > 0 },
+    { id: 'inquiry', label: t.contact, icon: <Mail size={20} />, show: true }
   ].filter(item => item.show);
 
   const SectionContainer = ({ icon, title, children, id }: any) => {
     return (
       <div id={id ? `${id}-section` : undefined} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: themeVars.primary }}>
+        <div style={{ padding: '16px 20px', background: '#f8fafc', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, fontWeight: 700, color: themeVars.primary, textAlign: profile.isRtl ? 'right' : 'left' }}>
           {icon}
           {title}
         </div>
@@ -253,6 +253,24 @@ export default function ClassicModern({
       `https://wa.me/${sharePhone}?text=Check out my digital profile: ${shareUrl}`,
       "_blank",
     );
+  };
+
+  const formatSocialUrl = (platform: string, value: string) => {
+    if (!value) return "";
+    if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("www.")) {
+      return value.startsWith("www.") ? `https://${value}` : value;
+    }
+    
+    switch (platform.toLowerCase()) {
+      case 'linkedin': return `https://linkedin.com/in/${value}`;
+      case 'twitter': return `https://twitter.com/${value}`;
+      case 'instagram': return `https://instagram.com/${value}`;
+      case 'tiktok': return `https://tiktok.com/@${value.replace('@', '')}`;
+      case 'facebook': return `https://facebook.com/${value}`;
+      case 'youtube': return `https://youtube.com/${value.includes('@') ? value : '@' + value}`;
+      case 'github': return `https://github.com/${value}`;
+      default: return value;
+    }
   };
 
   const downloadQR = () => {
@@ -577,15 +595,13 @@ export default function ClassicModern({
                 ))}
               </div>
               {isRatingSubmitted ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>{t.thankYouRating}</span>
-                  <button 
-                    onClick={() => setIsRatingSubmitted(false)}
-                    style={{ background: 'none', border: 'none', color: '#1a56db', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                  >
-                    {t.edit}
-                  </button>
-                </div>
+                <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>{t.thankYouRating}</div>
+                <button 
+                  onClick={() => setIsRatingSubmitted(false)}
+                  style={{ background: 'none', border: 'none', color: '#1a56db', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  {t.edit}
+                </button>
               ) : (
                 <span style={{ fontSize: 11, color: '#6b7280' }}>{t.ratingText} {profile.name}</span>
               )}
@@ -637,7 +653,7 @@ export default function ClassicModern({
             >
               {profile?.socials?.linkedin && (
                 <a
-                  href={`https://linkedin.com/in/${profile?.socials?.linkedin}`}
+                  href={formatSocialUrl('linkedin', profile?.socials?.linkedin)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -657,7 +673,7 @@ export default function ClassicModern({
               )}
               {profile?.socials?.twitter && (
                 <a
-                  href={`https://twitter.com/${profile?.socials?.twitter}`}
+                  href={formatSocialUrl('twitter', profile?.socials?.twitter)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -677,7 +693,7 @@ export default function ClassicModern({
               )}
               {profile?.socials?.instagram && (
                 <a
-                  href={`https://instagram.com/${profile?.socials?.instagram}`}
+                  href={formatSocialUrl('instagram', profile?.socials?.instagram)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -697,7 +713,7 @@ export default function ClassicModern({
               )}
               {profile?.socials?.tiktok && (
                 <a
-                  href={`https://tiktok.com/${profile?.socials?.tiktok}`}
+                  href={formatSocialUrl('tiktok', profile?.socials?.tiktok)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -717,7 +733,7 @@ export default function ClassicModern({
               )}
               {profile?.socials?.facebook && (
                 <a
-                  href={`https://facebook.com/${profile?.socials?.facebook}`}
+                  href={formatSocialUrl('facebook', profile?.socials?.facebook)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -737,7 +753,7 @@ export default function ClassicModern({
               )}
               {profile?.socials?.youtube && (
                 <a
-                  href={`https://youtube.com/${profile?.socials?.youtube}`}
+                  href={formatSocialUrl('youtube', profile?.socials?.youtube)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -757,7 +773,7 @@ export default function ClassicModern({
               )}
               {profile?.socials?.github && (
                 <a
-                  href={`https://github.com/${profile?.socials?.github}`}
+                  href={formatSocialUrl('github', profile?.socials?.github)}
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -975,7 +991,7 @@ export default function ClassicModern({
                   textDecoration: "none",
                 }}
               >
-                <Calendar size={18} /> Book a Meeting
+                <Calendar size={18} /> {t.bookMeeting}
               </a>
             )}
             {!profile.plan?.includes("Enterprise") && !profile.hideReferral && (
@@ -994,7 +1010,7 @@ export default function ClassicModern({
                   textDecoration: "none",
                 }}
               >
-                <Share2 size={18} /> Refer & Earn Rewards
+                <Share2 size={18} /> {t.referEarn}
               </Link>
             )}
             {profile.documentUrl && (
@@ -1136,7 +1152,7 @@ export default function ClassicModern({
                     <div
                       style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
                     >
-                      Call {profile.name2 ? (profile.name?.split(' ')[0] || 'Primary') : 'Mobile'}
+                      {t.call} {profile.name2 ? (profile.name?.split(' ')[0] || t.primary) : t.mobile}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {profile.phone}
@@ -1176,7 +1192,7 @@ export default function ClassicModern({
                     <div
                       style={{ fontSize: 14, fontWeight: 600, color: "#1f2937" }}
                     >
-                      Call {profile.name2?.split(' ')[0] || 'Secondary'}
+                      {t.call} {profile.name2?.split(' ')[0] || t.secondary}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {profile.phone2}
@@ -1262,7 +1278,7 @@ export default function ClassicModern({
                         color: "#1f2937",
                       }}
                     >
-                      WhatsApp {profile.name2 ? (profile.name?.split(' ')[0] || 'Primary') : ''}
+                      {t.whatsapp} {profile.name2 ? (profile.name?.split(' ')[0] || t.primary) : ''}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       +{profile.whatsapp}
@@ -1308,7 +1324,7 @@ export default function ClassicModern({
                         color: "#1f2937",
                       }}
                     >
-                      WhatsApp {profile.name2?.split(' ')[0] || 'Secondary'}
+                      {t.whatsapp} {profile.name2?.split(' ')[0] || t.secondary}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       +{profile.whatsapp2}
@@ -1358,7 +1374,7 @@ export default function ClassicModern({
                         color: "#1f2937",
                       }}
                     >
-                      Website
+                      {t.website}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {profile.website}
@@ -1405,7 +1421,7 @@ export default function ClassicModern({
                         color: "#1f2937",
                       }}
                     >
-                      Address
+                      {t.address}
                     </div>
                     <div style={{ fontSize: 12, color: "#6b7280" }}>
                       {profile.address_street ? (
@@ -1478,10 +1494,10 @@ export default function ClassicModern({
                               day !== "Sunday" ? "1px dashed #e2e8f0" : "none",
                           }}
                         >
-                          <span style={{ fontWeight: 600 }}>{day}</span>
+                          <span style={{ fontWeight: 600 }}>{(t as any)[day]}</span>
                           <span>
                             {h.closed ? (
-                              <span style={{ color: "#ef4444" }}>Closed</span>
+                              <span style={{ color: "#ef4444" }}>{t.closed}</span>
                             ) : (
                               <>
                                 {h.open} - {h.close}

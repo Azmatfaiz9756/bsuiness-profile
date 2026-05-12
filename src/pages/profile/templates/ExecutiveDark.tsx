@@ -151,6 +151,24 @@ export default function ExecutiveDark({
     );
   };
 
+  const formatSocialUrl = (platform: string, value: string) => {
+    if (!value) return "";
+    if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("www.")) {
+      return value.startsWith("www.") ? `https://${value}` : value;
+    }
+    
+    switch (platform.toLowerCase()) {
+      case 'linkedin': return `https://linkedin.com/in/${value}`;
+      case 'twitter': return `https://twitter.com/${value}`;
+      case 'instagram': return `https://instagram.com/${value}`;
+      case 'tiktok': return `https://tiktok.com/@${value.replace('@', '')}`;
+      case 'facebook': return `https://facebook.com/${value}`;
+      case 'youtube': return `https://youtube.com/${value.includes('@') ? value : '@' + value}`;
+      case 'github': return `https://github.com/${value}`;
+      default: return value;
+    }
+  };
+
   const downloadQR = () => {
     const svg = document.getElementById("profile-qr-dark");
     if (!svg) return;
@@ -474,7 +492,7 @@ export default function ExecutiveDark({
             >
               {profile?.socials?.linkedin && (
                 <a
-                  href={`https://linkedin.com/in/${profile?.socials?.linkedin}`}
+                  href={formatSocialUrl('linkedin', profile?.socials?.linkedin)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ textDecoration: "none", color: "#0a66c2" }}
@@ -484,7 +502,7 @@ export default function ExecutiveDark({
               )}
               {profile?.socials?.twitter && (
                 <a
-                  href={`https://twitter.com/${profile?.socials?.twitter}`}
+                  href={formatSocialUrl('twitter', profile?.socials?.twitter)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ textDecoration: "none", color: "#fff" }}
@@ -494,7 +512,7 @@ export default function ExecutiveDark({
               )}
               {profile?.socials?.instagram && (
                 <a
-                  href={`https://instagram.com/${profile?.socials?.instagram}`}
+                  href={formatSocialUrl('instagram', profile?.socials?.instagram)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ textDecoration: "none", color: "#E1306C" }}
@@ -504,7 +522,7 @@ export default function ExecutiveDark({
               )}
               {profile?.socials?.tiktok && (
                 <a
-                  href={`https://tiktok.com/${profile?.socials?.tiktok}`}
+                  href={formatSocialUrl('tiktok', profile?.socials?.tiktok)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ textDecoration: "none", color: "#fff" }}
@@ -514,7 +532,7 @@ export default function ExecutiveDark({
               )}
               {profile?.socials?.facebook && (
                 <a
-                  href={`https://facebook.com/${profile?.socials?.facebook}`}
+                  href={formatSocialUrl('facebook', profile?.socials?.facebook)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ textDecoration: "none", color: "#1877f2" }}
@@ -524,7 +542,7 @@ export default function ExecutiveDark({
               )}
               {profile?.socials?.youtube && (
                 <a
-                  href={`https://youtube.com/${profile?.socials?.youtube}`}
+                  href={formatSocialUrl('youtube', profile?.socials?.youtube)}
                   target="_blank"
                   rel="noreferrer"
                   style={{ textDecoration: "none", color: "#ff0000" }}
@@ -784,7 +802,7 @@ export default function ExecutiveDark({
         <div style={{ padding: "0 20px 20px" }}>
           {activeTab === 'home' && (
             <SectionContainer
-              title="About & Contact"
+              title={t.aboutContact}
               icon={<Contact size={18} />}
             >
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -812,7 +830,7 @@ export default function ExecutiveDark({
                       marginBottom: 4,
                     }}
                   >
-                    {profile.name2 ? profile.name.split(' ')[0] : 'Mobile'}
+                    {profile.name2 ? profile.name.split(' ')[0] : t.mobile}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
                     {profile.phone}
@@ -946,7 +964,7 @@ export default function ExecutiveDark({
                       marginBottom: 4,
                     }}
                   >
-                    Email
+                    {t.email}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
                     {profile.email}
@@ -979,7 +997,7 @@ export default function ExecutiveDark({
                       marginBottom: 4,
                     }}
                   >
-                    Website
+                    {t.website}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 500, color: "#eee" }}>
                     {profile.website}
@@ -1088,11 +1106,11 @@ export default function ExecutiveDark({
                           }}
                         >
                           <span style={{ fontWeight: 600, color: "#eee" }}>
-                            {day}
+                            {(t as any)[day]}
                           </span>
                           <span>
                             {h.closed ? (
-                              <span style={{ color: "#ef4444" }}>Closed</span>
+                              <span style={{ color: "#ef4444" }}>{t.closed}</span>
                             ) : (
                               <>
                                 {h.open} - {h.close}
@@ -1112,7 +1130,7 @@ export default function ExecutiveDark({
           </SectionContainer>
           )}
           {(activeTab === 'home' || activeTab === 'services') && Array.isArray(profile?.services) && profile.services.length > 0 && (
-            <SectionContainer title="Services" icon={<Globe size={18} />}>
+            <SectionContainer title={t.services} icon={<Globe size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {Array.isArray(profile?.services) && profile.services.map((svc: any, i: number) => (
                   <div
@@ -1163,7 +1181,7 @@ export default function ExecutiveDark({
                         letterSpacing: 1,
                       }}
                     >
-                      Portfolio
+                      {t.portfolio}
                     </div>
                     <div style={{ overflow: "hidden", paddingBottom: 12 }}>
                       <div className="gallery-slider-dark">
@@ -1335,7 +1353,7 @@ export default function ExecutiveDark({
                 </div>
               )}
               {activeTab === 'home' && (
-                <SectionContainer title="Store Highlights" icon={<ShoppingBag size={18} />}>
+                <SectionContainer title={t.highlights} icon={<ShoppingBag size={18} />}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {Array.isArray(profile?.products) && profile.products.slice(0, 3).map((prod: any, i: number) => (
                       <div
@@ -1440,7 +1458,7 @@ export default function ExecutiveDark({
             </>
           )}
           {activeTab === 'home' && Array.isArray(profile?.testimonials) && profile.testimonials.length > 0 && (
-            <SectionContainer title="Reviews" icon={<MessageSquare size={18} />}>
+            <SectionContainer title={t.reviews} icon={<MessageSquare size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {Array.isArray(profile?.testimonials) && profile.testimonials.map((test: any, i: number) => (
                   <div
@@ -1486,7 +1504,7 @@ export default function ExecutiveDark({
             </SectionContainer>
           )}
           {activeTab === 'home' && Array.isArray(profile?.faqs) && profile.faqs.length > 0 && (
-            <SectionContainer title="FAQs" icon={<MessageSquare size={18} />}>
+            <SectionContainer title={t.faqs} icon={<MessageSquare size={18} />}>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {Array.isArray(profile?.faqs) && profile.faqs.map((faq: any, i: number) => (
                   <div
@@ -1521,7 +1539,7 @@ export default function ExecutiveDark({
 
           {(activeTab === 'home' || activeTab === 'bank') && (
             <SectionContainer
-              title={isOwner ? "Wallet & Platform" : "Platform Details"}
+              title={isOwner ? t.walletPlatform : t.platformDetails}
               icon={<Wallet size={18} />}
             >
             <div>

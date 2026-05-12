@@ -4,7 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import ClassicModern from './templates/ClassicModern';
 import ExecutiveDark from './templates/ExecutiveDark';
 import MinimalClean from './templates/MinimalClean';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, increment, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Share2, Download, Globe } from 'lucide-react';
@@ -70,7 +70,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     "sameAs": Array.isArray(profile.socialLinks) ? profile.socialLinks.map((l: any) => l.url) : []
   } : null;
 
-  // Fetch from Firebase
   useEffect(() => {
     const fetchProfile = async () => {
       if (!id) return;
@@ -85,9 +84,8 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       
       try {
         let foundProfile = null;
-        console.log("Searching for profile with ID or Slug:", cleanId);
-
-        // Run primary queries in parallel to speed up load time
+        
+        // 1 & 2. Try direct ID or slug lowercase
         const docRef = doc(db, 'profiles', cleanId);
         const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId));
         
@@ -301,13 +299,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
                     onClick={() => setQrMode('online')} 
                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${qrMode === 'online' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    {t.onlineView || "Online View"}
+                    {t.scanOnline || "Scan Online"}
                   </button>
                   <button 
                     onClick={() => setQrMode('offline')} 
                     className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${qrMode === 'offline' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                   >
-                    {t.offlineSave || "Offline Save"}
+                    {t.scanOffline || "Scan Offline"}
                   </button>
                 </div>
 
