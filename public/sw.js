@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vibecard-v1';
+const CACHE_NAME = 'vibe-connect-v1';
 const ASSETS = [
   '/',
   '/index.html',
