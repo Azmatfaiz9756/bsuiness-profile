@@ -432,9 +432,9 @@ async function startServer() {
       }
 
       // Extract text and function calls from response
-      // In @google/genai, response object directly contains these properties
-      const responseText = response.text || "";
-      const functionCalls = response.functionCalls || [];
+      // In @google/genai, these are functions that should be called
+      const responseText = typeof response.text === 'function' ? response.text() : (response.text || "");
+      const functionCalls = typeof response.functionCalls === 'function' ? response.functionCalls() : (response.functionCalls || []);
 
       res.json({
         text: responseText,
@@ -492,6 +492,40 @@ async function startServer() {
     } catch (error: any) {
       console.error("Email Error:", error);
       res.status(500).json({ error: "Failed to send email" });
+    }
+  });
+
+  // Stock Proxy for bypassing CORS/Google blocks
+  app.get("/api/proxy/stock", async (req, res) => {
+    const { url } = req.query;
+    if (!url || typeof url !== 'string') return res.status(400).send("URL required");
+
+    try {
+      console.log(`[Stock Proxy] Fetching: ${url}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/csv,text/plain,*/*',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`Upstream error: ${response.status}`);
+      }
+      
+      const text = await response.text();
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.send(text);
+    } catch (e: any) {
+      console.error(`[Stock Proxy] Error:`, e.message);
+      res.status(500).send("Failed to fetch stock data");
     }
   });
 

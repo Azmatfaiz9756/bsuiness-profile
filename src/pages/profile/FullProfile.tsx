@@ -98,6 +98,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       const normalizedId = cleanId.toLowerCase();
       
       // Only show top-level loading if we don't have ANY profile data yet
+      // We set isFetched to false to indicate we are starting a fresh check
       if (!profile) {
         setLoading(true);
       }
@@ -112,20 +113,24 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
         if (docSnap.exists()) {
           foundProfile = { ...docSnap.data(), id: docSnap.id };
-        } else {
-          // 2. Try search by slug lowercase only if ID failed
+        } 
+        
+        // 2. If not found by ID, try Slug search
+        if (!foundProfile) {
           const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId), limit(1));
           const slugLowerSnap = await getDocs(qSlugLowerCase);
           
           if (!slugLowerSnap.empty) {
             foundProfile = { ...slugLowerSnap.docs[0].data(), id: slugLowerSnap.docs[0].id };
-          } else {
-            // 3. Fallback searches (Rare cases)
-            const qFallback = query(collection(db, 'profiles'), where('id', '==', cleanId), limit(1));
-            const fallbackSnap = await getDocs(qFallback);
-            if (!fallbackSnap.empty) {
-              foundProfile = { ...fallbackSnap.docs[0].data(), id: fallbackSnap.docs[0].id };
-            }
+          }
+        }
+
+        // 3. Last fallback remote search
+        if (!foundProfile) {
+          const qFallback = query(collection(db, 'profiles'), where('id', '==', cleanId), limit(1));
+          const fallbackSnap = await getDocs(qFallback);
+          if (!fallbackSnap.empty) {
+            foundProfile = { ...fallbackSnap.docs[0].data(), id: fallbackSnap.docs[0].id };
           }
         }
 
@@ -166,8 +171,8 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           }
 
         } else {
-          console.log("Profile not found in any Firebase search");
-          // If no profile found in DB, try one last time with context
+          console.log("Profile not found after all remote searches");
+          // Final check in local context profiles
           const existsInContext = profiles.find((p: any) => 
             p.id === cleanId || 
             (p.slug && p.slug.toLowerCase() === normalizedId)
@@ -176,28 +181,24 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           if (existsInContext) {
             setProfile(existsInContext);
           } else {
-            // ONLY set null if we are absolutely sure after fetching
+            // ONLY set profile to null after ALL checks have failed
+            // This is the trigger for the 404 UI
+            console.warn(`No profile found for ID/Slug: ${id}`);
             setProfile(null);
           }
         }
       } catch (err) {
         console.error("Error fetching profile:", err);
+        // On error, if we don't have a profile yet, at least try context
         if (!profile) {
-          const cleanId = id.trim();
-          const normalizedId = cleanId.toLowerCase();
           const localProfile = profiles.find((p: any) => 
-            p.id === cleanId || 
-            (p.slug && p.slug.toLowerCase() === normalizedId)
-          ) || (profiles.length > 0 ? profiles[0] : null);
-          
-          if (localProfile) {
-            setProfile(localProfile);
-            if (localProfile.template) {
-              setTemplate(localProfile.template);
-            }
-          }
+            p.id === id.trim() || 
+            (p.slug && p.slug.toLowerCase() === id.trim().toLowerCase())
+          );
+          if (localProfile) setProfile(localProfile);
         }
       } finally {
+        // ALWAYS finish by turning off loading and marking as fetched
         setLoading(false);
         setIsFetched(true);
       }

@@ -213,12 +213,18 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
                 for (const fallbackUrl of fallbacks) {
                   try {
-                    const abortController = new AbortController();
-                    const timeoutId = setTimeout(() => abortController.abort(), 6000);
-                    
-                    const resp = await fetch(fallbackUrl, { signal: abortController.signal });
+                    // Try direct fetch first
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    let resp = await fetch(fallbackUrl, { signal: controller.signal });
                     clearTimeout(timeoutId);
-                    
+
+                    // If direct fetch fails or is blocked (CORS), try the proxy
+                    if (!resp.ok) {
+                      console.log(`Direct fetch failed for ${fallbackUrl}, trying proxy...`);
+                      resp = await fetch(`/api/proxy/stock?url=${encodeURIComponent(fallbackUrl)}`);
+                    }
+
                     if (resp.ok) {
                       const text = await resp.text();
                       // Basic check to ensure we didn't get an HTML login/error page
@@ -230,6 +236,18 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
                     }
                   } catch (e) {
                     console.warn(`Sync fallback failed for ${fallbackUrl}:`, e);
+                    // Last ditch effort: try proxy for this URL if fetch threw (e.g. CORS)
+                    try {
+                      const resp = await fetch(`/api/proxy/stock?url=${encodeURIComponent(fallbackUrl)}`);
+                      if (resp.ok) {
+                        const text = await resp.text();
+                        if (text && text.length > 20 && !text.includes('<!DOCTYPE html>') && (text.includes(',') || text.includes(';') || text.includes('\t'))) {
+                          setStockData(text);
+                          console.log("Stock sync success using Proxy for URL:", fallbackUrl);
+                          return;
+                        }
+                      }
+                    } catch(proxyErr) {}
                   }
                 }
               }
