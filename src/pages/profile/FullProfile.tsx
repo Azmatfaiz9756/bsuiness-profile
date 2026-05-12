@@ -163,15 +163,20 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
         } else {
           console.log("Profile not found in any Firebase search");
-          // If no profile found in DB, we stay at null to show 404
+          // If no profile found in DB, try one last time with context
           const existsInContext = profiles.find((p: any) => 
             p.id === cleanId || 
             (p.slug && p.slug.toLowerCase() === normalizedId)
           );
+          
           if (existsInContext) {
             setProfile(existsInContext);
           } else {
-            setProfile(null);
+            // ONLY set null if we are sure there are no profiles loading in context
+            // or if we have at least one profile in profiles array (meaning it's not empty)
+            if (profiles.length > 0) {
+              setProfile(null);
+            }
           }
         }
       } catch (err) {
@@ -198,7 +203,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     fetchProfile();
   }, [id, profiles]);
 
-  if (loading && !profile) {
+  if (loading || (!profile && profiles.length === 0)) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
         <div className="relative">
@@ -211,7 +216,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     );
   }
 
-  if (!loading && !profile) {
+  if (!profile) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center text-slate-900">
         <div>

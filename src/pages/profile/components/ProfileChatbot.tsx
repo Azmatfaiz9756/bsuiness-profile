@@ -94,15 +94,17 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
     let stockContext = "";
     if (profile?.stockSyncEnabled && formattedStock) {
       stockContext = `
-IMPORTANT - LIVE INVENTORY (CHECK THIS LIST TO ANSWER PRODUCT QUESTIONS):
-Below is the current stock list from the business. If a user asks "kya stock hai" or about products, use this exact list:
+IMPORTANT - LIVE INVENTORY (CRITICAL KNOWLEDGE):
+The business has provided the following stock list. You MUST check this list first for any questions about products, availability, or prices.
+
+CURRENT STOCK LIST:
 ${formattedStock}
 
-INVENTORY RULES (HIGHEST PRIORITY):
-1. SEARCH: Look for closely matching product names in the list above.
-2. CONFIRM: If found, confirm availability.
-3. MISSING: If NOT in the list, say you don't have information on that specific item but can take an inquiry.
-4. PRICE: ${profile?.showStockPrice ? "You ARE allowed to share prices found in the list." : "Do NOT share numerical prices."}
+INVENTORY RULES:
+1. SEARCH: Look for matching names in the list above. If found, confirm it's in stock.
+2. PRICE: ${profile?.showStockPrice ? "Prices mentioned in the list can be shared." : "Do NOT share numerical prices."}
+3. NOT FOUND: If a product is NOT in the list, state that you don't have that specific item's stock information right now but can take an inquiry.
+4. "Kya stock hai?": If asked what's in stock, list the items found in the data above.
 `;
     }
 
@@ -188,18 +190,37 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
             setStockData(profile.stockManualData);
           } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
             let url = profile.stockSourceUrl;
+            
             if (profile.stockSourceType === 'GoogleSheet') {
-              // Convert normal sheet links to CSV pub links if possible
-              if (url.includes('docs.google.com/spreadsheets')) {
-                const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                if (idMatch) {
-                  // Universal export URL that works for most shared sheets
-                  url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv&id=${idMatch[1]}`;
-                } else if (url.includes('pub?')) {
-                   if (!url.includes('output=csv')) url += (url.includes('?') ? '&' : '?') + 'output=csv';
+              const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+              if (idMatch) {
+                const sheetId = idMatch[1];
+                // Try three different ways to get CSV data from Google Sheets
+                const fallbacks = [
+                  `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`,
+                  `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`,
+                  url.includes('/pub') ? url : `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`
+                ];
+
+                for (const fallbackUrl of fallbacks) {
+                  try {
+                    const resp = await fetch(fallbackUrl);
+                    if (resp.ok) {
+                      const text = await resp.text();
+                      if (text && text.length > 10 && !text.includes('<!DOCTYPE html>')) {
+                        setStockData(text);
+                        console.log("Stock sync success using:", fallbackUrl);
+                        return;
+                      }
+                    }
+                  } catch (e) {
+                    console.warn(`Fallback failed for ${fallbackUrl}:`, e);
+                  }
                 }
               }
             }
+            
+            // Default fetch
             const resp = await fetch(url);
             if (resp.ok) {
               const text = await resp.text();
