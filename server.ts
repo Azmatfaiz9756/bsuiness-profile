@@ -391,11 +391,11 @@ async function startServer() {
 
       // Recommended models according to gemini-api skill
       const modelMapping: Record<string, string> = {
-        'gemini-1.5-flash': 'gemini-3-flash-preview',
-        'gemini-1.5-pro': 'gemini-3.1-pro-preview'
+        'gemini-3-flash-preview': 'gemini-1.5-flash',
+        'gemini-3.1-pro-preview': 'gemini-1.5-pro'
       };
       
-      let targetModelName = model || "gemini-3-flash-preview";
+      let targetModelName = model || "gemini-1.5-flash";
       if (modelMapping[targetModelName]) {
         targetModelName = modelMapping[targetModelName];
       }
@@ -414,10 +414,10 @@ async function startServer() {
         });
       } catch (err: any) {
         console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModelName} failed: ${err.message}`);
-        if (targetModelName !== "gemini-3-flash-preview") {
-           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-3-flash-preview`);
+        if (targetModelName !== "gemini-1.5-flash") {
+           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-1.5-flash`);
            response = await (genAI.models as any).generateContent({
-             model: "gemini-3-flash-preview",
+             model: "gemini-1.5-flash",
              contents: contents,
              config: {
                systemInstruction: systemInstruction,
@@ -431,11 +431,14 @@ async function startServer() {
         }
       }
 
-      // In @google/genai, response is often the model response directly OR contains a text() method
-      const responseText = typeof response.text === 'function' ? response.text() : (response.text || "");
+      // Extract text and function calls from response
+      // In @google/genai, response object directly contains these properties
+      const responseText = response.text || "";
+      const functionCalls = response.functionCalls || [];
 
       res.json({
         text: responseText,
+        functionCalls: functionCalls,
         candidates: response?.candidates || []
       });
     } catch (error: any) {

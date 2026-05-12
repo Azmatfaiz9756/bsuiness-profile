@@ -139,38 +139,60 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
             setStockData(profile.stockManualData);
           } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
             let url = profile.stockSourceUrl;
-            if (profile.stockSourceType === 'GoogleSheet') {
+            if (profile.stockSourceType === 'GoogleSheet' || url.includes('docs.google.com') || url.includes('drive.google.com')) {
               const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
               if (idMatch) {
                 const sheetId = idMatch[1];
-                // Try three different ways to get CSV data from Google Sheets
+                // Try several ways to get CSV data from Google Sheets - order matters for reliability
                 const fallbacks = [
+                  `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&id=${sheetId}&gid=0`,
                   `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`,
+                  `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`,
                   `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`,
-                  url.includes('/pub') ? url : `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`
+                  `https://drive.google.com/uc?export=download&id=${sheetId}`,
+                  `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&usp=sharing`
                 ];
 
                 for (const fallbackUrl of fallbacks) {
                   try {
-                    const resp = await fetch(fallbackUrl);
+                    const abortController = new AbortController();
+                    const timeoutId = setTimeout(() => abortController.abort(), 6000);
+                    
+                    const resp = await fetch(fallbackUrl, { signal: abortController.signal });
+                    clearTimeout(timeoutId);
+                    
                     if (resp.ok) {
                       const text = await resp.text();
-                      if (text && text.length > 10 && !text.includes('<!DOCTYPE html>')) {
+                      // Basic check to ensure we didn't get an HTML login/error page
+                      if (text && text.length > 20 && !text.includes('<!DOCTYPE html>') && (text.includes(',') || text.includes(';') || text.includes('\t'))) {
                         setStockData(text);
-                        console.log("Stock sync success using:", fallbackUrl);
+                        console.log("Stock sync success (Tester) using URL:", fallbackUrl);
                         return;
                       }
                     }
                   } catch (e) {
-                    console.warn(`Fallback failed for ${fallbackUrl}:`, e);
+                    console.warn(`Tester sync fallback failed for ${fallbackUrl}:`, e);
                   }
                 }
               }
             }
-            const resp = await fetch(url);
-            if (resp.ok) {
-              const text = await resp.text();
-              setStockData(text);
+            
+            // Standard fetch for non-Google links or final fallback
+            try {
+              const abortController = new AbortController();
+              const timeoutId = setTimeout(() => abortController.abort(), 8000);
+              const resp = await fetch(url, { signal: abortController.signal });
+              clearTimeout(timeoutId);
+              
+              if (resp.ok) {
+                 const text = await resp.text();
+                 if (text && (text.includes(',') || text.includes(';') || text.length > 30)) {
+                   setStockData(text);
+                   console.log("Stock sync success (Tester default fetch)");
+                 }
+              }
+            } catch (e) {
+               console.error("Tester default stock fetch failed:", e);
             }
           } else if (profile.stockSourceType === 'CRM' && profile.crmProvider) {
             if (profile.crmProvider === 'Zoho' && profile.zohoToken && profile.zohoOrgId) {
@@ -282,7 +304,8 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
           if (!fc) continue;
           const col = fc.name === 'book_appointment' ? 'appointments' : 'leads';
           try {
-            await addDoc(collection(db, col), {
+            // Add a timeout to firestore write to prevent hanging the chat
+            const dbPromise = addDoc(collection(db, col), {
               ...fc.args,
               profileId: profile.id,
               ownerId: profile.ownerId || user.uid,
@@ -290,13 +313,17 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
               status: fc.name === 'book_appointment' ? 'Pending' : 'New',
               source: 'Dashboard Tester'
             });
+
+            // If it takes > 5s, we just continue to not freeze the UI
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error("Database timeout")), 5000)
+            );
+
+            await Promise.race([dbPromise, timeoutPromise]);
             results.push({ name: fc.name, response: { success: true } });
           } catch (e) {
-            console.error("DB Write Error:", e);
-            results.push({ name: fc.name, response: { success: false, error: "DB Error" } });
-            import('../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
-              handleFirestoreError(e, OperationType.WRITE, col);
-            }).catch(err => console.error(err));
+            console.error(`Tool execution error [${fc.name}]:`, e);
+            results.push({ name: fc.name, response: { success: false, error: String(e) } });
           }
         }
 
@@ -3504,6 +3531,9 @@ export default function OwnerDashboard() {
                                      onChange={e => setFormData({...formData, stockSourceUrl: e.target.value})} 
                                      className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium" 
                                    />
+                                   <div className="p-3 bg-amber-50 md-1 border border-amber-100 rounded-lg text-[10px] text-amber-800 leading-tight">
+                                     <strong>Crucial:</strong> Ensure your Google Sheet is shared as <strong>"Anyone with the link can view"</strong> or use <strong>File &rarr; Share &rarr; Publish to Web &rarr; Link &rarr; CSV</strong>. Private sheets cannot be synced.
+                                   </div>
                                    <p className="text-[10px] text-slate-400">Ensure the CSV has columns like: Product, Stock, Price, Status.</p>
                                  </div>
                                )}
