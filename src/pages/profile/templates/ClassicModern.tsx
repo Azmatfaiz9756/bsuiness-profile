@@ -257,19 +257,40 @@ export default function ClassicModern({
 
   const formatSocialUrl = (platform: string, value: string) => {
     if (!value) return "";
-    if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("www.")) {
-      return value.startsWith("www.") ? `https://${value}` : value;
+    const trimmed = value.trim();
+    
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
+    }
+    
+    if (trimmed.startsWith("www.")) {
+      return `https://${trimmed}`;
+    }
+
+    const domains: Record<string, string> = {
+      linkedin: 'linkedin.com',
+      twitter: 'twitter.com',
+      instagram: 'instagram.com',
+      tiktok: 'tiktok.com',
+      facebook: 'facebook.com',
+      youtube: 'youtube.com',
+      github: 'github.com'
+    };
+
+    const platformDomain = domains[platform.toLowerCase()];
+    if (platformDomain && trimmed.includes(platformDomain)) {
+      return `https://${trimmed}`;
     }
     
     switch (platform.toLowerCase()) {
-      case 'linkedin': return `https://linkedin.com/in/${value}`;
-      case 'twitter': return `https://twitter.com/${value}`;
-      case 'instagram': return `https://instagram.com/${value}`;
-      case 'tiktok': return `https://tiktok.com/@${value.replace('@', '')}`;
-      case 'facebook': return `https://facebook.com/${value}`;
-      case 'youtube': return `https://youtube.com/${value.includes('@') ? value : '@' + value}`;
-      case 'github': return `https://github.com/${value}`;
-      default: return value;
+      case 'linkedin': return `https://linkedin.com/in/${trimmed.replace('@', '')}`;
+      case 'twitter': return `https://twitter.com/${trimmed.replace('@', '')}`;
+      case 'instagram': return `https://instagram.com/${trimmed.replace('@', '')}`;
+      case 'tiktok': return `https://tiktok.com/@${trimmed.replace('@', '')}`;
+      case 'facebook': return `https://facebook.com/${trimmed.replace('@', '')}`;
+      case 'youtube': return trimmed.startsWith('channel/') || trimmed.startsWith('c/') ? `https://youtube.com/${trimmed}` : `https://youtube.com/${trimmed.startsWith('@') ? trimmed : '@' + trimmed}`;
+      case 'github': return `https://github.com/${trimmed.replace('@', '')}`;
+      default: return trimmed;
     }
   };
 
@@ -595,13 +616,15 @@ export default function ClassicModern({
                 ))}
               </div>
               {isRatingSubmitted ? (
-                <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>{t.thankYouRating}</div>
-                <button 
-                  onClick={() => setIsRatingSubmitted(false)}
-                  style={{ background: 'none', border: 'none', color: '#1a56db', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
-                >
-                  {t.edit}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ fontSize: 11, color: '#059669', fontWeight: 600 }}>{t.thankYouRating}</div>
+                  <button 
+                    onClick={() => setIsRatingSubmitted(false)}
+                    style={{ background: 'none', border: 'none', color: '#1a56db', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    {t.edit}
+                  </button>
+                </div>
               ) : (
                 <span style={{ fontSize: 11, color: '#6b7280' }}>{t.ratingText} {profile.name}</span>
               )}
