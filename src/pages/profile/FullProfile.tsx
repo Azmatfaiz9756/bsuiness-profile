@@ -52,7 +52,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const [profile, setProfile] = useState<any>(initialProfile);
   const [template, setTemplate] = useState(initialProfile?.template || 'classic');
   const [loading, setLoading] = useState(!initialProfile);
-  const [fetchCompleted, setFetchCompleted] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [qrMode, setQrMode] = useState<'online' | 'offline'>('online');
   const [localIsRtl, setLocalIsRtl] = useState(initialProfile?.isRtl || false);
@@ -94,14 +93,11 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     const fetchProfile = async () => {
       if (!id) return;
       
-      setFetchCompleted(false);
       const cleanId = id.trim();
       const normalizedId = cleanId.toLowerCase();
       
-      // If we don't have it yet, set loading
-      if (!profile) {
-        setLoading(true);
-      }
+      // Keep loading true if we don't have a profile yet
+      setLoading(true);
       
       try {
         let foundProfile = null;
@@ -197,13 +193,12 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         }
       } finally {
         setLoading(false);
-        setFetchCompleted(true);
       }
     };
     fetchProfile();
   }, [id, profiles]);
 
-  if (!fetchCompleted && !profile) {
+  if (loading && !profile) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
         <div className="relative">
@@ -216,7 +211,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     );
   }
 
-  if (fetchCompleted && !profile) {
+  if (!loading && !profile) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center text-slate-900">
         <div>

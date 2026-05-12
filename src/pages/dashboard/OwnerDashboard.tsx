@@ -27,11 +27,18 @@ function DashboardChatTester({ profile }: { profile: any }) {
 
   useEffect(() => {
     if (stockData) {
-      const lines = stockData.split('\n').filter(l => l.trim());
+      console.log("Tester Stock Data received:", stockData.substring(0, 500));
+      // Simple CSV to readable text conversion for AI context
+      const lines = stockData.split('\n').map(l => l.trim()).filter(l => l);
       if (lines.length > 1) {
-        const headers = lines[0].split(',').map(h => h.trim());
-        const dataRows = lines.slice(1, 15).map(row => {
-          const cells = row.split(',').map(c => c.trim());
+        // Detect delimiter (comma or semicolon)
+        const firstLine = lines[0];
+        const delimiter = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
+        const headers = firstLine.split(delimiter).map(h => h.trim());
+        
+        // Take up to 50 rows for more complete inventory context
+        const dataRows = lines.slice(1, 50).map(row => {
+          const cells = row.split(delimiter).map(c => c.trim());
           return headers.map((h, i) => `${h}: ${cells[i] || 'N/A'}`).join(', ');
         });
         setFormattedStock(dataRows.join('\n'));
@@ -56,12 +63,14 @@ function DashboardChatTester({ profile }: { profile: any }) {
     if (profile?.stockSyncEnabled && formattedStock) {
       stockContext = `
 IMPORTANT - LIVE INVENTORY (CHECK THIS LIST TO ANSWER PRODUCT QUESTIONS):
+Below is the current stock list from the business. If a user asks "kya stock hai" or about products, use this exact list:
 ${formattedStock}
 
-INVENTORY RULES:
-1. CUSTOMER QUERY MATCH: If a customer asks for a product, check the list above for matching names.
-2. STOCK STATUS: If it's in the list, confirm availability. If not, say you don't have that specific data but can take their details.
-3. PRICING: ${profile?.showStockPrice ? "You ARE allowed to share prices found in the list." : "Do NOT share numerical prices."}
+INVENTORY RULES (HIGHEST PRIORITY):
+1. SEARCH: Look for closely matching product names in the list above.
+2. CONFIRM: If found, confirm availability.
+3. MISSING: If NOT in the list, say you don't have information on that specific item but can take an inquiry.
+4. PRICE: ${profile?.showStockPrice ? "You ARE allowed to share prices found in the list." : "Do NOT share numerical prices."}
 `;
     }
 
@@ -82,15 +91,15 @@ TRANSLATION FEATURES:
     };
 
     if (langId === 'hi') {
-      return `Aap ${truncate(profile.name, 100)} ke Assistant hain. Aapko aam Hindustani language use karni hai.
+      return `Aap ${truncate(profile.name, 100)} ke Assistant hain. Aapko aam Hindustani language use karni hai (Natural & Human-like).
 
 ${stockContext}
 ${translationInfo}
 
 HIDAYAT (IMPORTANT):
-1. MASTER KNOWLEDGE: Jo 'MASTER KNOWLEDGE BASE' mein instructions hain, unhe sabse pehle follow karein.
-2. STOCK LOKUP: Agar user kisi product ke baare mein puche, toh upar de gaye 'LIVE INVENTORY' mein check karein.
-3. PRICE POLICY: ${profile?.showStockPrice ? "Inventory wale prices bata sakte hain." : "Prices mat batana."}
+1. LIVE INVENTORY: Agar user product ya stock ke bare mein kuch bhi puche (e.g., "kya stock hai", "kya milega"), toh upar 'LIVE INVENTORY' dekh kar jawab dein.
+2. LEAD GENERATION: Agar user kisi product mein interest show kare, toh foran unka Name aur Mobile Number mangiye.
+3. MASTER KNOWLEDGE: Jo 'MASTER KNOWLEDGE BASE' mein instructions hain, unhe bhi follow karein.
 4. NO FORMAL HINDI: 'janab', 'yogdaan' jaise words use na karein. Simple bhasha use karein.
 
 Greeting: "Assalamualekum! Main ${profile?.name} ka digital assistant hoon. Main aapki kaise madad kar sakta hoon?"`;
