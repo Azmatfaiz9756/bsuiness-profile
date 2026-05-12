@@ -211,7 +211,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         title={`${profile.name} | ${profile.company} | Digital Business Card`}
         description={profile.bio || `View ${profile.name}'s professional profile on Vibecard.ae. Connect, scan, and save contact details.`}
         keywords={`${profile.name}, ${profile.company}, ${profile.title}, digital business card, UAE business`}
-        image={profile.photo || "/logo.png"}
+        image={profile.photo || "/logo.svg"}
         url={window.location.href}
       />
       {schemaMarkup && (

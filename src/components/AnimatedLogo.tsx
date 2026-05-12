@@ -22,12 +22,18 @@ export default function AnimatedLogo({ size = 8, theme = 'dark' }: { size?: numb
       
       {/* The actual logo image */}
       <img 
-        src="/logo.png" 
+        src="/logo.svg" 
         alt="VIBE Digital Connect logo" 
         className={`relative z-20 w-[80%] h-[80%] object-contain`} 
         onError={(e) => { 
-          e.currentTarget.style.display = 'none'; 
-          e.currentTarget.nextElementSibling!.style.display = 'flex'; 
+          // If SVG fails, try PNG
+          const target = e.currentTarget;
+          if (target.src.endsWith('.svg')) {
+            target.src = '/logo.png';
+            return;
+          }
+          target.style.display = 'none'; 
+          (target.nextElementSibling as HTMLElement).style.display = 'flex'; 
         }} 
       />
       

@@ -14,7 +14,7 @@ export default function SEO({
   title = "Vibecard.ae | Professional Digital Business Cards", 
   description = "Elevate your professional presence with Vibecard.ae. Create your smart digital business card and network better in the UAE.", 
   keywords = "digital business card, networking UAE, smart business card, professional profile, NFC card Dubai",
-  image = "/logo.png",
+  image = "/logo.svg",
   url = "https://vibecard.ae",
   type = "website"
 }: SEOProps) {
