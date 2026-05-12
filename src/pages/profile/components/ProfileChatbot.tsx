@@ -87,10 +87,13 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
     };
 
     const translationInfo = `
+ADDITIONAL CONTEXT & KNOWLEDGE BASE:
+${profile?.aiPrompt || 'No specific instructions provided.'}
+
 TRANSLATION & LEAD GENERATION RULES:
 - You are a polyglot AI assistant. You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
 - BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}.
-- PRICE POLICY: Do NOT provide specific prices or numerical cost estimates. If the user asks for price/cost, tell them you don't have the exact pricing but can take their details for a custom quote.
+- PRICE POLICY: ${profile?.showStockPrice ? "You CAN share prices ONLY for items found in the STOCK/INVENTORY data provided below." : "Do NOT provide specific prices or numerical cost estimates."} If the user asks for price/cost of something NOT in the inventory, tell them you don't have the exact pricing but can take their details for a custom quote.
 - LEAD CAPTURE: Whenever a user asks about services, prices, or working with the business, you MUST ask for their Name and Mobile Number.
 - TOOL USAGE: Once you have the user's name and phone number (mobile), call the 'send_inquiry' tool to save it as a lead.
 `;
@@ -107,7 +110,7 @@ SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
 
 KHASS HIDAYAT (IMPORTANT):
 1. SERVICES: User ko business ki services ke baare mein acche se samjhayein.
-2. NO PRICES: Kisi bhi cheez ka price mat batana. Bas ye kaho ki "Main accurate price nahi bata sakta, lekin aap apni details de dijiye humari team aapko call karke quotation de degi."
+2. PRICES: ${profile?.showStockPrice ? "Sirf un cheezon ka price batayein jo STOCK/INVENTORY data mein hain." : "Kisi bhi cheez ka price mat batana."} Agar koi aisi cheez puche jo inventory mein nahi hai, toh kaho ki "Main iska accurate price nahi bata sakta, lekin aap apni details de dijiye humari team aapko call karke quotation de degi."
 3. LEAD CAPTURE: User se unka Name aur Mobile Number zaroor mangein agar wo kaam ke baare mein puche.
 4. TOOL: 'send_inquiry' tool ka use karke details save karein.
 
@@ -174,7 +177,23 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
           if (profile.stockSourceType === 'Manual' && profile.stockManualData) {
             setStockData(profile.stockManualData);
           } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
-            const resp = await fetch(profile.stockSourceUrl);
+            let url = profile.stockSourceUrl;
+            if (profile.stockSourceType === 'GoogleSheet') {
+              // Convert normal sheet links to CSV pub links if possible
+              if (url.includes('docs.google.com/spreadsheets') && !url.includes('output=csv')) {
+                if (url.includes('/edit')) {
+                   const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                   if (idMatch) {
+                     url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv`;
+                   }
+                } else if (!url.includes('pub?')) {
+                   url = url.endsWith('/') ? url + 'pub?output=csv' : url + '/pub?output=csv';
+                } else if (url.includes('pub?')) {
+                   if (!url.includes('output=csv')) url += '&output=csv';
+                }
+              }
+            }
+            const resp = await fetch(url);
             if (resp.ok) {
               const text = await resp.text();
               setStockData(text);

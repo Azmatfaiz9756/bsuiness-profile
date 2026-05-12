@@ -4,7 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import ClassicModern from './templates/ClassicModern';
 import ExecutiveDark from './templates/ExecutiveDark';
 import MinimalClean from './templates/MinimalClean';
-import { doc, getDoc, collection, query, where, getDocs, increment, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, increment, updateDoc, limit } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, X, Share2, Download, Globe } from 'lucide-react';

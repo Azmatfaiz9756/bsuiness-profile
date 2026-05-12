@@ -50,9 +50,13 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
     }
 
     const translationInfo = `
+ADDITIONAL CONTEXT & KNOWLEDGE BASE:
+${profile?.aiPrompt || 'No specific instructions provided.'}
+
 TRANSLATION FEATURES:
 - You are a polyglot AI assistant. You can understand and translate between any languages.
 - You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+- PRICE POLICY: ${profile?.showStockPrice ? "You CAN share prices ONLY for items found in the STOCK/INVENTORY data provided." : "Do NOT provide specific prices or numerical cost estimates."}
 - If the user sends a message in a different language, translate it internally, then respond in the target language.
 - If asked specifically to translate something, perform the translation accurately.
 `;
@@ -124,7 +128,23 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
           if (profile.stockSourceType === 'Manual' && profile.stockManualData) {
             setStockData(profile.stockManualData);
           } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
-            const resp = await fetch(profile.stockSourceUrl);
+            let url = profile.stockSourceUrl;
+            if (profile.stockSourceType === 'GoogleSheet') {
+              // Convert normal sheet links to CSV pub links if possible
+              if (url.includes('docs.google.com/spreadsheets') && !url.includes('output=csv')) {
+                if (url.includes('/edit')) {
+                   const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                   if (idMatch) {
+                     url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv`;
+                   }
+                } else if (!url.includes('pub?')) {
+                   url = url.endsWith('/') ? url + 'pub?output=csv' : url + '/pub?output=csv';
+                } else if (url.includes('pub?')) {
+                   if (!url.includes('output=csv')) url += '&output=csv';
+                }
+              }
+            }
+            const resp = await fetch(url);
             if (resp.ok) {
               const text = await resp.text();
               setStockData(text);
