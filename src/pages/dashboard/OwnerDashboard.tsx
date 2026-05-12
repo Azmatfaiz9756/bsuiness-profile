@@ -602,8 +602,8 @@ export default function OwnerDashboard() {
     // Verify Firestore Connection on mount
     const testConn = async () => {
       try {
-        const { getDocFromServer, doc } = await import('firebase/firestore');
-        await getDocFromServer(doc(db, 'test', 'connection'));
+        const { getDoc, doc } = await import('firebase/firestore');
+        await getDoc(doc(db, 'test', 'connection'));
         console.log('Firestore connection verified');
       } catch (e: any) {
         console.warn('Firestore connection test failed:', e.message);

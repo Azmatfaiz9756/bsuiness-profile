@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { useEffect, useState } from 'react';
-import { doc, getDocFromServer, query, collection, where, getDocs } from 'firebase/firestore';
+import { doc, getDocFromServer, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from 'react-hot-toast';
@@ -88,16 +88,15 @@ export default function App() {
 
     async function testConnection() {
       try {
-        await getDocFromServer(doc(db, 'settings', 'system'));
-        console.log("Firebase connection successful.");
+        // Just a simple check without forcing a server fetch immediately on boot
+        // This avoids blocking the app if there's a slight network lag
+        getDoc(doc(db, 'settings', 'system')).then(() => {
+          console.log("Firebase initialized.");
+        }).catch(err => {
+          console.warn("Initial firebase fetch failed (non-blocking):", err.message);
+        });
       } catch (error: any) {
-        if(error.code === 'unknown' && error.message.includes('auth/network-request-failed')) {
-          console.warn("Firebase Auth unreachable. This might be a temporary network issue.");
-        } else if(error.message.includes('the client is offline')) {
-          console.error("Firebase is in offline mode. Please check your internet connection and Firebase configuration.");
-        } else {
-          console.error("Firebase connection test failed:", error.message || error);
-        }
+        console.error("Firebase initialization test failed:", error.message || error);
       }
     }
     testConnection();

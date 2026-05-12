@@ -1,19 +1,19 @@
 {
-  "name": "Vibecard | Digital Business Card",
-  "short_name": "Vibecard",
-  "description": "Premium Digital Business Cards for UAE Professionals",
+  "name": "Vibe Digital Connect",
+  "short_name": "Vibe",
+  "description": "Premium Digital Business Card Platform for Networking",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/9198/9198463.png",
+      "src": "/logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/9198/9198463.png",
+      "src": "/logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
