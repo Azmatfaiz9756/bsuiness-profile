@@ -40,6 +40,24 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
   const [liveChatSessionId, setLiveChatSessionId] = useState<string | null>(null);
   const [isLiveAgentRequesting, setIsLiveAgentRequesting] = useState(false);
   const [stockData, setStockData] = useState<string>('');
+  const [formattedStock, setFormattedStock] = useState<string>('');
+
+  useEffect(() => {
+    if (stockData) {
+      // Simple CSV to readable text conversion for AI context
+      const lines = stockData.split('\n').filter(l => l.trim());
+      if (lines.length > 1) {
+        const headers = lines[0].split(',').map(h => h.trim());
+        const dataRows = lines.slice(1, 10).map(row => {
+          const cells = row.split(',').map(c => c.trim());
+          return headers.map((h, i) => `${h}: ${cells[i] || 'N/A'}`).join(', ');
+        });
+        setFormattedStock(dataRows.join('\n'));
+      } else {
+        setFormattedStock(stockData);
+      }
+    }
+  }, [stockData]);
 
   const [showIdentityForm, setShowIdentityForm] = useState(false);
   const [identityForm, setIdentityForm] = useState({ name: '', phone: '', countryCode: '+971' });
@@ -68,16 +86,15 @@ export default function ProfileChatbot({ profile }: { profile: any }) {
 
   const getPrompt = (langId: string) => {
     let stockContext = "";
-    if (profile?.stockSyncEnabled && stockData) {
-      // Further truncate stock data to prevent 413 errors on custom domains (proxies are often strict)
-      const truncatedStock = stockData.length > 2000 ? stockData.substring(0, 2000) + "... [Truncated for speed]" : stockData;
+    if (profile?.stockSyncEnabled && formattedStock) {
       stockContext = `
-IMPORTANT - REAL-TIME STOCK/INVENTORY DATA:
-The following is warehouse stock and pricing information (first 2k chars):
-${truncatedStock}
+IMPORTANT - LIVE INVENTORY (CHECK THIS LIST TO ANSWER PRODUCT QUESTIONS):
+${formattedStock}
 
-If a user asks about a product not listed above, say you don't have information about its current stock but can take an inquiry.
-${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above." : "Do NOT share numerical prices unless explicitly permitted by the user, just confirm availability."}
+INVENTORY RULES:
+1. CUSTOMER QUERY MATCH: If a customer asks for a product, check the list above for matching names.
+2. STOCK STATUS: If it's in the list, confirm availability. If not, say you don't have that specific data but can take their details.
+3. PRICING: ${profile?.showStockPrice ? "You ARE allowed to share prices found in the list." : "Do NOT share numerical prices."}
 `;
     }
 
@@ -87,43 +104,28 @@ ${profile?.showStockPrice ? "You ARE allowed to share the prices mentioned above
     };
 
     const translationInfo = `
-ADDITIONAL CONTEXT & KNOWLEDGE BASE:
+MASTER KNOWLEDGE BASE (FOLLOW THESE RULES FIRST):
 ${profile?.aiPrompt || 'No specific instructions provided.'}
 
-TRANSLATION & LEAD GENERATION RULES:
-- You are a polyglot AI assistant. You MUST respond in the language selected by the user: ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
-- BUSINESS INTELLIGENCE: Talk clearly about the services offered: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}.
-- PRICE POLICY: ${profile?.showStockPrice ? "You CAN share prices ONLY for items found in the STOCK/INVENTORY data provided below." : "Do NOT provide specific prices or numerical cost estimates."} If the user asks for price/cost of something NOT in the inventory, tell them you don't have the exact pricing but can take their details for a custom quote.
-- LEAD CAPTURE: Whenever a user asks about services, prices, or working with the business, you MUST ask for their Name and Mobile Number.
-- TOOL USAGE: Once you have the user's name and phone number (mobile), call the 'send_inquiry' tool to save it as a lead.
+TRANSLATION & BUSINESS RULES:
+- Language: Respond strictly in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1000)}.
+- Lead Capture: If they ask about services or products, ask for Name and Mobile Number.
 `;
 
     if (langId === 'hi') {
-      return `Aap ${profile?.name} ke AI assistant hain. Aapko ekdum aam Hindustani (Hindi-Urdu mix) mein baat karni hai jo hum roz-mara ki zindagi mein bolte hain. 
+      return `Aap ${profile?.name} ke Digital Assistant hain. Aapko aam Hindustani language use karni hai.
 
-${translationInfo}
 ${stockContext}
+${translationInfo}
 
-SANSKRIT AUR MUSHIKL URDU BILKUL USE NA KAREIN:
-- No formal Urdu/Hindi: 'janab', 'khidmat', 'vistar', 'yogdaan' etc - Yeh sab mat use karein.
-- Simple words use karein: 'baat-cheet', 'madad', 'kaam', 'khass', 'zyada'.
+HIDAYAT (IMPORTANT):
+1. MASTER KNOWLEDGE: Jo 'MASTER KNOWLEDGE BASE' mein instructions hain, unhe sabse pehle follow karein.
+2. STOCK LOKUP: Agar user kisi product ke baare mein puche, toh upar de gaye 'LIVE INVENTORY' mein check karein.
+3. PRICE POLICY: ${profile?.showStockPrice ? "Inventory wale prices bata sakte hain." : "Prices mat batana."}
+4. NO FORMAL HINDI: 'janab', 'yogdaan' jaise words use na karein. Simple bhasha use karein.
 
-KHASS HIDAYAT (IMPORTANT):
-1. SERVICES: User ko business ki services ke baare mein acche se samjhayein.
-2. PRICES: ${profile?.showStockPrice ? "Sirf un cheezon ka price batayein jo STOCK/INVENTORY data mein hain." : "Kisi bhi cheez ka price mat batana."} Agar koi aisi cheez puche jo inventory mein nahi hai, toh kaho ki "Main iska accurate price nahi bata sakta, lekin aap apni details de dijiye humari team aapko call karke quotation de degi."
-3. LEAD CAPTURE: User se unka Name aur Mobile Number zaroor mangein agar wo kaam ke baare mein puche.
-4. TOOL: 'send_inquiry' tool ka use karke details save karein.
-
-Greeting Style:
-"Assalamualekum! Bataiye sir, main aapki kis tarah se madad kar sakta hoon? ${profile?.name} sir ki services ya kisi inquiry ke liye main aapki help kar sakta hoon."
-
-Business Details:
-- Name: ${truncate(profile?.name, 100)}
-- Work: ${truncate(profile?.title, 100)}
-- Company: ${truncate(profile?.company, 100)}
-- Bio: ${truncate(profile?.bio, 1000)}
-- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}
-- Contact: Email ${profile?.email}, Phone ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}`;
+Greeting: "Assalamualekum! Main ${profile?.name} ka digital assistant hoon. Main aapki kaise madad kar sakta hoon?"`;
     }
     
     if (langId === 'ar') {

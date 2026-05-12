@@ -52,6 +52,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const [profile, setProfile] = useState<any>(initialProfile);
   const [template, setTemplate] = useState(initialProfile?.template || 'classic');
   const [loading, setLoading] = useState(!initialProfile);
+  const [fetchCompleted, setFetchCompleted] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [qrMode, setQrMode] = useState<'online' | 'offline'>('online');
   const [localIsRtl, setLocalIsRtl] = useState(initialProfile?.isRtl || false);
@@ -195,12 +196,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         }
       } finally {
         setLoading(false);
+        setFetchCompleted(true);
       }
     };
     fetchProfile();
   }, [id, profiles]);
 
-  if (loading && !profile) {
+  if (!fetchCompleted && !profile) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
         <div className="relative">
@@ -213,7 +215,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     );
   }
 
-  if (!profile) {
+  if (fetchCompleted && !profile) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center text-slate-900">
         <div>
