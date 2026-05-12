@@ -97,8 +97,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       const cleanId = id.trim();
       const normalizedId = cleanId.toLowerCase();
       
-      // Only show top-level loading if we don't have ANY profile data yet
-      // We set isFetched to false to indicate we are starting a fresh check
+      const setStates = (p: any, l: boolean, f: boolean) => {
+        setProfile(p);
+        setLoading(l);
+        setIsFetched(f);
+        if (p?.template) setTemplate(p.template);
+      };
+
       if (!profile) {
         setLoading(true);
       }
@@ -107,7 +112,6 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       try {
         let foundProfile = null;
         
-        // 1. Try direct ID first (Fastest path)
         const docRef = doc(db, 'profiles', cleanId);
         const docSnap = await getDoc(docRef);
 
@@ -115,17 +119,14 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           foundProfile = { ...docSnap.data(), id: docSnap.id };
         } 
         
-        // 2. If not found by ID, try Slug search
         if (!foundProfile) {
           const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId), limit(1));
           const slugLowerSnap = await getDocs(qSlugLowerCase);
-          
           if (!slugLowerSnap.empty) {
             foundProfile = { ...slugLowerSnap.docs[0].data(), id: slugLowerSnap.docs[0].id };
           }
         }
 
-        // 3. Last fallback remote search
         if (!foundProfile) {
           const qFallback = query(collection(db, 'profiles'), where('id', '==', cleanId), limit(1));
           const fallbackSnap = await getDocs(qFallback);
@@ -135,87 +136,40 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         }
 
         if (foundProfile) {
-          // Success: Update state and cache
-          setProfile(foundProfile);
-          if (foundProfile.template) setTemplate(foundProfile.template);
-          
-          // Persistence for instant "tap to open" feel next time
           localStorage.setItem(`vibe_cache_${normalizedId}`, JSON.stringify(foundProfile));
           if (foundProfile.id) {
             localStorage.setItem(`vibe_cache_${foundProfile.id.toLowerCase()}`, JSON.stringify(foundProfile));
           }
           
-          // Increment views (Delayed background task)
           if (!isPreview) {
             try {
                const pId = foundProfile.id || cleanId;
-               if (pId) {
-                 const now = Date.now();
-                 const storageKey = `last_view_${pId}`;
-                 const lastView = localStorage.getItem(storageKey);
-                 const FIFTEEN_MINUTES = 15 * 60 * 1000;
-                 
-                 // Save the profile we visited for sharing commission tracking
-                 localStorage.setItem('dbc_profile_visited', pId);
-
-                 if (!lastView || (now - parseInt(lastView)) > FIFTEEN_MINUTES) {
-                   const { increment, updateDoc } = await import('firebase/firestore');
-                   const updateRef = doc(db, 'profiles', pId);
-                   await updateDoc(updateRef, { views: increment(1) });
-                   localStorage.setItem(storageKey, now.toString());
-                 }
+               const storageKey = `last_view_${pId}`;
+               const lastView = localStorage.getItem(storageKey);
+               const now = Date.now();
+               if (!lastView || (now - parseInt(lastView)) > 15 * 60 * 1000) {
+                 const { updateDoc, increment } = await import('firebase/firestore');
+                 await updateDoc(doc(db, 'profiles', pId), { views: increment(1) });
+                 localStorage.setItem(storageKey, now.toString());
                }
-            } catch (err) {
-               console.error("Failed to update profile views:", err);
-            }
+            } catch (err) {}
           }
 
-          // SET THESE HERE to batch with setProfile
-          setLoading(false);
-          setIsFetched(true);
-
+          setStates(foundProfile, false, true);
         } else {
-          console.log("Profile not found after all remote searches");
-          // Final check in local context profiles
+          // Context fallback
           const existsInContext = profiles.find((p: any) => 
-            p.id === cleanId || 
-            (p.slug && p.slug.toLowerCase() === normalizedId)
+            p.id === cleanId || (p.slug && p.slug.toLowerCase() === normalizedId)
           );
-          
-          if (existsInContext) {
-            setProfile(existsInContext);
-            if (existsInContext.template) setTemplate(existsInContext.template);
-            setLoading(false);
-            setIsFetched(true);
-          } else {
-            // ONLY set profile to null after ALL checks have failed
-            // This is the trigger for the 404 UI
-            console.warn(`No profile found for ID/Slug: ${id}`);
-            setProfile(null);
-            setLoading(false);
-            setIsFetched(true);
-          }
+          setStates(existsInContext || null, false, true);
         }
       } catch (err) {
-        console.error("Error fetching profile:", err);
-        // On error, if we don't have a profile yet, at least try context
-        if (!profile) {
-          const localProfile = profiles.find((p: any) => 
-            p.id === id.trim() || 
-            (p.slug && p.slug.toLowerCase() === id.trim().toLowerCase())
-          );
-          if (localProfile) {
-            setProfile(localProfile);
-            setLoading(false);
-            setIsFetched(true);
-          } else {
-            setProfile(null);
-            setLoading(false);
-            setIsFetched(true);
-          }
-        }
+        console.error("Fetch error:", err);
+        const localProfile = profiles.find((p: any) => 
+          p.id === cleanId || (p.slug && p.slug.toLowerCase() === normalizedId)
+        );
+        setStates(localProfile || null, false, true);
       } 
-      // Removed finally to ensure batching inside try/catch blocks Above
     };
     fetchProfile();
   }, [id, profiles]);
@@ -233,8 +187,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     );
   }
 
-  // Only show "Not Found" if we are CERTAIN we finished fetching and still have no profile
-  if (isFetched && !profile && !loading) {
+  if (isFetched && !profile) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center text-slate-900">
         <div>

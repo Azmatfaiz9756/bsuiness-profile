@@ -123,6 +123,9 @@ Do NOT make up any products or prices.
 # SYSTEM KNOWLEDGE (MANDATORY INSTRUCTIONS)
 ${profile?.aiPrompt || 'Respond as a professional assistant for ' + profile?.name}
 
+# SALES STRATEGY & RULES
+${profile?.aiSalesInstructions || 'Be helpful and try to capture leads by asking for name and number when user is interested.'}
+
 # BUSINESS DETAILS
 - Name: ${profile?.name}
 - Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1000)}
@@ -201,7 +204,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
     if (profile?.stockSyncEnabled) {
       const fetchStock = async () => {
         try {
-          if (profile.stockSourceType === 'Manual' && profile.stockManualData) {
+          if ((profile.stockSourceType === 'Manual' || profile.stockSourceType === 'FileUpload') && profile.stockManualData) {
             setStockData(profile.stockManualData);
           } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
             let url = profile.stockSourceUrl;

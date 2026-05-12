@@ -3,9 +3,10 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Upload, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
+import * as XLSX from 'xlsx';
 
 import LiveAgentPanel from './LiveAgentPanel';
 import { CHAT_LANGUAGES } from '../../lib/languages';
@@ -76,21 +77,29 @@ INVENTORY RULES:
 `;
     }
 
-    const translationInfo = `
-MASTER KNOWLEDGE BASE (FOLLOW THESE RULES FIRST):
-${profile?.aiPrompt || 'No specific instructions provided.'}
-
-TRANSLATION FEATURES:
-- Language: Respond strictly in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
-- You are a polyglot AI assistant. You can understand and translate between any languages.
-- PRICE POLICY: ${profile?.showStockPrice ? "You CAN share prices ONLY for items found in the STOCK/INVENTORY data provided." : "Do NOT provide specific prices or numerical cost estimates."}
-- If the user sends a message in a different language, translate it internally, then respond in the target language.
-`;
-
     const truncate = (str: string, len: number) => {
       if (!str) return 'N/A';
       return str.length > len ? str.substring(0, len) + '...' : str;
     };
+
+    const translationInfo = `
+# SYSTEM KNOWLEDGE (MANDATORY INSTRUCTIONS)
+${profile?.aiPrompt || 'Respond as a professional assistant for ' + profile?.name}
+
+# SALES STRATEGY & RULES
+${profile?.aiSalesInstructions || 'Be helpful and try to capture leads by asking for name and number when user is interested.'}
+
+# BUSINESS DETAILS
+- Name: ${profile?.name}
+- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1000)}
+- WhatsApp: ${profile?.whatsapp || profile?.phone}
+- Email: ${profile?.email}
+
+# OPERATIONAL RULES
+- Language: Respond strictly in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
+- Tone: Professional, helpful, and concise (max 2-3 short sentences).
+- Leads: If the user expresses interest in services or stock items, politely ask for their Name and Mobile Number for follow-up.
+`;
 
     if (langId === 'hi') {
       return `Aap ${truncate(profile.name, 100)} ke Assistant hain. Aapko aam Hindustani language use karni hai (Natural & Human-like).
@@ -948,6 +957,27 @@ export default function OwnerDashboard() {
   }
   if (!user) return <Navigate to="/" />;
   if (!profile && !loading) return <div style={{padding: 40}}>Error: Profile could not be loaded. Please check your permissions or try again.</div>;
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const csv = XLSX.utils.sheet_to_csv(sheet);
+        setFormData({ ...formData, stockManualData: csv, stockSourceType: 'FileUpload' });
+      } catch (err) {
+        console.error("Error parsing file:", err);
+        alert("Failed to parse file. Please ensure it's a valid CSV or Excel file.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
 
   const handleSave = async () => {
     if (formData.email && !validateEmail(formData.email)) {
@@ -3496,6 +3526,25 @@ export default function OwnerDashboard() {
                                <Sparkles size={10} /> AUTO-SAVING ACTIVE
                             </div>
                          </div>
+
+                         <div className="mt-8 pt-8 border-t border-slate-100">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                <Coins size={20} />
+                              </div>
+                              <div>
+                                <h4 className="text-base font-black text-slate-900 m-0">AI Selling Strategy</h4>
+                                <p className="text-xs text-slate-500 m-0">Specific rules for closing sales & handling deals</p>
+                              </div>
+                            </div>
+                            
+                            <textarea 
+                              placeholder="Specify your sales techniques, discount rules, closing scripts, and follow-up strategies..." 
+                              value={formData.aiSalesInstructions || ''} 
+                              onChange={e => setFormData({...formData, aiSalesInstructions: e.target.value})} 
+                              className="w-full p-5 bg-emerald-50/30 border border-emerald-100 rounded-2xl min-h-[150px] outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-medium leading-relaxed resize-none"
+                            />
+                         </div>
                          
                          {/* Inventory & CRM Sync Section */}
                          <div className="mt-8 pt-8 border-t border-slate-100">
@@ -3526,9 +3575,8 @@ export default function OwnerDashboard() {
                                      className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
                                    >
                                      <option value="Manual">Manual Entry (JSON/Text)</option>
-                                     <option value="GoogleSheet">Google Sheets (Public CSV Link)</option>
-                                     <option value="CSV_URL">Direct CSV URL</option>
-                                     <option value="CRM">CRM API (Zoho/Tally - Beta)</option>
+                                     <option value="FileUpload">Upload Excel/CSV File</option>
+                                     <option value="CRM">CRM API (Zoho/Vyapar)</option>
                                    </select>
                                  </div>
                                  <div className="flex items-center gap-4 pt-6">
@@ -3539,20 +3587,36 @@ export default function OwnerDashboard() {
                                  </div>
                                </div>
 
-                               {(formData.stockSourceType === 'GoogleSheet' || formData.stockSourceType === 'CSV_URL') && (
+                               {formData.stockSourceType === 'FileUpload' && (
                                  <div className="flex flex-col gap-1.5">
-                                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Source URL</label>
-                                   <input 
-                                     type="url" 
-                                     placeholder={formData.stockSourceType === 'GoogleSheet' ? "Enter Google Sheet 'Publish to Web' CSV URL" : "Enter public CSV link"}
-                                     value={formData.stockSourceUrl || ''} 
-                                     onChange={e => setFormData({...formData, stockSourceUrl: e.target.value})} 
-                                     className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium" 
-                                   />
-                                   <div className="p-3 bg-amber-50 md-1 border border-amber-100 rounded-lg text-[10px] text-amber-800 leading-tight">
-                                     <strong>Crucial:</strong> Ensure your Google Sheet is shared as <strong>"Anyone with the link can view"</strong> or use <strong>File &rarr; Share &rarr; Publish to Web &rarr; Link &rarr; CSV</strong>. Private sheets cannot be synced.
+                                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upload Inventory File</label>
+                                   <div className="relative group">
+                                     <input 
+                                       type="file" 
+                                       accept=".csv, .xlsx, .xls"
+                                       onChange={handleFileUpload}
+                                       className="hidden" 
+                                       id="stock-file-upload"
+                                     />
+                                     <label 
+                                       htmlFor="stock-file-upload"
+                                       className="flex flex-col items-center justify-center gap-3 p-10 border-2 border-dashed border-slate-200 rounded-2xl hover:border-blue-500 hover:bg-blue-50/30 transition-all cursor-pointer text-center"
+                                     >
+                                       <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                                         <Upload size={24} />
+                                       </div>
+                                       <div>
+                                         <p className="text-sm font-black text-slate-900 m-0">Click to upload Excel or CSV</p>
+                                         <p className="text-[10px] text-slate-400 m-0 mt-1">Supports .xlsx, .xls, and .csv files</p>
+                                       </div>
+                                     </label>
                                    </div>
-                                   <p className="text-[10px] text-slate-400">Ensure the CSV has columns like: Product, Stock, Price, Status.</p>
+                                   {formData.stockManualData && (
+                                     <div className="mt-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-2">
+                                       <ShieldCheck size={14} className="text-emerald-600" />
+                                       <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">File parsed & loaded successfully</span>
+                                     </div>
+                                   )}
                                  </div>
                                )}
 
