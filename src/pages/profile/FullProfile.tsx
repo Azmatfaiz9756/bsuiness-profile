@@ -94,6 +94,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     const fetchProfile = async () => {
       if (!id) return;
       
+      setFetchCompleted(false);
       const cleanId = id.trim();
       const normalizedId = cleanId.toLowerCase();
       

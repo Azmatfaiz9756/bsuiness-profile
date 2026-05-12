@@ -130,16 +130,13 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
             let url = profile.stockSourceUrl;
             if (profile.stockSourceType === 'GoogleSheet') {
               // Convert normal sheet links to CSV pub links if possible
-              if (url.includes('docs.google.com/spreadsheets') && !url.includes('output=csv')) {
-                if (url.includes('/edit')) {
-                   const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                   if (idMatch) {
-                     url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv`;
-                   }
-                } else if (!url.includes('pub?')) {
-                   url = url.endsWith('/') ? url + 'pub?output=csv' : url + '/pub?output=csv';
+              if (url.includes('docs.google.com/spreadsheets')) {
+                const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (idMatch) {
+                  // Universal export URL that works for most shared sheets
+                  url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv&id=${idMatch[1]}`;
                 } else if (url.includes('pub?')) {
-                   if (!url.includes('output=csv')) url += '&output=csv';
+                   if (!url.includes('output=csv')) url += (url.includes('?') ? '&' : '?') + 'output=csv';
                 }
               }
             }
@@ -197,7 +194,13 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
       }));
 
       const modelName = 'gemini-3-flash-preview';
-      const systemInstruction = profile.aiPrompt || getPrompt(selectedLang);
+      const basePrompt = getPrompt(selectedLang);
+      
+      // Combine base prompt with user's specific instructions
+      let systemInstruction = basePrompt;
+      if (profile?.aiPrompt) {
+        systemInstruction = `${basePrompt}\n\nSPECIALIZED BUSINESS INSTRUCTIONS (HIGHEST PRIORITY):\n${profile.aiPrompt}`;
+      }
 
       const chatContents = [
         ...history,

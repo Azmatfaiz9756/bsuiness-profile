@@ -182,16 +182,13 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
             let url = profile.stockSourceUrl;
             if (profile.stockSourceType === 'GoogleSheet') {
               // Convert normal sheet links to CSV pub links if possible
-              if (url.includes('docs.google.com/spreadsheets') && !url.includes('output=csv')) {
-                if (url.includes('/edit')) {
-                   const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                   if (idMatch) {
-                     url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv`;
-                   }
-                } else if (!url.includes('pub?')) {
-                   url = url.endsWith('/') ? url + 'pub?output=csv' : url + '/pub?output=csv';
+              if (url.includes('docs.google.com/spreadsheets')) {
+                const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (idMatch) {
+                  // Universal export URL that works for most shared sheets
+                  url = `https://docs.google.com/spreadsheets/d/${idMatch[1]}/export?format=csv&id=${idMatch[1]}`;
                 } else if (url.includes('pub?')) {
-                   if (!url.includes('output=csv')) url += '&output=csv';
+                   if (!url.includes('output=csv')) url += (url.includes('?') ? '&' : '?') + 'output=csv';
                 }
               }
             }
@@ -534,9 +531,15 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
     try {
       // Use recommended model
       const modelName = 'gemini-3-flash-preview';
-      let systemInstruction = profile?.aiPrompt || getPrompt(selectedLang);
+      const basePrompt = getPrompt(selectedLang);
       
-      // Final tight safety truncation for the system instruction to prevent 413 on strict proxies
+      // Combine base prompt with user's specific instructions
+      let systemInstruction = basePrompt;
+      if (profile?.aiPrompt) {
+        systemInstruction = `${basePrompt}\n\nSPECIALIZED BUSINESS INSTRUCTIONS (HIGHEST PRIORITY):\n${profile.aiPrompt}`;
+      }
+      
+      // Final tight safety truncation
       if (systemInstruction.length > 8000) {
         systemInstruction = systemInstruction.substring(0, 8000) + "... [Prompt Truncated]";
       }
