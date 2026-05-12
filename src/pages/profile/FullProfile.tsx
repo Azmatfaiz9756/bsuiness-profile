@@ -170,6 +170,10 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
             }
           }
 
+          // SET THESE HERE to batch with setProfile
+          setLoading(false);
+          setIsFetched(true);
+
         } else {
           console.log("Profile not found after all remote searches");
           // Final check in local context profiles
@@ -180,11 +184,16 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           
           if (existsInContext) {
             setProfile(existsInContext);
+            if (existsInContext.template) setTemplate(existsInContext.template);
+            setLoading(false);
+            setIsFetched(true);
           } else {
             // ONLY set profile to null after ALL checks have failed
             // This is the trigger for the 404 UI
             console.warn(`No profile found for ID/Slug: ${id}`);
             setProfile(null);
+            setLoading(false);
+            setIsFetched(true);
           }
         }
       } catch (err) {
@@ -195,18 +204,23 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
             p.id === id.trim() || 
             (p.slug && p.slug.toLowerCase() === id.trim().toLowerCase())
           );
-          if (localProfile) setProfile(localProfile);
+          if (localProfile) {
+            setProfile(localProfile);
+            setLoading(false);
+            setIsFetched(true);
+          } else {
+            setProfile(null);
+            setLoading(false);
+            setIsFetched(true);
+          }
         }
-      } finally {
-        // ALWAYS finish by turning off loading and marking as fetched
-        setLoading(false);
-        setIsFetched(true);
-      }
+      } 
+      // Removed finally to ensure batching inside try/catch blocks Above
     };
     fetchProfile();
   }, [id, profiles]);
 
-  if (loading || (!isFetched && !profile)) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
         <div className="relative">
@@ -219,7 +233,8 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     );
   }
 
-  if (isFetched && !profile) {
+  // Only show "Not Found" if we are CERTAIN we finished fetching and still have no profile
+  if (isFetched && !profile && !loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-6 text-center text-slate-900">
         <div>

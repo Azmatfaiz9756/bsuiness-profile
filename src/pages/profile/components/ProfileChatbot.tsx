@@ -120,26 +120,35 @@ Do NOT make up any products or prices.
     };
 
     const translationInfo = `
-MASTER KNOWLEDGE BASE (FOLLOW THESE RULES FIRST):
-${profile?.aiPrompt || 'No specific instructions provided.'}
+# SYSTEM KNOWLEDGE (MANDATORY INSTRUCTIONS)
+${profile?.aiPrompt || 'Respond as a professional assistant for ' + profile?.name}
 
-TRANSLATION & BUSINESS RULES:
+# BUSINESS DETAILS
+- Name: ${profile?.name}
+- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1000)}
+- WhatsApp: ${profile?.whatsapp || profile?.phone}
+- Email: ${profile?.email}
+- Website: ${window.location.origin}/profile/${profile?.slug || profile?.id}
+
+# OPERATIONAL RULES
 - Language: Respond strictly in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
-- Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1000)}.
-- Lead Capture: If they ask about services or products, ask for Name and Mobile Number.
+- Tone: Professional, helpful, and concise (max 2-3 short sentences).
+- Leads: If the user expresses interest in services or stock items, politely ask for their Name and Mobile Number for follow-up.
 `;
 
     if (langId === 'hi') {
-      return `Aap ${profile?.name} ke Professional Digital Assistant hain. Aapko aam Hindustani language use karni hai (Natural & Human-like).
+      return `Aap ${profile?.name} ke Professional Digital Assistant hain. 
+Aapko aam Hindustani language (Natural & Human-like) use karni hai.
 
 ${stockContext}
 ${translationInfo}
 
-HIDAYAT (IMPORTANT):
-1. LIVE INVENTORY: Agar user product ya stock ke bare mein kuch bhi puche (e.g., "kya stock hai", "kya milega"), toh upar 'LIVE INVENTORY' dekh kar jawab dein.
-2. LEAD GENERATION: Agar user kisi product mein interest show kare, toh foran unka Name aur Mobile Number mangiye.
-3. MASTER KNOWLEDGE: Jo 'MASTER KNOWLEDGE BASE' mein instructions hain, unhe bhi follow karein.
-4. NO FORMAL HINDI: 'janab', 'yogdaan' jaise words use na karein. Simple bhasha use karein.
+# HIDAYAT (IMPORTANT):
+1. LIVE INVENTORY: Agar user kisi product ya stock ke bare mein kuch bhi puche, toh upar 'LIVE INVENTORY' dekh kar jawab dein.
+2. AGAR STOCK MEIN NAHI HAI: Agar item stock list mein nahi hai, toh kahein "Sir/Ma'am, filhal iska live stock record update ho raha hai, lekin main aapki inquiry note kar leta hoon."
+3. PEHCHAN: Hamesha bataiye ke aap ${profile?.name} ke assistant hain.
+4. INQUIRY: Customer ka Name aur Mobile Number lijiye agar wo kisi cheez mein dilchaspi dikhaye.
+5. OWNER INSTRUCTIONS: Jo 'SYSTEM KNOWLEDGE' mein instructions hain, unhe sabse pehle follow karein.
 
 Greeting: "Assalamualekum! Main ${profile?.name} ka digital assistant hoon. Main aapki kaise madad kar sakta hoon?"`;
     }
@@ -603,7 +612,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
     try {
       // Use recommended model
-      const modelName = 'gemini-1.5-flash';
+      const modelName = 'gemini-3-flash-preview';
       const basePrompt = getPrompt(selectedLang);
       
       // Combine base prompt with user's specific instructions

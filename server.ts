@@ -391,33 +391,44 @@ async function startServer() {
 
       // Recommended models according to gemini-api skill
       const modelMapping: Record<string, string> = {
-        'gemini-3-flash-preview': 'gemini-1.5-flash',
-        'gemini-3.1-pro-preview': 'gemini-1.5-pro'
+        'gemini-1.5-flash': 'gemini-3-flash-preview',
+        'gemini-1.5-pro': 'gemini-3.1-pro-preview',
+        'gemini-3-flash-preview': 'gemini-3-flash-preview',
+        'gemini-3.1-pro-preview': 'gemini-3.1-pro-preview'
       };
       
-      let targetModelName = model || "gemini-1.5-flash";
+      let targetModelName = model || "gemini-3-flash-preview";
       if (modelMapping[targetModelName]) {
         targetModelName = modelMapping[targetModelName];
       }
       
       let response;
       try {
-        response = await (genAI.models as any).generateContent({
+        console.log(`[Gemini Proxy][${requestId}] Calling model: ${targetModelName}`);
+        // For @google/genai 1.x, systemInstruction and tools go inside config
+        const generationParams: any = {
           model: targetModelName,
           contents: contents,
           config: {
+            ...generationConfig,
             systemInstruction: systemInstruction,
-            maxOutputTokens: 1024,
-            temperature: 0.2,
-            ...generationConfig
+            maxOutputTokens: 2048,
+            temperature: 0.2
           }
-        });
+        };
+
+        // If tools were provided at top level, move them to config
+        if (req.body.tools) {
+          generationParams.config.tools = req.body.tools;
+        }
+
+        response = await (genAI.models as any).generateContent(generationParams);
       } catch (err: any) {
         console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModelName} failed: ${err.message}`);
-        if (targetModelName !== "gemini-1.5-flash") {
-           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-1.5-flash`);
+        if (targetModelName !== "gemini-3-flash-preview") {
+           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-3-flash-preview`);
            response = await (genAI.models as any).generateContent({
-             model: "gemini-1.5-flash",
+             model: "gemini-3-flash-preview",
              contents: contents,
              config: {
                systemInstruction: systemInstruction,
@@ -432,9 +443,11 @@ async function startServer() {
       }
 
       // Extract text and function calls from response
-      // In @google/genai, these are functions that should be called
-      const responseText = typeof response.text === 'function' ? response.text() : (response.text || "");
-      const functionCalls = typeof response.functionCalls === 'function' ? response.functionCalls() : (response.functionCalls || []);
+      // In @google/genai 1.x, these are PROPERTIES, not methods
+      const responseText = response.text || "";
+      const functionCalls = response.functionCalls || [];
+
+      console.log(`[Gemini Proxy][${requestId}] Success. Text length: ${responseText.length}, Function calls: ${functionCalls.length}`);
 
       res.json({
         text: responseText,
