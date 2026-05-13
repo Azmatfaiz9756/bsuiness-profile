@@ -42,7 +42,8 @@ import {
   VolumeX,
   Building,
   BadgeCheck,
-  ArrowRight
+  ArrowRight,
+  Star
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -949,6 +950,40 @@ export default function ClassicModern({
                 <Send size={16} /> {t.share}
               </button>
             </div>
+
+            {profile.googleReviewLink && (
+              <button
+                onClick={() => window.open(profile.googleReviewLink, '_blank')}
+                style={{
+                  width: "100%",
+                  background: "#fff",
+                  color: "#f59e0b",
+                  border: "2px solid #f59e0b",
+                  height: 54,
+                  borderRadius: 16,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  fontSize: 14,
+                  marginTop: 4,
+                  transition: "all 0.2s",
+                  boxShadow: "0 4px 12px rgba(245,158,11,0.1)"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = "#f59e0b";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = "#fff";
+                  e.currentTarget.style.color = "#f59e0b";
+                }}
+              >
+                <Star size={18} fill="currentColor" /> {t.googleReview}
+              </button>
+            )}
           </div>
           
           <style>{`

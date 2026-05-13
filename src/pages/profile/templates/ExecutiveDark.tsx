@@ -35,7 +35,8 @@ import {
   VolumeX,
   Building,
   BadgeCheck,
-  ArrowRight
+  ArrowRight,
+  Star
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -702,6 +703,32 @@ export default function ExecutiveDark({
                   <Share2 size={16} /> {t.share}
                 </button>
               </div>
+
+              {profile.googleReviewLink && (
+                <button
+                  onClick={() => window.open(profile.googleReviewLink, '_blank')}
+                  style={{
+                    width: "100%",
+                    background: "transparent",
+                    color: "#b45309",
+                    border: "1px solid #b45309",
+                    padding: "12px",
+                    borderRadius: 4,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 14,
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    marginTop: 12
+                  }}
+                >
+                  <Star size={16} fill="currentColor" /> {t.googleReview}
+                </button>
+              )}
             </div>
             </div>
           </div>

@@ -35,7 +35,8 @@ import {
   BadgeCheck,
   Contact2,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  Star
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -556,6 +557,30 @@ export default function MinimalClean({
                   <Share2 size={16} /> {t.share}
                 </button>
               </div>
+
+              {profile.googleReviewLink && (
+                <button
+                  onClick={() => window.open(profile.googleReviewLink, '_blank')}
+                  style={{
+                    width: "100%",
+                    background: "transparent",
+                    color: "#f59e0b",
+                    border: "1px solid #f59e0b",
+                    padding: "14px",
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 15,
+                    marginTop: 4
+                  }}
+                >
+                  <Star size={16} fill="currentColor" /> {t.googleReview}
+                </button>
+              )}
             </div>
             {!profile.plan?.includes("Enterprise") && (
               <Link

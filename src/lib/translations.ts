@@ -104,6 +104,7 @@ export const translations = {
     Saturday: "Saturday",
     Sunday: "Sunday",
     closed: "Closed",
+    googleReview: "Google Review",
   },
   ar: {
     visits: "زيارة",
@@ -209,6 +210,7 @@ export const translations = {
     Saturday: "السبت",
     Sunday: "الأحد",
     closed: "مغلق",
+    googleReview: "تقييم جوجل",
   }
 };
 

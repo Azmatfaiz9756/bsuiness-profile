@@ -1807,6 +1807,10 @@ export default function OwnerDashboard() {
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions)</label>
                         <input type="url" value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://maps.google.com/..." />
                       </div>
+                      <div className="flex flex-col gap-1.5 md:col-span-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Review Link (Get Ratings)</label>
+                        <input type="url" value={formData.googleReviewLink || ''} onChange={e => setFormData({...formData, googleReviewLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://search.google.com/local/writereview?placeid=..." />
+                      </div>
                     </div>
                   </div>
                 )}
