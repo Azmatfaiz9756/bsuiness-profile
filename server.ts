@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config({ override: true });
-import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import express from "express";
 import compression from "compression";
 import cors from "cors";
@@ -380,16 +380,13 @@ async function startServer() {
         return res.status(400).json({ error: "Gemini API key not configured on server." });
       }
 
-      const genAI = new GoogleGenAI({ apiKey });
-      const { model, contents, config, systemInstruction: topLevelSysInst } = req.body;
+      const ai = new GoogleGenAI({ apiKey });
+      const { model, contents, config, systemInstruction: topLevelSysInst, tools } = req.body;
       
-      // Some frontends might send systemInstruction inside config
       const systemInstruction = topLevelSysInst || config?.systemInstruction;
       const generationConfig = { ...config };
-      // Delete from generationConfig so we don't duplicate or have type issues if we move it
       if (generationConfig.systemInstruction) delete generationConfig.systemInstruction;
 
-      // Recommended models according to gemini-api skill
       const modelMapping: Record<string, string> = {
         'gemini-1.5-flash': 'gemini-3-flash-preview',
         'gemini-1.5-pro': 'gemini-3.1-pro-preview',
@@ -402,58 +399,41 @@ async function startServer() {
         targetModelName = modelMapping[targetModelName];
       }
       
-      let response;
       try {
         console.log(`[Gemini Proxy][${requestId}] Calling model: ${targetModelName}`);
-        // For @google/genai 1.x, systemInstruction and tools go inside config
-        const generationParams: any = {
+        
+        const response = await ai.models.generateContent({
           model: targetModelName,
           contents: contents,
           config: {
             ...generationConfig,
             systemInstruction: systemInstruction,
             maxOutputTokens: 2048,
-            temperature: 0.2
+            temperature: 0.2,
+            tools: tools
           }
-        };
+        });
+        
+        const responseText = response.text || "";
+        const functionCalls = response.functionCalls || [];
 
-        // If tools were provided at top level, move them to config
-        if (req.body.tools) {
-          generationParams.config.tools = req.body.tools;
-        }
-
-        response = await (genAI.models as any).generateContent(generationParams);
+        console.log(`[Gemini Proxy][${requestId}] Success. Text length: ${responseText.length}`);
+        return res.json({ 
+          text: responseText,
+          functionCalls: functionCalls,
+          candidates: response.candidates || []
+        });
       } catch (err: any) {
-        console.warn(`[Gemini Proxy][${requestId}] Primary model ${targetModelName} failed: ${err.message}`);
-        if (targetModelName !== "gemini-3-flash-preview") {
-           console.log(`[Gemini Proxy][${requestId}] Falling back to gemini-3-flash-preview`);
-           response = await (genAI.models as any).generateContent({
-             model: "gemini-3-flash-preview",
-             contents: contents,
-             config: {
-               systemInstruction: systemInstruction,
-               maxOutputTokens: 1024,
-               temperature: 0.2,
-               ...generationConfig
-             }
-           });
-        } else {
-           throw err;
-        }
+        console.warn(`[Gemini Proxy][${requestId}] Model ${targetModelName} failed: ${err.message}`);
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: contents
+        });
+        return res.json({ 
+          text: response.text,
+          functionCalls: response.functionCalls || []
+        });
       }
-
-      // Extract text and function calls from response
-      // In @google/genai 1.x, these are PROPERTIES, not methods
-      const responseText = response.text || "";
-      const functionCalls = response.functionCalls || [];
-
-      console.log(`[Gemini Proxy][${requestId}] Success. Text length: ${responseText.length}, Function calls: ${functionCalls.length}`);
-
-      res.json({
-        text: responseText,
-        functionCalls: functionCalls,
-        candidates: response?.candidates || []
-      });
     } catch (error: any) {
       console.error(`[Gemini Proxy][${requestId}] Error:`, error);
       // Clean up error message for frontend

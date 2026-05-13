@@ -3,7 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { db, auth } from '../../firebase';
 import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Upload, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, Calendar, MessageSquare, Image as ImageIcon, Shield, Send, Menu, X, BarChart3, MapPin, Link as LinkIcon, Plus, Mail, Phone, Building, Brain, Sparkles, Megaphone, Gift, Download, Upload, Headset, Briefcase, ArrowLeft, UserPlus, Share2, Coins, MessageCircle, Globe, Clock, ShieldCheck, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
 import * as XLSX from 'xlsx';
@@ -1412,7 +1412,7 @@ export default function OwnerDashboard() {
                          {[
                            { label: 'Profile Photo', done: !!formData.photoURL, icon: ImageIcon },
                            { label: 'WhatsApp link', done: !!(formData.socials?.whatsapp || formData.whatsapp), icon: Share2 },
-                           { label: 'Quick Pay Set', done: !!formData.quickPayAmount, icon: Coins },
+                           { label: 'Google Rating Link', done: !!formData.googleReviewLink, icon: Star },
                            { label: 'Business Bio', done: !!formData.bio, icon: LayoutDashboard }
                          ].map((step, i) => (
                            <div key={i} className={`flex items-center gap-3 p-3 rounded-2xl border transition-all ${step.done ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
@@ -1807,9 +1807,17 @@ export default function OwnerDashboard() {
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Maps Link (Get Directions)</label>
                         <input type="url" value={formData.mapLink || ''} onChange={e => setFormData({...formData, mapLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://maps.google.com/..." />
                       </div>
-                      <div className="flex flex-col gap-1.5 md:col-span-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Google Review Link (Get Ratings)</label>
-                        <input type="url" value={formData.googleReviewLink || ''} onChange={e => setFormData({...formData, googleReviewLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="https://search.google.com/local/writereview?placeid=..." />
+                       <div className="flex flex-col gap-1.5 md:col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-xs font-black text-blue-800 uppercase tracking-wider flex items-center gap-2">
+                             <Star size={16} className="fill-blue-600 text-blue-600" /> Google Review Link (Get Ratings)
+                          </label>
+                          {formData.googleReviewLink && (
+                            <a href={formData.googleReviewLink} target="_blank" rel="noreferrer" className="text-[10px] font-bold text-blue-600 hover:underline">Test Link ↗</a>
+                          )}
+                        </div>
+                        <input type="url" value={formData.googleReviewLink || ''} onChange={e => setFormData({...formData, googleReviewLink: e.target.value})} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white" placeholder="https://search.google.com/local/writereview?placeid=..." />
+                        <p className="text-[10px] text-blue-600/70 font-medium mt-1.5 italic">Add your Google Business review link here. This helps you collect 5-star ratings from your profile visitors.</p>
                       </div>
                     </div>
                   </div>
@@ -3580,7 +3588,7 @@ export default function OwnerDashboard() {
                                    >
                                      <option value="Manual">Manual Entry (JSON/Text)</option>
                                      <option value="FileUpload">Upload Excel/CSV File</option>
-                                     <option value="CRM">CRM API (Zoho/Vyapar)</option>
+                                     <option value="CRM">CRM API (Zoho/Vyapar/Tally)</option>
                                    </select>
                                  </div>
                                  <div className="flex items-center gap-4 pt-6">
@@ -3592,7 +3600,7 @@ export default function OwnerDashboard() {
                                </div>
 
                                {formData.stockSourceType === 'FileUpload' && (
-                                 <div className="flex flex-col gap-1.5">
+                                 <div className="flex flex-col gap-1.5 animation-fade-in">
                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upload Inventory File</label>
                                    <div className="relative group">
                                      <input 
@@ -3611,14 +3619,14 @@ export default function OwnerDashboard() {
                                        </div>
                                        <div>
                                          <p className="text-sm font-black text-slate-900 m-0">Click to upload Excel or CSV</p>
-                                         <p className="text-[10px] text-slate-400 m-0 mt-1">Supports .xlsx, .xls, and .csv files</p>
+                                         <p className="text-[10px] text-slate-400 m-0 mt-1">AI will read your products and stock from the file</p>
                                        </div>
                                      </label>
                                    </div>
                                    {formData.stockManualData && (
                                      <div className="mt-2 p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-2">
                                        <ShieldCheck size={14} className="text-emerald-600" />
-                                       <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">File parsed & loaded successfully</span>
+                                       <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">File parsed: {formData.stockManualData.split('\n').length} items found</span>
                                      </div>
                                    )}
                                  </div>

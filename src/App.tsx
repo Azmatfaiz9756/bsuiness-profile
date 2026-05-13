@@ -51,6 +51,19 @@ import SeedDemo from './pages/SeedDemo';
 
 import ScrollToTop from './components/ScrollToTop';
 
+import { ErrorBoundary } from 'react-error-boundary';
+
+function ErrorFallback({ error, resetErrorBoundary }: any) {
+  return (
+    <div className="p-8 text-center bg-red-50 text-red-900 border border-red-200 rounded min-h-screen">
+      <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
+      <pre className="text-left bg-white p-4 overflow-auto rounded text-sm text-red-600 mb-4 border border-red-100">{error.message}</pre>
+      <pre className="text-left bg-white p-4 overflow-auto rounded text-xs text-red-500">{error.stack}</pre>
+      <button onClick={resetErrorBoundary} className="mt-6 px-4 py-2 bg-red-600 text-white rounded">Try again</button>
+    </div>
+  );
+}
+
 export default function App() {
   const [domainProfileId, setDomainProfileId] = useState<string | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(true);
@@ -63,8 +76,11 @@ export default function App() {
         '127.0.0.1', 
         'vibecard.ae',
         'vibedigitalconnect.com',
-        'ais-dev-pn2tu27zkvta4z3zy6bt5q-406651789755.europe-west1.run.app',
-        'ais-pre-pn2tu27zkvta4z3zy6bt5q-406651789755.europe-west1.run.app'
+        'run.app',
+        'googleusercontent.com',
+        'google.com',
+        'web.app',
+        'firebaseapp.com'
       ];
 
       // If it's a main domain, we use standard routing
@@ -73,12 +89,15 @@ export default function App() {
       if (!isMainDomain) {
         try {
           const q = query(collection(db, 'profiles'), where('customDomain', '==', hostname));
-          const snap = await getDocs(q);
-          if (!snap.empty) {
+          const docsPromise = getDocs(q);
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1500));
+          const snap = await Promise.race([docsPromise, timeoutPromise]) as any;
+          
+          if (snap && !snap.empty) {
             setDomainProfileId(snap.docs[0].id);
           }
         } catch (e) {
-          console.error("Domain check failed", e);
+          console.warn("Domain check skipped or failed", e);
         }
       }
       setIsCheckingDomain(false);
@@ -111,34 +130,39 @@ export default function App() {
     if (window.location.pathname.startsWith('/store')) {
       return (
         <HelmetProvider>
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
           <AppProvider>
             <Toaster position="top-center" />
             <BrowserRouter>
               <ProfileStore forcedId={domainProfileId} />
             </BrowserRouter>
           </AppProvider>
+          </ErrorBoundary>
         </HelmetProvider>
       );
     }
     return (
       <HelmetProvider>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
         <AppProvider>
           <Toaster position="top-center" />
           <BrowserRouter>
             <FullProfile forcedId={domainProfileId} />
           </BrowserRouter>
         </AppProvider>
+        </ErrorBoundary>
       </HelmetProvider>
     );
   }
 
   return (
     <HelmetProvider>
-      <AppProvider>
-        <Toaster position="top-center" />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <AppProvider>
+          <Toaster position="top-center" />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
             {/* Frontend Website Routes */}
             <Route path="/" element={<FrontendLayout />}>
               <Route index element={<FrontendHome />} />
@@ -194,6 +218,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </AppProvider>
+      </ErrorBoundary>
     </HelmetProvider>
   );
 }

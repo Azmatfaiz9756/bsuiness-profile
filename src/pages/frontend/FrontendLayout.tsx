@@ -245,16 +245,16 @@ export const FrontendLayout = () => {
                   {siteSettings?.seoDesc || 'The ultimate platform for premium professional networking. AI-powered digital business cards designed for the modern executive.'}
                 </p>
                 <div className="flex gap-4">
-                  {siteSettings.socialTwitter && (
+                  {siteSettings?.socialTwitter && (
                     <a href={siteSettings.socialTwitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">𝕏</a>
                   )}
-                  {siteSettings.socialLinkedin && (
+                  {siteSettings?.socialLinkedin && (
                     <a href={siteSettings.socialLinkedin} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">in</a>
                   )}
-                  {siteSettings.socialFacebook && (
+                  {siteSettings?.socialFacebook && (
                     <a href={siteSettings.socialFacebook} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">f</a>
                   )}
-                  {!siteSettings.socialTwitter && !siteSettings.socialLinkedin && !siteSettings.socialFacebook && (
+                  {!siteSettings?.socialTwitter && !siteSettings?.socialLinkedin && !siteSettings?.socialFacebook && (
                     <>
                       <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">𝕏</a>
                       <a href="#" className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">in</a>

@@ -120,8 +120,11 @@ Do NOT make up any products or prices.
     };
 
     const translationInfo = `
-# SYSTEM KNOWLEDGE (MANDATORY INSTRUCTIONS)
+# SYSTEM KNOWLEDGE AND FACTS
+Please review the below knowledge base data carefully. If the data is formatted as a CSV (comma separated values) list, or tabular data, parse it rows by rows to understand the Products, Specifications, and their corresponding Prices accurately. You MUST refer strictly to this data.
+---
 ${profile?.aiPrompt || 'Respond as a professional assistant for ' + profile?.name}
+---
 
 # SALES STRATEGY & RULES
 ${profile?.aiSalesInstructions || 'Be helpful and try to capture leads by asking for name and number when user is interested.'}
@@ -136,6 +139,7 @@ ${profile?.aiSalesInstructions || 'Be helpful and try to capture leads by asking
 # OPERATIONAL RULES
 - Language: Respond strictly in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
 - Tone: Professional, helpful, and concise (max 2-3 short sentences).
+- Accuracy: NEVER invent products or prices. Only quote from the System Knowledge and Facts provided above.
 - Leads: If the user expresses interest in services or stock items, politely ask for their Name and Mobile Number for follow-up.
 `;
 
@@ -206,82 +210,6 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         try {
           if ((profile.stockSourceType === 'Manual' || profile.stockSourceType === 'FileUpload') && profile.stockManualData) {
             setStockData(profile.stockManualData);
-          } else if ((profile.stockSourceType === 'GoogleSheet' || profile.stockSourceType === 'CSV_URL') && profile.stockSourceUrl) {
-            let url = profile.stockSourceUrl;
-            
-            if (profile.stockSourceType === 'GoogleSheet' || url.includes('docs.google.com') || url.includes('drive.google.com')) {
-              const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-              if (idMatch) {
-                const sheetId = idMatch[1];
-                // Try several ways to get CSV data from Google Sheets or Drive - order matters for reliability
-                const fallbacks = [
-                  `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&id=${sheetId}&gid=0`,
-                  `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`,
-                  `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv`,
-                  `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`,
-                  `https://drive.google.com/uc?export=download&id=${sheetId}`,
-                  `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&usp=sharing`
-                ];
-
-                for (const fallbackUrl of fallbacks) {
-                  try {
-                    // Try direct fetch first
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 5000);
-                    let resp = await fetch(fallbackUrl, { signal: controller.signal });
-                    clearTimeout(timeoutId);
-
-                    // If direct fetch fails or is blocked (CORS), try the proxy
-                    if (!resp.ok) {
-                      console.log(`Direct fetch failed for ${fallbackUrl}, trying proxy...`);
-                      resp = await fetch(`/api/proxy/stock?url=${encodeURIComponent(fallbackUrl)}`);
-                    }
-
-                    if (resp.ok) {
-                      const text = await resp.text();
-                      // Basic check to ensure we didn't get an HTML login/error page
-                      if (text && text.length > 20 && !text.includes('<!DOCTYPE html>') && (text.includes(',') || text.includes(';') || text.includes('\t'))) {
-                        setStockData(text);
-                        console.log("Stock sync success using URL:", fallbackUrl);
-                        return;
-                      }
-                    }
-                  } catch (e) {
-                    console.warn(`Sync fallback failed for ${fallbackUrl}:`, e);
-                    // Last ditch effort: try proxy for this URL if fetch threw (e.g. CORS)
-                    try {
-                      const resp = await fetch(`/api/proxy/stock?url=${encodeURIComponent(fallbackUrl)}`);
-                      if (resp.ok) {
-                        const text = await resp.text();
-                        if (text && text.length > 20 && !text.includes('<!DOCTYPE html>') && (text.includes(',') || text.includes(';') || text.includes('\t'))) {
-                          setStockData(text);
-                          console.log("Stock sync success using Proxy for URL:", fallbackUrl);
-                          return;
-                        }
-                      }
-                    } catch(proxyErr) {}
-                  }
-                }
-              }
-            }
-            
-            // Standard fetch for non-Google links or final fallback
-            try {
-              const abortController = new AbortController();
-              const timeoutId = setTimeout(() => abortController.abort(), 8000);
-              const resp = await fetch(url, { signal: abortController.signal });
-              clearTimeout(timeoutId);
-              
-              if (resp.ok) {
-                 const text = await resp.text();
-                 if (text && (text.includes(',') || text.includes(';') || text.length > 30)) {
-                   setStockData(text);
-                   console.log("Stock sync success (default fetch)");
-                 }
-              }
-            } catch (e) {
-               console.error("Default stock fetch failed:", e);
-            }
           } else if (profile.stockSourceType === 'CRM') {
             const apiUrl = '';
             const resp = await fetch(`${apiUrl}/api/crm/stock/${profile.id}`);
@@ -296,7 +224,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
       };
       fetchStock();
     }
-  }, [profile?.stockSyncEnabled, profile?.stockSourceType, profile?.stockSourceUrl, profile?.stockManualData, profile?.crmProvider, profile?.id]);
+  }, [profile?.stockSyncEnabled, profile?.stockSourceType, profile?.stockManualData, profile?.crmProvider, profile?.id]);
 
   // Persist language, history and session ID
   useEffect(() => {
@@ -618,16 +546,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
       const modelName = 'gemini-3-flash-preview';
       const basePrompt = getPrompt(selectedLang);
       
-      // Combine base prompt with user's specific instructions
-      let systemInstruction = basePrompt;
-      if (profile?.aiPrompt) {
-        systemInstruction = `${basePrompt}\n\nSPECIALIZED BUSINESS INSTRUCTIONS (HIGHEST PRIORITY):\n${profile.aiPrompt}`;
-      }
-      
-      // Final tight safety truncation
-      if (systemInstruction.length > 8000) {
-        systemInstruction = systemInstruction.substring(0, 8000) + "... [Prompt Truncated]";
-      }
+      const systemInstruction = basePrompt;
 
       // Limit history to keep request body small (very important for custom domain proxies)
       const historyLimit = 8;

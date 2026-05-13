@@ -31,7 +31,13 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [agentLang, setAgentLang] = useState(localStorage.getItem('agent_chat_lang') || 'en');
+  const [agentLang, setAgentLang] = useState(() => {
+    try {
+      return localStorage.getItem('agent_chat_lang') || 'en';
+    } catch {
+      return 'en';
+    }
+  });
   const [isTranslating, setIsTranslating] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(auth.currentUser);
   const messagesEndRef = useRef<HTMLDivElement>(null);

@@ -820,6 +820,8 @@ export default function FrontendHome() {
   }, [activeCategory, activeCity]);
 
   const filteredProfiles = profiles.filter((p) => {
+    if (!p || !p.name) return false;
+    
     const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.company && p.company.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -1054,7 +1056,7 @@ export default function FrontendHome() {
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-700 rounded-full text-white flex items-center justify-center text-3xl font-extrabold">
                                 {p.avatar ||
-                                  p.name.substring(0, 2).toUpperCase()}
+                                  (p.name ? p.name.substring(0, 2).toUpperCase() : "??")}
                               </div>
                             )}
                           </div>

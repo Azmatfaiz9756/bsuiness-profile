@@ -47,6 +47,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const [profiles, setProfiles] = useState<any[]>([]);
+  const [profilesLoading, setProfilesLoading] = useState(true);
   const [profilesCount, setProfilesCount] = useState(0);
   const [profile, setProfile] = useState<any>(null);
   const [usersCount, setUsersCount] = useState(0);
@@ -86,7 +87,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           ...doc.data()
         }));
         setProfiles(items);
-      }, (err) => handleFirestoreError(err, OperationType.LIST, 'profiles (active)'));
+        setProfilesLoading(false);
+      }, (err) => {
+        handleFirestoreError(err, OperationType.LIST, 'profiles (active)');
+        setProfilesLoading(false);
+      });
       return unsub;
     });
   }, []);
@@ -253,7 +258,13 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [stats, setStats] = useState({ totalViews: 98450, shopRevenue: 42800 });
 
-  const [selectedCountry, setSelectedCountry] = useState(localStorage.getItem('dbc_country') || 'UAE');
+  const [selectedCountry, setSelectedCountry] = useState(() => {
+    try {
+      return localStorage.getItem('dbc_country') || 'UAE';
+    } catch {
+      return 'UAE';
+    }
+  });
 
   useEffect(() => {
     const map: Record<string, string> = {
@@ -339,22 +350,27 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           }
         });
 
-        const hasGottenBonus = localStorage.getItem(`dbc_bonus_${u.uid}`);
+        let hasGottenBonus = true; // Default true to skip if fails
+        try {
+          hasGottenBonus = !!localStorage.getItem(`dbc_bonus_${u.uid}`);
+        } catch {}
+        
         if (!hasGottenBonus) {
            // Find user's profile to check plan
            const userProfile = profiles.find((p: any) => p.ownerId === u.uid || p.userId === u.uid || p.email === u.email);
            
            if (userProfile?.plan === 'Enterprise' || userProfile?.plan === 'Enterprise Sub') {
              // Enterprise users don't get welcome bonus
-             localStorage.setItem(`dbc_bonus_${u.uid}`, 'true'); // Mark as "processed"
+             try { localStorage.setItem(`dbc_bonus_${u.uid}`, 'true'); } catch {}
              return;
            }
 
-           const region = localStorage.getItem('dbc_country') || 'UAE';
+           let region = 'UAE';
+           try { region = localStorage.getItem('dbc_country') || 'UAE'; } catch {}
            const config = siteSettings?.countryReferrals?.[region] || siteSettings?.countryReferrals?.['Global'];
            if (config && config.welcomeBonus) {
              setWalletBalance(prev => prev + Number(config.welcomeBonus));
-             localStorage.setItem(`dbc_bonus_${u.uid}`, 'true');
+             try { localStorage.setItem(`dbc_bonus_${u.uid}`, 'true'); } catch {}
              // No blocking alert for faster experience
            }
         }
@@ -367,7 +383,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     <AppContext.Provider value={{
       user, authLoading, 
       isLoginModalOpen, setIsLoginModalOpen,
-      profiles, setProfiles, profile, setProfile, orders, setOrders, products, setProducts, 
+      profiles, profilesLoading, setProfiles, profile, setProfile, orders, setOrders, products, setProducts, 
       walletBalance, setWalletBalance, stats, setStats,
       cart, setCart, wishlist, setWishlist, userOrders, setUserOrders,
       addresses, setAddresses, siteSettings, setSiteSettings,

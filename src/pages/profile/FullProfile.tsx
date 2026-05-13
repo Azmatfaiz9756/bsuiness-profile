@@ -23,7 +23,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const location = useLocation();
   const isPreview = new URLSearchParams(location.search).get('preview') === 'true';
 
-  const { profiles } = useAppContext();
+  const { profiles, profilesLoading } = useAppContext();
 
   // Optimized profile lookup with aggressive local caching
   const getInitialProfile = () => {
@@ -36,13 +36,17 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
     // 2. Try persistent local cache for instant second-load
     if (id) {
-      const cached = localStorage.getItem(`vibe_cache_${id.trim().toLowerCase()}`);
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch (e) {
-          return null;
+      try {
+        const cached = localStorage.getItem(`vibe_cache_${id.trim().toLowerCase()}`);
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            return null;
+          }
         }
+      } catch (e) {
+        return null;
       }
     }
     return null;
@@ -99,12 +103,12 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       const cleanId = id.trim();
       const normalizedId = cleanId.toLowerCase();
       
-      const setStates = (p: any, l: boolean, f: boolean) => {
+    const setStates = (p: any, l: boolean, f: boolean) => {
         if (ignore) return;
         setProfile(p);
+        if (p?.template) setTemplate(p.template);
         setLoading(l);
         setIsFetched(f);
-        if (p?.template) setTemplate(p.template);
       };
 
       // Only set loading to true if we don't have a profile yet
@@ -167,6 +171,12 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
           setStates(foundProfile, false, true);
         } else {
+          // If we are still loading global profiles, wait for that before declaring "not found"
+          if (profilesLoading) {
+            setLoading(true);
+            return;
+          }
+          
           // Context fallback
           const existsInContext = profiles.find((p: any) => 
             p.id === cleanId || (p.slug && p.slug.toLowerCase() === normalizedId)
