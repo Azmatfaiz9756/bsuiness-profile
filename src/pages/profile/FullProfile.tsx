@@ -91,19 +91,24 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   } : null;
 
   useEffect(() => {
+    let ignore = false;
+
     const fetchProfile = async () => {
-      if (!id) return;
+      if (!id || ignore) return;
       
       const cleanId = id.trim();
       const normalizedId = cleanId.toLowerCase();
       
       const setStates = (p: any, l: boolean, f: boolean) => {
+        if (ignore) return;
         setProfile(p);
         setLoading(l);
         setIsFetched(f);
         if (p?.template) setTemplate(p.template);
       };
 
+      // Only set loading to true if we don't have a profile yet
+      // This prevents flickering when switching between valid profiles or updating
       if (!profile) {
         setLoading(true);
       }
@@ -112,6 +117,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       try {
         let foundProfile = null;
         
+        // 1. Try direct ID first
         const docRef = doc(db, 'profiles', cleanId);
         const docSnap = await getDoc(docRef);
 
@@ -119,7 +125,8 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           foundProfile = { ...docSnap.data(), id: docSnap.id };
         } 
         
-        if (!foundProfile) {
+        // 2. Try slug search
+        if (!foundProfile && !ignore) {
           const qSlugLowerCase = query(collection(db, 'profiles'), where('slug', '==', normalizedId), limit(1));
           const slugLowerSnap = await getDocs(qSlugLowerCase);
           if (!slugLowerSnap.empty) {
@@ -127,13 +134,16 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           }
         }
 
-        if (!foundProfile) {
+        // 3. Last fallback
+        if (!foundProfile && !ignore) {
           const qFallback = query(collection(db, 'profiles'), where('id', '==', cleanId), limit(1));
           const fallbackSnap = await getDocs(qFallback);
           if (!fallbackSnap.empty) {
             foundProfile = { ...fallbackSnap.docs[0].data(), id: fallbackSnap.docs[0].id };
           }
         }
+
+        if (ignore) return;
 
         if (foundProfile) {
           localStorage.setItem(`vibe_cache_${normalizedId}`, JSON.stringify(foundProfile));
@@ -164,6 +174,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           setStates(existsInContext || null, false, true);
         }
       } catch (err) {
+        if (ignore) return;
         console.error("Fetch error:", err);
         const localProfile = profiles.find((p: any) => 
           p.id === cleanId || (p.slug && p.slug.toLowerCase() === normalizedId)
@@ -171,7 +182,12 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         setStates(localProfile || null, false, true);
       } 
     };
+
     fetchProfile();
+
+    return () => {
+      ignore = true;
+    };
   }, [id, profiles]);
 
   if (loading) {
