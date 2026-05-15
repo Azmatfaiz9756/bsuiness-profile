@@ -131,6 +131,25 @@ export default function ExecutiveDark({
     );
   };
 
+  const getTheme = () => {
+    switch(profile.profession) {
+      case 'Welder': return { icon: '🔥', primary: '#ea580c' };
+      case 'Doctor': return { icon: '⚕️', primary: '#0ea5e9' };
+      case 'Carpenter': return { icon: '🪚', primary: '#d97706' };
+      case 'AC Technician': return { icon: '❄️', primary: '#0284c7' };
+      case 'Electrician': return { icon: '⚡', primary: '#eab308' };
+      case 'Plumber': return { icon: '💧', primary: '#06b6d4' };
+      case 'Mechanic': return { icon: '🔧', primary: '#475569' };
+      case 'Engineer': return { icon: '📐', primary: '#2563eb' };
+      case 'Lawyer': return { icon: '⚖️', primary: '#1e293b' };
+      case 'Chef': return { icon: '👨‍🍳', primary: '#ef4444' };
+      case 'Real Estate Agent': return { icon: '🏢', primary: '#0d9488' };
+      default: return { icon: '', primary: '#2563eb' };
+    }
+  };
+
+  const themeVars = getTheme();
+
   const handleSave = () => {
     let vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}${profile.name2 ? ' & ' + profile.name2 : ''}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL;TYPE=CELL:${profile.phone}\n`;
     if (profile.phone2) vcard += `TEL;TYPE=CELL:${profile.phone2}\n`;
@@ -709,24 +728,33 @@ export default function ExecutiveDark({
                   onClick={() => window.open(profile.googleReviewLink, '_blank')}
                   style={{
                     width: "100%",
-                    background: "transparent",
-                    color: "#b45309",
-                    border: "1px solid #b45309",
-                    padding: "12px",
-                    borderRadius: 4,
-                    fontWeight: 700,
+                    background: "#2563eb",
+                    color: "#fff",
+                    border: "none",
+                    height: 54,
+                    borderRadius: 12,
+                    fontWeight: 900,
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 8,
+                    gap: 10,
                     fontSize: 14,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    marginTop: 12
+                    marginTop: 12,
+                    transition: "all 0.2s",
+                    boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.4)"
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.opacity = "0.9";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.opacity = "1";
                   }}
                 >
-                  <Star size={16} fill="currentColor" /> {t.googleReview}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                    <path d="M12.48 10.92v3.28h7.84c-.24 1.84-1.92 5.08-7.84 5.08-5.12 0-9.28-4.24-9.28-9.28s4.16-9.28 9.28-9.28c2.92 0 4.88 1.24 6 2.32l2.6-2.6C19.12 1.48 16.08 0 12.48 0 5.56 0 0 5.56 0 12.48s5.56 12.48 12.48 12.48c7.24 0 12.04-5.08 12.04-12.28 0-.84-.08-1.48-.2-2.12h-11.84z"/>
+                  </svg>
+                  Review us on Google
                 </button>
               )}
             </div>

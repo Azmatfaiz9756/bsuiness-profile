@@ -1317,11 +1317,11 @@ export default function OwnerDashboard() {
               </div>
               <div className="flex flex-wrap gap-2 w-full md:w-auto shrink-0">
                 <Link 
-                  to={formData.slug ? `/${formData.slug}` : `/profile/${formData.id || user.uid}`}
+                  to={formData.slug ? `/${formData.slug}?preview=true&template=${formData.template || 'classic'}` : `/profile/${formData.id || user.uid}?preview=true&template=${formData.template || 'classic'}`}
                   target="_blank"
                   className="flex items-center gap-2 px-6 py-2.5 bg-white text-blue-600 font-black rounded-xl border-2 border-blue-600 hover:bg-blue-50 transition-all text-xs uppercase tracking-widest shadow-lg shadow-blue-500/10"
                 >
-                  <Globe size={14} /> View Live Profile
+                  <Globe size={14} /> View Live Preview
                 </Link>
                 <button onClick={() => {
                   setFormData({
@@ -1370,7 +1370,7 @@ export default function OwnerDashboard() {
                   });
                   alert('Demo content loaded! Click "Save Changes" to publish.');
                 }} className="flex-1 md:flex-none px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-200 transition-colors shrink-0 text-center">Load Demo Content</button>
-                <Link to={`/profile/${profile?.slug || profile?.id}`} className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-50 transition-colors shrink-0 text-center">Preview Live</Link>
+                <Link to={formData.slug ? `/${formData.slug}?preview=true&template=${formData.template || 'classic'}` : `/profile/${formData.id || user.uid}?preview=true&template=${formData.template || 'classic'}`} target="_blank" className="flex-1 md:flex-none px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm font-semibold hover:bg-slate-50 transition-colors shrink-0 text-center">Preview Live</Link>
                 <button 
                   onClick={canEditProfile ? handleSave : () => alert('You do not have permission to edit this profile.')} 
                   disabled={!canEditProfile}

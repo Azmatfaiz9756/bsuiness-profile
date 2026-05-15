@@ -22,6 +22,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const isPreview = new URLSearchParams(location.search).get('preview') === 'true';
+  const templateParam = new URLSearchParams(location.search).get('template');
 
   const { profiles, profilesLoading } = useAppContext();
 
@@ -54,7 +55,14 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
 
   const initialProfile = getInitialProfile();
   const [profile, setProfile] = useState<any>(initialProfile);
-  const [template, setTemplate] = useState(initialProfile?.template || 'classic');
+  const [template, setTemplate] = useState(templateParam || initialProfile?.template || 'classic');
+
+  // Sync template if param changes during preview
+  useEffect(() => {
+    if (isPreview && templateParam) {
+      setTemplate(templateParam);
+    }
+  }, [isPreview, templateParam]);
   const [loading, setLoading] = useState(!initialProfile);
   const [isFetched, setIsFetched] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -106,7 +114,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
     const setStates = (p: any, l: boolean, f: boolean) => {
         if (ignore) return;
         setProfile(p);
-        if (p?.template) setTemplate(p.template);
+        if (p?.template && !templateParam) setTemplate(p.template);
         setLoading(l);
         setIsFetched(f);
       };

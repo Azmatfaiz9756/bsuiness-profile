@@ -144,7 +144,7 @@ export default function MinimalClean({
       case 'Lawyer': return { icon: '⚖️', primary: '#1e293b' };
       case 'Chef': return { icon: '👨‍🍳', primary: '#ef4444' };
       case 'Real Estate Agent': return { icon: '🏢', primary: '#0d9488' };
-      default: return { icon: '', primary: '#111827' };
+      default: return { icon: '', primary: '#2563eb' };
     }
   };
 
@@ -563,22 +563,33 @@ export default function MinimalClean({
                   onClick={() => window.open(profile.googleReviewLink, '_blank')}
                   style={{
                     width: "100%",
-                    background: "transparent",
-                    color: "#f59e0b",
-                    border: "1px solid #f59e0b",
-                    padding: "14px",
+                    background: "#2563eb",
+                    color: "#fff",
+                    border: "none",
+                    height: 54,
                     borderRadius: 999,
-                    fontWeight: 600,
+                    fontWeight: 900,
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 8,
+                    gap: 10,
                     fontSize: 15,
-                    marginTop: 4
+                    marginTop: 4,
+                    transition: "all 0.2s",
+                    boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)"
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.opacity = "0.9";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.opacity = "1";
                   }}
                 >
-                  <Star size={16} fill="currentColor" /> {t.googleReview}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-1.92 5.08-7.84 5.08-5.12 0-9.28-4.24-9.28-9.28s4.16-9.28 9.28-9.28c2.92 0 4.88 1.24 6 2.32l2.6-2.6C19.12 1.48 16.08 0 12.48 0 5.56 0 0 5.56 0 12.48s5.56 12.48 12.48 12.48c7.24 0 12.04-5.08 12.04-12.28 0-.84-.08-1.48-.2-2.12h-11.84z"/>
+                </svg>
+                  Review us on Google
                 </button>
               )}
             </div>

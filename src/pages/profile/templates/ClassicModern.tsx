@@ -101,10 +101,6 @@ export default function ClassicModern({
   const [followLoading, setFollowLoading] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
   const [applyingJob, setApplyingJob] = useState<any>(null);
-  const [showConnectModal, setShowConnectModal] = useState(false);
-  const [connectInfo, setConnectInfo] = useState({ name: '', phone: '', whatsapp: '', company: '' });
-  const [connectLoading, setConnectLoading] = useState(false);
-
   const toggleAudio = () => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
       const command = isMuted ? 'unMute' : 'mute';
@@ -200,10 +196,6 @@ export default function ClassicModern({
     );
   };
 
-  const handleSave = async () => {
-    setShowConnectModal(true);
-  };
-
   const processVcfDownload = () => {
     let vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:${profile.name}${profile.name2 ? ' & ' + profile.name2 : ''}\nTITLE:${profile.title}\nORG:${profile.company}\nTEL;TYPE=CELL:${profile.phone}\n`;
     if (profile.phone2) vcard += `TEL;TYPE=CELL:${profile.phone2}\n`;
@@ -215,37 +207,6 @@ export default function ClassicModern({
     a.download = `${String(profile.name || 'profile').replace(/\s+/g, "_")}.vcf`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handleConnectSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!connectInfo.name || !connectInfo.phone) return alert("Please provide your name and calling number.");
-    
-    setConnectLoading(true);
-    try {
-      // Ensure we have a valid profile ID
-      const targetProfileId = profile.id;
-      if (!targetProfileId) throw new Error("Profile ID missing");
-
-      await addDoc(collection(db, 'leads'), {
-        profileId: targetProfileId,
-        ownerId: profile.ownerId || profile.userId, // Save ownerId to help with filtering
-        ...connectInfo,
-        email: '',
-        message: 'Exchanged contact via profile "Connect" button.',
-        source: 'Contact Form',
-        createdAt: serverTimestamp()
-      });
-      
-      processVcfDownload();
-      setShowConnectModal(false);
-      alert("Success! Contact saved and your info shared with the profile owner.");
-    } catch (e: any) {
-      console.error("Lead saving error:", e);
-      alert("Error saving contact: " + (e.message || "Unknown error"));
-    } finally {
-      setConnectLoading(false);
-    }
   };
 
   const handleWhatsAppShare = () => {
@@ -885,28 +846,6 @@ export default function ClassicModern({
             
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button
-                onClick={() => handleSave()}
-                style={{
-                  flex: 1,
-                  background: "#000",
-                  color: "#fff",
-                  border: "none",
-                  height: 52,
-                  borderRadius: 14,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  fontSize: 13,
-                  boxShadow: "0 10px 20px -5px rgba(0,0,0,0.3)",
-                  minWidth: '140px'
-                }}
-              >
-                <UserPlus size={18} /> {t.exchange}
-              </button>
-              <button
                 onClick={() => processVcfDownload()}
                 style={{
                   flex: 1,
@@ -956,9 +895,9 @@ export default function ClassicModern({
                 onClick={() => window.open(profile.googleReviewLink, '_blank')}
                 style={{
                   width: "100%",
-                  background: "#fff",
-                  color: "#f59e0b",
-                  border: "2px solid #f59e0b",
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
                   height: 54,
                   borderRadius: 16,
                   fontWeight: 900,
@@ -970,18 +909,21 @@ export default function ClassicModern({
                   fontSize: 14,
                   marginTop: 4,
                   transition: "all 0.2s",
-                  boxShadow: "0 4px 12px rgba(245,158,11,0.1)"
+                  boxShadow: "0 10px 15px -3px rgba(37, 99, 235, 0.2)"
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.background = "#f59e0b";
-                  e.currentTarget.style.color = "#fff";
+                  e.currentTarget.style.opacity = "0.9";
+                  e.currentTarget.style.transform = "translateY(-1px)";
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = "#fff";
-                  e.currentTarget.style.color = "#f59e0b";
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                <Star size={18} fill="currentColor" /> {t.googleReview}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-1.92 5.08-7.84 5.08-5.12 0-9.28-4.24-9.28-9.28s4.16-9.28 9.28-9.28c2.92 0 4.88 1.24 6 2.32l2.6-2.6C19.12 1.48 16.08 0 12.48 0 5.56 0 0 5.56 0 12.48s5.56 12.48 12.48 12.48c7.24 0 12.04-5.08 12.04-12.28 0-.84-.08-1.48-.2-2.12h-11.84z"/>
+                </svg>
+                {t.googleReview}
               </button>
             )}
           </div>
@@ -3081,129 +3023,6 @@ export default function ClassicModern({
         <ProfileChatbot profile={profile} />
         <AddToHomeScreen profileName={profile.name} />
 
-        {/* Connect Modal */}
-        <AnimatePresence>
-          {showConnectModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{
-                position: "fixed",
-                inset: 0,
-                background: "rgba(15,23,42,0.8)",
-                backdropFilter: "blur(8px)",
-                zIndex: 2000,
-                display: "flex",
-                alignItems: "flex-end",
-                padding: 0
-              }}
-              onClick={() => setShowConnectModal(false)}
-            >
-              <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  width: "100%",
-                  background: "#fff",
-                  borderTopLeftRadius: 30,
-                  borderTopRightRadius: 30,
-                  padding: "32px 24px",
-                  maxHeight: "90vh",
-                  overflowY: "auto",
-                  boxShadow: '0 -20px 50px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 24px' }}></div>
-                <h3 style={{ fontSize: 24, fontWeight: 900, color: "#0f172a", marginBottom: 8, padding: 0 }}>Exchange Contact</h3>
-                <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, lineHeight: 1.6, padding: 0 }}>Fill in your details to save <strong>{profile.name}</strong> to your contacts and help them reach back to you.</p>
-                
-                <form onSubmit={handleConnectSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>Full Name</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={connectInfo.name}
-                      onChange={e => setConnectInfo({...connectInfo, name: e.target.value})}
-                      placeholder="Your Name" 
-                      style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
-                    />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>Calling No.</label>
-                      <input 
-                        type="tel" 
-                        required
-                        value={connectInfo.phone}
-                        onChange={e => setConnectInfo({...connectInfo, phone: e.target.value})}
-                        placeholder="+971..." 
-                        style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
-                      />
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>WhatsApp</label>
-                      <input 
-                        type="tel" 
-                        value={connectInfo.whatsapp}
-                        onChange={e => setConnectInfo({...connectInfo, whatsapp: e.target.value})}
-                        placeholder="+971..." 
-                        style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
-                      />
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <label style={{ fontSize: 10, fontWeight: 900, color: "#1e293b", textTransform: 'uppercase', letterSpacing: 2 }}>Company Name</label>
-                    <input 
-                      type="text" 
-                      value={connectInfo.company}
-                      onChange={e => setConnectInfo({...connectInfo, company: e.target.value})}
-                      placeholder="Organization Name" 
-                      style={{ width: '100%', padding: '16px', borderRadius: 16, border: '1px solid #e2e8f0', background: '#f8fafc', fontSize: 16, outline: 'none', borderBottom: '2px solid #e2e8f0' }} 
-                    />
-                  </div>
-                  
-                  <button 
-                    type="submit"
-                    disabled={connectLoading}
-                    style={{ 
-                      marginTop: 12,
-                      width: '100%', 
-                      padding: '20px', 
-                      background: 'linear-gradient(to right, #2563eb, #1d4ed8)', 
-                      color: '#fff', 
-                      borderRadius: 20, 
-                      border: 'none', 
-                      fontSize: 14, 
-                      fontWeight: 900, 
-                      textTransform: 'uppercase', 
-                      letterSpacing: 2,
-                      boxShadow: '0 10px 25px -5px rgba(37,99,235,0.4)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 10
-                    }}
-                  >
-                    {connectLoading ? 'Processing...' : 'Exchange Contact'} <Contact2 size={20} />
-                  </button>
-                  
-                  <button 
-                    type="button"
-                    onClick={() => setShowConnectModal(false)}
-                    style={{ width: '100%', padding: '16px', background: 'transparent', color: '#64748b', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, border: 'none' }}
-                  >
-                    Maybe Later
-                  </button>
-                </form>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   </div>
