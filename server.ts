@@ -381,11 +381,13 @@ async function startServer() {
       }
 
       const ai = new GoogleGenAI({ apiKey });
-      const { model, contents, config, systemInstruction: topLevelSysInst, tools } = req.body;
-      
+      const { model, contents, config, systemInstruction: topLevelSysInst } = req.body;
+      let tools = req.body.tools || config?.tools;
+
       const systemInstruction = topLevelSysInst || config?.systemInstruction;
       const generationConfig = { ...config };
       if (generationConfig.systemInstruction) delete generationConfig.systemInstruction;
+      if (generationConfig.tools) delete generationConfig.tools;
 
       const modelMapping: Record<string, string> = {
         'gemini-1.5-flash': 'gemini-3-flash-preview',
@@ -410,7 +412,7 @@ async function startServer() {
             systemInstruction: systemInstruction,
             maxOutputTokens: 2048,
             temperature: 0.2,
-            tools: tools
+            ...(tools ? { tools } : {})
           }
         });
         
@@ -433,7 +435,7 @@ async function startServer() {
             systemInstruction: systemInstruction,
             maxOutputTokens: 2048,
             temperature: 0.2,
-            tools: tools
+            ...(tools ? { tools } : {})
           }
         });
         return res.json({ 
