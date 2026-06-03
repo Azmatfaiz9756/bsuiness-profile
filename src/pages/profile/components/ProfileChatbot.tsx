@@ -436,11 +436,21 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
       
       setLiveChatSessionId(sessDoc.id);
       
-      // Add initial message
+      // Add initial messages
+      let delay = 0;
+      for (const m of messages.slice(-5)) { // Just last 5 messages for context
+        await addDoc(collection(db, `chat_sessions/${sessDoc.id}/messages`), {
+          senderType: m.role === 'user' ? 'Customer' : 'Agent',
+          text: m.content || '(Attachment)',
+          timestamp: new Date(Date.now() + delay) // slightly offset so they sort correctly
+        });
+        delay += 10;
+      }
+      // Add the handover message
       await addDoc(collection(db, `chat_sessions/${sessDoc.id}/messages`), {
         senderType: 'Customer',
         text: 'I want to talk to a human agent.',
-        timestamp: serverTimestamp()
+        timestamp: new Date(Date.now() + delay)
       });
 
       setMessages(prev => [...prev, { role: 'model', content: selectedLang === 'hi' ? "Zaroor! Main ek live agent ko connect kar raha hoon. Please line pe bane rahein..." : "Sure! Connecting you to a live agent. Please stay online..." }]);
@@ -620,9 +630,10 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
       let functionCalls: any[] = response.functionCalls || [];
 
       // Fallback: If Gemini model outputs raw JSON with 'tool_calls' in OpenAI format inside text
-      if (functionCalls.length === 0 && response.text && response.text.includes('tool_calls')) {
+      let cleanedText = response.text || '';
+      if (functionCalls.length === 0 && cleanedText && (cleanedText.includes('tool_calls') || cleanedText.includes('talk_to_human'))) {
         try {
-          const match = response.text.match(/\{[\s\S]*"tool_calls"[\s\S]*\}/);
+          const match = cleanedText.match(/\{[\s\S]*"tool_calls"[\s\S]*\}/);
           if (match) {
             const parsed = JSON.parse(match[0]);
             if (parsed.tool_calls && Array.isArray(parsed.tool_calls)) {
@@ -635,14 +646,22 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
                   args = params;
                 }
                 return {
-                  name: tc.function?.name,
+                  name: tc.function?.name || tc.name,
                   args: args
                 };
               });
             }
+            // Remove the raw JSON from the text so it doesn't show in the chat UI
+            cleanedText = cleanedText.replace(match[0], '').trim();
           }
         } catch (e) {
           console.error("Tried to parse tool_calls from text, failed:", e);
+        }
+
+        // Hard ultimate fallback: If it STILL couldn't parse but mentioned talk_to_human
+        if (functionCalls.length === 0 && cleanedText.includes('talk_to_human')) {
+          functionCalls = [{ name: 'talk_to_human', args: { name: 'Visitor' } }];
+          cleanedText = cleanedText.replace(/\{[\s\S]*\}/g, '').trim(); 
         }
       }
 
@@ -684,8 +703,6 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         }
 
         if (results.some(r => r.name === 'talk_to_human')) {
-          const msg = selectedLang === 'ar' ? 'تم تحويل المحادثة إلى خدمة العملاء. يرجى الانتظار...' : selectedLang === 'hi' ? 'Aapko live agent ke paas bhej rahe hain. Kripya pratiksha karein...' : 'Transferring you to a live human agent. Please wait a moment...';
-          setMessages(prev => [...prev, { role: 'model', content: msg }]);
           setLoading(false);
           return;
         }
@@ -707,7 +724,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
           setMessages(prev => [...prev, { role: 'model', content: finalText }]);
         }
       } else {
-        const text = response.text;
+        const text = cleanedText || response.text;
         if (text) {
           setMessages(prev => [...prev, { role: 'model', content: text }]);
         }

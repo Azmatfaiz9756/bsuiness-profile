@@ -71,6 +71,8 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let sessData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       
+      console.log(`LiveAgentPanel fetched ${sessData.length} sessions for ownerId: ${user.uid}`);
+      
       // Sort by updatedAt descending
       sessData.sort((a: any, b: any) => {
         const timeA = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
