@@ -269,7 +269,7 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
         parts: [{ text: msg.content }]
       }));
 
-      const modelName = 'gemini-3-flash-preview';
+      const modelName = 'gemini-2.5-flash';
       const basePrompt = getPrompt(selectedLang);
       
       // Combine base prompt with user's specific instructions
@@ -1608,7 +1608,7 @@ export default function OwnerDashboard() {
                             try {
                               const aiInstance = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
                               const res = await aiInstance.models.generateContent({
-                                model: 'gemini-3-flash-preview',
+                                model: 'gemini-2.5-flash',
                                 contents: [{ role: 'user', parts: [{ text: `Generate a concise, professional 2-3 sentence bio for: Name: ${formData.name || ''}, Title: ${formData.title || ''}, Company: ${formData.company || ''}. Make it sound modern and impressive. Do not use quotes.` }] }]
                               });
                               const text = res.text;

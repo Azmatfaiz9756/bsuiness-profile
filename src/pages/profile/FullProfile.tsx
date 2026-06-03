@@ -158,9 +158,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
         if (ignore) return;
 
         if (foundProfile) {
-          localStorage.setItem(`vibe_cache_${normalizedId}`, JSON.stringify(foundProfile));
-          if (foundProfile.id) {
-            localStorage.setItem(`vibe_cache_${foundProfile.id.toLowerCase()}`, JSON.stringify(foundProfile));
+          try {
+            localStorage.setItem(`vibe_cache_${normalizedId}`, JSON.stringify(foundProfile));
+            if (foundProfile.id) {
+              localStorage.setItem(`vibe_cache_${foundProfile.id.toLowerCase()}`, JSON.stringify(foundProfile));
+            }
+          } catch (storageErr) {
+            console.error('vibe_cache storage error:', storageErr);
           }
           
           if (!isPreview) {
@@ -250,7 +254,13 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
       />
       {schemaMarkup && (
         <script type="application/ld+json">
-          {JSON.stringify(schemaMarkup)}
+          {(() => {
+            try {
+              return JSON.stringify(schemaMarkup);
+            } catch (e) {
+              return '{}';
+            }
+          })()}
         </script>
       )}
       {isPreview && (

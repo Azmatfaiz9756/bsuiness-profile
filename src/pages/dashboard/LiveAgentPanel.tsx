@@ -64,27 +64,19 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
       // Default: show sessions for this profile or fallback
       q = query(
         sessionsRef,
-        where('ownerId', '==', user.uid),
-        orderBy('updatedAt', 'desc')
+        where('ownerId', '==', user.uid)
       );
     }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let sessData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       
-      // Client-side filtering for Enterprise routing logic
-      if (profileId !== 'platform') {
-        sessData = sessData.filter((s: any) => {
-          // If I'm the priority agent
-          if (s.priorityAgentId === profileId) return true;
-          // If I'm a fallback agent and priority didn't respond (routingLevel === Fallback)
-          if (s.routingLevel === 'Fallback' && s.fallbackAgentIds?.includes(profileId)) return true;
-          // Legacy support (older sessions)
-          if (!s.priorityAgentId && s.profileId === profileId) return true;
-          
-          return false;
-        });
-      }
+      // Sort by updatedAt descending
+      sessData.sort((a: any, b: any) => {
+        const timeA = a.updatedAt?.toMillis ? a.updatedAt.toMillis() : 0;
+        const timeB = b.updatedAt?.toMillis ? b.updatedAt.toMillis() : 0;
+        return timeB - timeA;
+      });
 
       setSessions(sessData);
     }, (error) => {
@@ -136,7 +128,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         try {
           const prompt = `Translate the following text to ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang}. Output ONLY the translated text, without any additional comments:\n\n${lastMsg.text}`;
           const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.5-flash',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;
@@ -189,7 +181,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         
         try {
           const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.5-flash',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;

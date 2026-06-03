@@ -155,7 +155,8 @@ ${translationInfo}
 2. AGAR STOCK MEIN NAHI HAI: Agar item stock list mein nahi hai, toh kahein "Sir/Ma'am, filhal iska live stock record update ho raha hai, lekin main aapki inquiry note kar leta hoon."
 3. PEHCHAN: Hamesha bataiye ke aap ${profile?.name} ke assistant hain.
 4. INQUIRY: Customer ka Name aur Mobile Number lijiye agar wo kisi cheez mein dilchaspi dikhaye.
-5. OWNER INSTRUCTIONS: Jo 'SYSTEM KNOWLEDGE' mein instructions hain, unhe sabse pehle follow karein.
+5. LIVE AGENT: Agar user bole ki usko "human", "insaan", "live agent", ya "customer care" se baat karni hai, toh 'talk_to_human' function tool call karein (sirf agar uska naam pata ho, agar nahi toh pehle naam puchiye). Aise mein 'send_inquiry' call mat kijiye.
+6. OWNER INSTRUCTIONS: Jo 'SYSTEM KNOWLEDGE' mein instructions hain, unhe sabse pehle follow karein.
 
 Greeting: "Assalamualekum! Main ${profile?.name} ka digital assistant hoon. Main aapki kaise madad kar sakta hoon?"`;
     }
@@ -175,6 +176,7 @@ ${stockContext}
 - الخدمات: ${Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}`).join('، ') : 'N/A'}
 - التواصل: ${profile?.email}, ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}
 
+هام: إذا طلب المستخدم التحدث إلى وكيل بشري أو خدمة العملاء، استخدم أداة 'talk_to_human' (اسأل عن اسمه أولاً إذا لم تكن تعرفه). لا تستخدم 'send_inquiry' لذلك.
 ساعد الزوار في التعرف على الخدمات والتواصل.`;
     }
 
@@ -197,7 +199,9 @@ Full Profile Context:
 - WhatsApp: ${profile?.whatsapp || profile?.phone}
 - Services: ${truncate(Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}: ${s.desc || s.description}`).join('; ') : 'None', 1500)}
 - Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
-- Socials: ${JSON.stringify(profile?.socials || {}).substring(0, 500)}
+- Socials: ${(() => { try { return JSON.stringify(profile?.socials || {}); } catch(e) { return 'Error parsing'; } })().substring(0, 500)}
+
+VERY IMPORTANT RULE: If the user explicitly asks to talk to a "human agent", "real person", "support team", "live chat", or "customer care", you MUST call the \`talk_to_human\` function tool immediately. If you don't have their name, kindly ask for it first, then call \`talk_to_human\`. DO NOT call \`send_inquiry\` when they just want to chat with a live agent.
 
 Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.
 IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed. Always respond in ${lang?.label || langId}.`;
@@ -412,14 +416,14 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
     }
   }, [countdown]);
 
-  const startLiveChat = async (customerName: string, customerEmail?: string) => {
+  const startLiveChat = async (customerName: string, customerEmail?: string, customerPhone?: string) => {
     setIsLiveAgentRequesting(true);
     try {
       const sessDoc = await addDoc(collection(db, 'chat_sessions'), {
         profileId: profile.id,
-        ownerId: profile.ownerId || (profile.id === 'platform' ? 'platform' : profile.id),
+        ownerId: profile.ownerId || profile.userId || (profile.id === 'platform' ? 'platform' : profile.id),
         customerName: visitorDetails?.name || customerName || 'Visitor',
-        customerPhone: visitorDetails?.phone || '',
+        customerPhone: visitorDetails?.phone || customerPhone || '',
         customerEmail: customerEmail || '',
         customerLang: selectedLang || 'en',
         status: 'Queued',
@@ -543,7 +547,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
     try {
       // Use recommended model
-      const modelName = 'gemini-3-flash-preview';
+      const modelName = 'gemini-2.5-flash';
       const basePrompt = getPrompt(selectedLang);
       
       const systemInstruction = basePrompt;
@@ -599,14 +603,15 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
               },
               {
                 name: "talk_to_human",
-                description: "Hand over the chat to a live human agent. Call this if the user specifically asks to talk to a person, an agent, or if the AI cannot help further.",
+                description: "Hand over the chat to a live human agent. Call this ONLY when the user explicitly says they want to talk to a live agent, human, support, or person. DO NOT use send_inquiry for live agent requests. Collect name and phone if missing.",
                 parameters: {
                   type: Type.OBJECT,
                   properties: {
                     name: { type: Type.STRING, description: "Customer's name" },
+                    phone: { type: Type.STRING, description: "Customer's phone number" },
                     email: { type: Type.STRING, description: "Customer's email (optional)" }
                   },
-                  required: ["name"]
+                  required: ["name", "phone"]
                 }
               }
             ]
@@ -621,9 +626,9 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         for (const fc of functionCalls) {
           if (!fc) continue;
           if (fc.name === 'talk_to_human') {
-            const args = fc.args as { name: string; email?: string };
-            await startLiveChat(args.name, args.email);
-            results.push({ name: fc.name, response: { success: true, message: "Human agent requested. Connection pending." } });
+            const args = fc.args as { name: string; phone?: string; email?: string };
+            await startLiveChat(args.name, args.email, args.phone);
+            results.push({ name: fc.name, response: { success: true, message: "Live agent will connect with you right here in this chat shortly..." } });
             continue;
           }
 
