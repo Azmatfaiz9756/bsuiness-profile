@@ -99,6 +99,7 @@ ${profile?.aiSalesInstructions || 'Be helpful and try to capture leads by asking
 - Language: Respond strictly in ${CHAT_LANGUAGES.find(l => l.id === langId)?.label || langId}.
 - Tone: Professional, helpful, and concise (max 2-3 short sentences).
 - Leads: If the user expresses interest in services or stock items, politely ask for their Name and Mobile Number for follow-up.
+- LIVE AGENT RULE: If the user explicitly asks to talk to a "human agent", "real person", "support team", "live chat", or "customer care" (or their equivalents in other languages), you MUST call the \`talk_to_human\` function tool immediately. If you just asked for their name to connect them and they provided it, call \`talk_to_human\` IMMIEDATELY. DO NOT call \`send_inquiry\` when they just want to chat with a live agent.
 `;
 
     if (langId === 'hi') {
@@ -442,11 +443,15 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
         const finalText = finalResponse.text;
         if (finalText) {
           setMessages(prev => [...prev, { role: 'model', content: finalText }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'model', content: "Processed successfully, please check your panel." }]);
         }
       } else {
         const text = cleanedText || response.text;
         if (text) {
           setMessages(prev => [...prev, { role: 'model', content: text }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'model', content: "Okay, I understand." }]);
         }
       }
     } catch (err: any) {

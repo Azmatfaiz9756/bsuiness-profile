@@ -438,7 +438,8 @@ async function startServer() {
         });
         return res.json({ 
           text: fallbackResponse.text,
-          functionCalls: fallbackResponse.functionCalls || []
+          functionCalls: fallbackResponse.functionCalls || [],
+          candidates: fallbackResponse.candidates || []
         });
       }
     } catch (error: any) {

@@ -155,7 +155,7 @@ ${translationInfo}
 2. AGAR STOCK MEIN NAHI HAI: Agar item stock list mein nahi hai, toh kahein "Sir/Ma'am, filhal iska live stock record update ho raha hai, lekin main aapki inquiry note kar leta hoon."
 3. PEHCHAN: Hamesha bataiye ke aap ${profile?.name} ke assistant hain.
 4. INQUIRY: Customer ka Name aur Mobile Number lijiye agar wo kisi cheez mein dilchaspi dikhaye.
-5. LIVE AGENT: Agar user bole ki usko "human", "insaan", "live agent", ya "customer care" se baat karni hai, toh 'talk_to_human' function tool call karein (sirf agar uska naam pata ho, agar nahi toh pehle naam puchiye). Aise mein 'send_inquiry' call mat kijiye.
+5. LIVE AGENT: Agar user bole ki usko "human", "insaan", "live agent", ya "customer care" se baat karni hai, toh 'talk_to_human' function tool call karein. Agar aapne already unka naam pucha tha aur unhone ab apna naam bata diya hai, toh TURANT 'talk_to_human' tool call karein. 'send_inquiry' call mat kijiye.
 6. OWNER INSTRUCTIONS: Jo 'SYSTEM KNOWLEDGE' mein instructions hain, unhe sabse pehle follow karein.
 
 Greeting: "Assalamualekum! Main ${profile?.name} ka digital assistant hoon. Main aapki kaise madad kar sakta hoon?"`;
@@ -176,7 +176,7 @@ ${stockContext}
 - الخدمات: ${Array.isArray(profile?.services) ? profile.services.map((s: any) => `${s.name || s.title}`).join('، ') : 'N/A'}
 - التواصل: ${profile?.email}, ${profile?.phone}, WhatsApp: ${profile?.whatsapp || profile?.phone}
 
-هام: إذا طلب المستخدم التحدث إلى وكيل بشري أو خدمة العملاء، استخدم أداة 'talk_to_human' (اسأل عن اسمه أولاً إذا لم تكن تعرفه). لا تستخدم 'send_inquiry' لذلك.
+هام: إذا طلب المستخدم التحدث إلى وكيل بشري أو خدمة العملاء، استخدم أداة 'talk_to_human' فوراً. إذا أعطاك اسمه بعد أن طلبته، اتصل بـ 'talk_to_human' فوراً. لا تستخدم 'send_inquiry' لذلك.
 ساعد الزوار في التعرف على الخدمات والتواصل.`;
     }
 
@@ -201,7 +201,7 @@ Full Profile Context:
 - Contact: Email: ${profile?.email}, Phone: ${profile?.phone}
 - Socials: ${(() => { try { return JSON.stringify(profile?.socials || {}); } catch(e) { return 'Error parsing'; } })().substring(0, 500)}
 
-VERY IMPORTANT RULE: If the user explicitly asks to talk to a "human agent", "real person", "support team", "live chat", or "customer care", you MUST call the \`talk_to_human\` function tool immediately. If you don't have their name, kindly ask for it first, then call \`talk_to_human\`. DO NOT call \`send_inquiry\` when they just want to chat with a live agent.
+VERY IMPORTANT RULE: If the user explicitly asks to talk to a "human agent", "real person", "support team", "live chat", or "customer care", you MUST call the \`talk_to_human\` function tool immediately. If you just asked for their name to connect them and they provided it, call \`talk_to_human\` IMMIEDATELY. DO NOT call \`send_inquiry\` when they just want to chat with a live agent.
 
 Assist visitors with inquiries about the business, services, and contact information in ${lang?.label || langId}.
 IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoid fluff for maximum speed. Always respond in ${lang?.label || langId}.`;
@@ -726,11 +726,15 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         const finalText = finalResponse.text;
         if (finalText) {
           setMessages(prev => [...prev, { role: 'model', content: finalText }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'model', content: "Okay, I have processed that for you." }]);
         }
       } else {
         const text = cleanedText || response.text;
         if (text) {
           setMessages(prev => [...prev, { role: 'model', content: text }]);
+        } else {
+          setMessages(prev => [...prev, { role: 'model', content: "Okay, I understand." }]);
         }
       }
     } catch (err: any) {
