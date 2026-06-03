@@ -86,7 +86,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
     });
 
     return () => unsubscribe();
-  }, [profileId]);
+  }, [profileId, user]);
 
   // Listen to messages for selected session
   useEffect(() => {

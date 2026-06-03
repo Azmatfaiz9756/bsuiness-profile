@@ -609,8 +609,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
                   properties: {
                     name: { type: Type.STRING, description: "Customer's name" },
                     email: { type: Type.STRING, description: "Customer's email (optional)" }
-                  },
-                  required: ["name"]
+                  }
                 }
               }
             ]
@@ -618,7 +617,34 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         }
       });
 
-      const functionCalls = response.functionCalls;
+      let functionCalls: any[] = response.functionCalls || [];
+
+      // Fallback: If Gemini model outputs raw JSON with 'tool_calls' in OpenAI format inside text
+      if (functionCalls.length === 0 && response.text && response.text.includes('tool_calls')) {
+        try {
+          const match = response.text.match(/\{[\s\S]*"tool_calls"[\s\S]*\}/);
+          if (match) {
+            const parsed = JSON.parse(match[0]);
+            if (parsed.tool_calls && Array.isArray(parsed.tool_calls)) {
+              functionCalls = parsed.tool_calls.map((tc: any) => {
+                let args = {};
+                const params = tc.function?.arguments || tc.function?.parameters || tc.arguments;
+                if (typeof params === 'string') {
+                  try { args = JSON.parse(params); } catch(e) {}
+                } else if (typeof params === 'object') {
+                  args = params;
+                }
+                return {
+                  name: tc.function?.name,
+                  args: args
+                };
+              });
+            }
+          }
+        } catch (e) {
+          console.error("Tried to parse tool_calls from text, failed:", e);
+        }
+      }
 
       if (functionCalls && functionCalls.length > 0) {
         const results = [];
@@ -655,6 +681,13 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
             console.error(`Tool execution error [${fc.name}]:`, e);
             results.push({ name: fc.name, response: { success: false, error: String(e) } });
           }
+        }
+
+        if (results.some(r => r.name === 'talk_to_human')) {
+          const msg = selectedLang === 'ar' ? 'تم تحويل المحادثة إلى خدمة العملاء. يرجى الانتظار...' : selectedLang === 'hi' ? 'Aapko live agent ke paas bhej rahe hain. Kripya pratiksha karein...' : 'Transferring you to a live human agent. Please wait a moment...';
+          setMessages(prev => [...prev, { role: 'model', content: msg }]);
+          setLoading(false);
+          return;
         }
 
         const finalContents = [
