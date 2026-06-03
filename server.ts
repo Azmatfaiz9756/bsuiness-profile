@@ -417,7 +417,7 @@ async function startServer() {
         const responseText = response.text || "";
         const functionCalls = response.functionCalls || [];
 
-        console.log(`[Gemini Proxy][${requestId}] Success. Text length: ${responseText.length}`);
+        console.log(`[Gemini Proxy][${requestId}] Success. Text length: ${responseText.length}, FunctionCalls: ${functionCalls.length}`);
         return res.json({ 
           text: responseText,
           functionCalls: functionCalls,
@@ -425,13 +425,20 @@ async function startServer() {
         });
       } catch (err: any) {
         console.warn(`[Gemini Proxy][${requestId}] Model ${targetModelName} failed: ${err.message}`);
-        const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: contents
+        const fallbackResponse = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: contents,
+          config: {
+            ...generationConfig,
+            systemInstruction: systemInstruction,
+            maxOutputTokens: 2048,
+            temperature: 0.2,
+            tools: tools
+          }
         });
         return res.json({ 
-          text: response.text,
-          functionCalls: response.functionCalls || []
+          text: fallbackResponse.text,
+          functionCalls: fallbackResponse.functionCalls || []
         });
       }
     } catch (error: any) {

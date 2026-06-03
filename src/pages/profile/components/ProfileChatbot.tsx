@@ -418,6 +418,9 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
   const startLiveChat = async (customerName: string, customerEmail?: string) => {
     setIsLiveAgentRequesting(true);
+    // Show UI feedback immediately
+    setMessages(prev => [...prev, { role: 'model', content: selectedLang === 'hi' ? "Zaroor! Main ek live agent ko connect kar raha hoon. Please line pe bane rahein..." : "Sure! Connecting you to a live agent. Please stay online..." }]);
+    
     try {
       const sessDoc = await addDoc(collection(db, 'chat_sessions'), {
         profileId: profile.id,
@@ -431,7 +434,8 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         priorityAgentId: profile.id,
         assignedAgentId: null,
         lastMessage: 'Requested human agent',
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        source: 'AI Chatbot'
       });
       
       setLiveChatSessionId(sessDoc.id);
@@ -453,13 +457,12 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         timestamp: new Date(Date.now() + delay)
       });
 
-      setMessages(prev => [...prev, { role: 'model', content: selectedLang === 'hi' ? "Zaroor! Main ek live agent ko connect kar raha hoon. Please line pe bane rahein..." : "Sure! Connecting you to a live agent. Please stay online..." }]);
     } catch (e) {
-      console.error(e);
+      console.error("[ProfileChatbot] startLiveChat error:", e);
       import('../../../lib/firestoreUtils').then(({ handleFirestoreError, OperationType }) => {
         handleFirestoreError(e, OperationType.WRITE, 'chat_sessions');
       });
-      setMessages(prev => [...prev, { role: 'model', content: "Sorry, live support is currently unavailable." }]);
+      setMessages(prev => [...prev, { role: 'model', content: "Sorry, live support is currently unavailable. Connection failed." }]);
     }
     setIsLiveAgentRequesting(false);
   };
@@ -703,6 +706,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         }
 
         if (results.some(r => r.name === 'talk_to_human')) {
+          console.log("[ProfileChatbot] talk_to_human caught. Early exiting genContent loop.");
           setLoading(false);
           return;
         }

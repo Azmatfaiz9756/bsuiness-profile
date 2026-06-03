@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '../../firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, or } from 'firebase/firestore';
 import { MessageSquare, User, Send, CheckCircle2, Clock, Globe } from 'lucide-react';
 import { AGENT_LANGUAGES } from '../../lib/languages';
 import { ProxyGoogleGenAI } from '../../lib/gemini';
@@ -60,8 +60,15 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
     let q;
     if (profileId === 'platform') {
       q = query(sessionsRef, orderBy('updatedAt', 'desc'));
+    } else if (profileId) {
+      q = query(
+        sessionsRef,
+        or(
+          where('ownerId', '==', user.uid),
+          where('profileId', '==', profileId)
+        )
+      );
     } else {
-      // Default: show sessions for this profile or fallback
       q = query(
         sessionsRef,
         where('ownerId', '==', user.uid)
