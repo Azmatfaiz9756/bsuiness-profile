@@ -307,15 +307,26 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
               },
               {
                 name: "send_inquiry",
-                description: "Send a contact inquiry. Requires name, email, and message.",
+                description: "Send a contact inquiry. Requires name, phone (mobile number), and message.",
                 parameters: {
                   type: Type.OBJECT,
                   properties: {
                     name: { type: Type.STRING },
-                    email: { type: Type.STRING },
+                    phone: { type: Type.STRING },
                     message: { type: Type.STRING }
                   },
-                  required: ["name", "email", "message"]
+                  required: ["name", "phone", "message"]
+                }
+              },
+              {
+                name: "talk_to_human",
+                description: "Hand over the chat to a live human agent. Call this if the user specifically asks to talk to a person, an agent, or if the AI cannot help further.",
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    name: { type: Type.STRING, description: "Customer's name" },
+                    email: { type: Type.STRING, description: "Customer's email (optional)" }
+                  }
                 }
               }
             ]
@@ -323,12 +334,74 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
         }
       });
 
-      const functionCalls = response.functionCalls;
+      let functionCalls: any[] = response.functionCalls || [];
+
+      // Fallback: If Gemini model outputs raw JSON with 'tool_calls' in OpenAI format inside text
+      let cleanedText = response.text || '';
+      if (functionCalls.length === 0 && cleanedText && (cleanedText.includes('tool_calls') || cleanedText.includes('talk_to_human'))) {
+        try {
+          const match = cleanedText.match(/\{[\s\S]*"tool_calls"[\s\S]*\}/);
+          if (match) {
+            const parsed = JSON.parse(match[0]);
+            if (parsed.tool_calls && Array.isArray(parsed.tool_calls)) {
+              functionCalls = parsed.tool_calls.map((tc: any) => {
+                let args = {};
+                const params = tc.function?.arguments || tc.function?.parameters || tc.arguments;
+                if (typeof params === 'string') {
+                  try { args = JSON.parse(params); } catch(e) {}
+                } else if (typeof params === 'object') {
+                  args = params;
+                }
+                return {
+                  name: tc.function?.name || tc.name,
+                  args: args
+                };
+              });
+            }
+            cleanedText = cleanedText.replace(match[0], '').trim();
+          }
+        } catch (e) {
+          console.error("Tried to parse tool_calls from text, failed:", e);
+        }
+
+        // Hard ultimate fallback: If it STILL couldn't parse but mentioned talk_to_human
+        if (functionCalls.length === 0 && cleanedText.includes('talk_to_human')) {
+          functionCalls = [{ name: 'talk_to_human', args: { name: 'Visitor' } }];
+          cleanedText = cleanedText.replace(/\{[\s\S]*\}/g, '').trim(); 
+        }
+      }
 
       if (functionCalls && functionCalls.length > 0) {
         const results = [];
         for (const fc of functionCalls) {
           if (!fc) continue;
+
+          if (fc.name === 'talk_to_human') {
+            try {
+              await addDoc(collection(db, 'chat_sessions'), {
+                profileId: profile.id,
+                ownerId: profile.ownerId || user.uid,
+                customerName: fc.args?.name || 'Dashboard Tester',
+                customerPhone: fc.args?.phone || '',
+                customerEmail: fc.args?.email || '',
+                customerLang: selectedLang || 'en',
+                status: 'Queued',
+                routingLevel: 'Priority',
+                priorityAgentId: profile.id,
+                assignedAgentId: null,
+                lastMessage: 'Requested human agent (Tester)',
+                updatedAt: serverTimestamp(),
+                source: 'Dashboard Tester'
+              });
+            } catch (e) {
+              console.error("Test session creation failed", e);
+            }
+            const msg = selectedLang === 'ar' ? 'تم تحويل المحادثة إلى خدمة العملاء. (TESTER HANDOVER SIMULATED)' : selectedLang === 'hi' ? 'Aapko live agent ke paas bhej rahe hain... Session Created in Panel! (TESTER)' : 'Transferring you to a live human agent... Session created in panel! (TESTER)';
+            setMessages(prev => [...prev, { role: 'model', content: msg }]);
+            setLoading(false);
+            return;
+          }
+
           const col = fc.name === 'book_appointment' ? 'appointments' : 'leads';
           try {
             // Add a timeout to firestore write to prevent hanging the chat
@@ -371,7 +444,7 @@ Context: ${truncate(profile?.bio, 1000)}. Contact: Email: ${profile?.email}, Pho
           setMessages(prev => [...prev, { role: 'model', content: finalText }]);
         }
       } else {
-        const text = response.text;
+        const text = cleanedText || response.text;
         if (text) {
           setMessages(prev => [...prev, { role: 'model', content: text }]);
         }
