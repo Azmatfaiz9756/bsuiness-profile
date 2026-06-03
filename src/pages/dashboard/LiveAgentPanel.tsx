@@ -128,7 +128,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         try {
           const prompt = `Translate the following text to ${AGENT_LANGUAGES.find(l => l.id === agentLang)?.label || agentLang}. Output ONLY the translated text, without any additional comments:\n\n${lastMsg.text}`;
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;
@@ -181,7 +181,7 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
         
         try {
           const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: [{ role: 'user', parts: [{ text: prompt }] }]
           });
           const result = response.text;

@@ -416,14 +416,14 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
     }
   }, [countdown]);
 
-  const startLiveChat = async (customerName: string, customerEmail?: string, customerPhone?: string) => {
+  const startLiveChat = async (customerName: string, customerEmail?: string) => {
     setIsLiveAgentRequesting(true);
     try {
       const sessDoc = await addDoc(collection(db, 'chat_sessions'), {
         profileId: profile.id,
         ownerId: profile.ownerId || profile.userId || (profile.id === 'platform' ? 'platform' : profile.id),
         customerName: visitorDetails?.name || customerName || 'Visitor',
-        customerPhone: visitorDetails?.phone || customerPhone || '',
+        customerPhone: visitorDetails?.phone || '',
         customerEmail: customerEmail || '',
         customerLang: selectedLang || 'en',
         status: 'Queued',
@@ -547,7 +547,7 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
 
     try {
       // Use recommended model
-      const modelName = 'gemini-2.5-flash';
+      const modelName = 'gemini-3-flash-preview';
       const basePrompt = getPrompt(selectedLang);
       
       const systemInstruction = basePrompt;
@@ -603,15 +603,14 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
               },
               {
                 name: "talk_to_human",
-                description: "Hand over the chat to a live human agent. Call this ONLY when the user explicitly says they want to talk to a live agent, human, support, or person. DO NOT use send_inquiry for live agent requests. Collect name and phone if missing.",
+                description: "Hand over the chat to a live human agent. Call this if the user specifically asks to talk to a person, an agent, or if the AI cannot help further.",
                 parameters: {
                   type: Type.OBJECT,
                   properties: {
                     name: { type: Type.STRING, description: "Customer's name" },
-                    phone: { type: Type.STRING, description: "Customer's phone number" },
                     email: { type: Type.STRING, description: "Customer's email (optional)" }
                   },
-                  required: ["name", "phone"]
+                  required: ["name"]
                 }
               }
             ]
@@ -626,9 +625,9 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
         for (const fc of functionCalls) {
           if (!fc) continue;
           if (fc.name === 'talk_to_human') {
-            const args = fc.args as { name: string; phone?: string; email?: string };
-            await startLiveChat(args.name, args.email, args.phone);
-            results.push({ name: fc.name, response: { success: true, message: "Live agent will connect with you right here in this chat shortly..." } });
+            const args = fc.args as { name: string; email?: string };
+            await startLiveChat(args.name, args.email);
+            results.push({ name: fc.name, response: { success: true, message: "Human agent requested. Connection pending." } });
             continue;
           }
 
