@@ -423,15 +423,15 @@ IMPORTANT: Keep your responses EXTREMELY concise (max 2-3 short sentences). Avoi
     
     try {
       const sessDoc = await addDoc(collection(db, 'chat_sessions'), {
-        profileId: profile.id,
-        ownerId: profile.ownerId || profile.userId || (profile.id === 'platform' ? 'platform' : profile.id),
+        profileId: profile?.id || profile?.slug || "",
+        ownerId: profile?.ownerId || profile?.userId || profile?.id || "platform",
         customerName: visitorDetails?.name || customerName || 'Visitor',
         customerPhone: visitorDetails?.phone || '',
         customerEmail: customerEmail || '',
         customerLang: selectedLang || 'en',
         status: 'Queued',
         routingLevel: 'Priority',
-        priorityAgentId: profile.id,
+        priorityAgentId: profile?.id || profile?.slug || "",
         assignedAgentId: null,
         lastMessage: 'Requested human agent',
         updatedAt: serverTimestamp(),

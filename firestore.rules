@@ -38,17 +38,17 @@ service cloud.firestore {
     // --- ENTITY VALIDATORS ---
 
     function isValidUser(data) {
-      return (('email' in data) ? (data.email is string) : true) &&
-             (!('name' in data) || data.name is string) &&
-             (!('displayName' in data) || data.displayName is string) &&
-             (!('phone' in data) || data.phone is string) &&
-             (!('photoURL' in data) || data.photoURL is string) &&
-             (!('walletBalance' in data) || data.walletBalance is number) &&
-             (!('totalEarned' in data) || data.totalEarned is number) &&
-             (!('totalSpent' in data) || data.totalSpent is number) &&
-             (!('createdAt' in data) || (data.createdAt is timestamp || data.createdAt is string || data.createdAt is number)) &&
-             (!('lastLogin' in data) || (data.lastLogin is timestamp || data.lastLogin is string || data.lastLogin is number)) &&
-             (!('plan' in data) || data.plan is string);
+      return (('email' in data) ? (data.email is string || data.email == null) : true) &&
+             (!('name' in data) || data.name == null || data.name is string) &&
+             (!('displayName' in data) || data.displayName == null || data.displayName is string) &&
+             (!('phone' in data) || data.phone == null || data.phone is string) &&
+             (!('photoURL' in data) || data.photoURL == null || data.photoURL is string) &&
+             (!('walletBalance' in data) || data.walletBalance == null || data.walletBalance is number) &&
+             (!('totalEarned' in data) || data.totalEarned == null || data.totalEarned is number) &&
+             (!('totalSpent' in data) || data.totalSpent == null || data.totalSpent is number) &&
+             (!('createdAt' in data) || data.createdAt == null || (data.createdAt is timestamp || data.createdAt is string || data.createdAt is number)) &&
+             (!('lastLogin' in data) || data.lastLogin == null || (data.lastLogin is timestamp || data.lastLogin is string || data.lastLogin is number)) &&
+             (!('plan' in data) || data.plan == null || data.plan is string);
     }
 
     function isValidProfile(data) {
@@ -56,143 +56,148 @@ service cloud.firestore {
     }
 
     function isValidProfileCore(data) {
-      return (!('ownerId' in data) || isValidId(data.ownerId)) &&
-             (!('name' in data) || data.name is string) &&
-             (!('id' in data) || data.id is string) &&
-             (!('name2' in data) || data.name2 is string) &&
-             (!('phone2' in data) || data.phone2 is string) &&
-             (!('whatsapp2' in data) || data.whatsapp2 is string) &&
-             (!('quickPayAmount' in data) || data.quickPayAmount is number) &&
-             (!('quickPayCurrency' in data) || data.quickPayCurrency is string) &&
-             (!('bankName' in data) || data.bankName is string) &&
-             (!('accountName' in data) || data.accountName is string) &&
-             (!('accountNumber' in data) || data.accountNumber is string) &&
-             (!('iban' in data) || data.iban is string) &&
-             (!('swiftCode' in data) || data.swiftCode is string) &&
-             (!('ifscCode' in data) || data.ifscCode is string) &&
-             (!('bankAccounts' in data) || data.bankAccounts is list) &&
-             (!('walletBalance' in data) || data.walletBalance is number) &&
-             (!('fakeFollowers' in data) || data.fakeFollowers is number) &&
-             (!('views' in data) || data.views is number) &&
-             (!('services' in data) || data.services is list) &&
-             (!('socials' in data) || data.socials is map) &&
-             (!('testimonials' in data) || data.testimonials is list) &&
-             (!('faqs' in data) || data.faqs is list) &&
-             (!('gallery' in data) || data.gallery is list) &&
-             (!('videos' in data) || data.videos is list) &&
-             (!('customButtons' in data) || data.customButtons is list) &&
-             (!('seo' in data) || data.seo is map) &&
-             (!('hours' in data) || data.hours is map) &&
-             (!('team' in data) || data.team is list) &&
-             (!('jobOpenings' in data) || data.jobOpenings is list) &&
-             (!('paymentLinks' in data) || data.paymentLinks is list) &&
-             (!('products' in data) || data.products is list) &&
-             (!('directoryHiddenFields' in data) || data.directoryHiddenFields is list) &&
-             (!('availabilityStatus' in data) || data.availabilityStatus is string) &&
-             (!('lastStatusUpdate' in data) || data.lastStatusUpdate is string) &&
-             (!('directoryVisibility' in data) || data.directoryVisibility is string) &&
-             (!('templateId' in data) || data.templateId is string) &&
-             (!('template' in data) || data.template is string) &&
-             (!('plan' in data) || data.plan is string) &&
-             (!('status' in data) || data.status is string) &&
-             (!('isSubProfile' in data) || (data.isSubProfile is bool || data.isSubProfile is string)) &&
-             (!('companyId' in data) || data.companyId is string) &&
-             (!('referralCount' in data) || data.referralCount is number);
+      return (!('ownerId' in data) || data.ownerId == null || isValidId(data.ownerId)) &&
+             (!('userId' in data) || data.userId == null || isValidId(data.userId)) &&
+             (!('name' in data) || data.name == null || data.name is string) &&
+             (!('id' in data) || data.id == null || data.id is string) &&
+             (!('name2' in data) || data.name2 == null || data.name2 is string) &&
+             (!('phone2' in data) || data.phone2 == null || data.phone2 is string) &&
+             (!('whatsapp2' in data) || data.whatsapp2 == null || data.whatsapp2 is string) &&
+             (!('quickPayAmount' in data) || data.quickPayAmount == null || data.quickPayAmount is number) &&
+             (!('quickPayCurrency' in data) || data.quickPayCurrency == null || data.quickPayCurrency is string) &&
+             (!('bankName' in data) || data.bankName == null || data.bankName is string) &&
+             (!('accountName' in data) || data.accountName == null || data.accountName is string) &&
+             (!('accountNumber' in data) || data.accountNumber == null || data.accountNumber is string) &&
+             (!('iban' in data) || data.iban == null || data.iban is string) &&
+             (!('swiftCode' in data) || data.swiftCode == null || data.swiftCode is string) &&
+             (!('ifscCode' in data) || data.ifscCode == null || data.ifscCode is string) &&
+             (!('bankAccounts' in data) || data.bankAccounts == null || data.bankAccounts is list) &&
+             (!('walletBalance' in data) || data.walletBalance == null || data.walletBalance is number) &&
+             (!('fakeFollowers' in data) || data.fakeFollowers == null || data.fakeFollowers is number) &&
+             (!('views' in data) || data.views == null || data.views is number) &&
+             (!('services' in data) || data.services == null || data.services is list) &&
+             (!('socials' in data) || data.socials == null || data.socials is map) &&
+             (!('testimonials' in data) || data.testimonials == null || data.testimonials is list) &&
+             (!('faqs' in data) || data.faqs == null || data.faqs is list) &&
+             (!('gallery' in data) || data.gallery == null || data.gallery is list) &&
+             (!('videos' in data) || data.videos == null || data.videos is list) &&
+             (!('customButtons' in data) || data.customButtons == null || data.customButtons is list) &&
+             (!('seo' in data) || data.seo == null || data.seo is map) &&
+             (!('hours' in data) || data.hours == null || data.hours is map) &&
+             (!('team' in data) || data.team == null || data.team is list) &&
+             (!('jobOpenings' in data) || data.jobOpenings == null || data.jobOpenings is list) &&
+             (!('paymentLinks' in data) || data.paymentLinks == null || data.paymentLinks is list) &&
+             (!('products' in data) || data.products == null || data.products is list) &&
+             (!('directoryHiddenFields' in data) || data.directoryHiddenFields == null || data.directoryHiddenFields is list) &&
+             (!('availabilityStatus' in data) || data.availabilityStatus == null || data.availabilityStatus is string) &&
+             (!('lastStatusUpdate' in data) || data.lastStatusUpdate == null || data.lastStatusUpdate is string) &&
+             (!('directoryVisibility' in data) || data.directoryVisibility == null || data.directoryVisibility is string) &&
+             (!('templateId' in data) || data.templateId == null || data.templateId is string) &&
+             (!('template' in data) || data.template == null || data.template is string) &&
+             (!('plan' in data) || data.plan == null || data.plan is string) &&
+             (!('status' in data) || data.status == null || data.status is string) &&
+             (!('isSubProfile' in data) || data.isSubProfile == null || (data.isSubProfile is bool || data.isSubProfile is string)) &&
+             (!('companyId' in data) || data.companyId == null || data.companyId is string) &&
+             (!('referralCount' in data) || data.referralCount == null || data.referralCount is number);
     }
 
     function isValidProfileSecondary(data) {
-      return (!('referralPending' in data) || data.referralPending is number) &&
-             (!('referralEarnings' in data) || data.referralEarnings is number) &&
-             (!('hideReferral' in data) || (data.hideReferral is bool || data.hideReferral is string)) &&
-             (!('teamMembers' in data) || data.teamMembers is list) &&
-             (!('mapLink' in data) || data.mapLink is string) &&
-             (!('crmProvider' in data) || data.crmProvider is string) &&
-             (!('aiApiKey' in data) || data.aiApiKey is string) &&
-             (!('aiPrompt' in data) || data.aiPrompt is string) &&
-             (!('stockSyncEnabled' in data) || (data.stockSyncEnabled is bool || data.stockSyncEnabled is string)) &&
-             (!('stockSourceType' in data) || data.stockSourceType is string) &&
-             (!('showStockPrice' in data) || (data.showStockPrice is bool || data.showStockPrice is string)) &&
-             (!('stockSourceUrl' in data) || data.stockSourceUrl is string) &&
-             (!('stockManualData' in data) || data.stockManualData is string) &&
-             (!('referredBy' in data) || data.referredBy is string) &&
-             (!('vCardUrl' in data) || data.vCardUrl is string) &&
-             (!('qrUrl' in data) || data.qrUrl is string) &&
-             (!('nfcUrl' in data) || data.nfcUrl is string) &&
-             (!('createdAt' in data) || (data.createdAt is string || data.createdAt is timestamp || data.createdAt is number)) &&
-             (!('bannerVideo' in data) || data.bannerVideo is string) &&
-             (!('bannerVideoUrl' in data) || data.bannerVideoUrl is string) &&
-             (!('bannerUrl' in data) || data.bannerUrl is string) &&
-             (!('photoUrl' in data) || data.photoUrl is string) &&
-             (!('photoURL' in data) || data.photoURL is string) &&
-             (!('themeColor' in data) || data.themeColor is string) &&
-             (!('isPrivate' in data) || (data.isPrivate is bool || data.isPrivate is string)) &&
-             (!('profileViews' in data) || data.profileViews is number) &&
-             (!('active' in data) || (data.active is bool || data.active is string)) &&
-             (!('profession' in data) || data.profession is string) &&
-             (!('skills' in data) || data.skills is list) &&
-             (!('location' in data) || data.location is string) &&
-             (!('city' in data) || data.city is string) &&
-             (!('country' in data) || data.country is string) &&
-             (!('category' in data) || data.category is string) &&
-             (!('announcement' in data) || data.announcement is string) &&
-             (!('customDomain' in data) || data.customDomain is string) &&
-             (!('featured' in data) || (data.featured is bool || data.featured is string)) &&
-             (!('slug' in data) || data.slug is string) &&
-             (!('meetingUrl' in data) || data.meetingUrl is string) &&
-             (!('documentUrl' in data) || data.documentUrl is string) &&
-             (!('documentButtonText' in data) || data.documentButtonText is string) &&
-             (!('bio' in data) || data.bio is string) &&
-             (!('title' in data) || data.title is string) &&
-             (!('company' in data) || data.company is string) &&
-             (!('phone' in data) || data.phone is string) &&
-             (!('whatsapp' in data) || data.whatsapp is string) &&
-             (!('email' in data) || data.email is string) &&
-             (!('website' in data) || data.website is string) &&
-             (!('address' in data) || data.address is string) &&
-             (!('updatedAt' in data) || (data.updatedAt is string || data.updatedAt is number || data.updatedAt is timestamp)) &&
-             (!('hasUsedTrial' in data) || (data.hasUsedTrial is bool || data.hasUsedTrial is string)) &&
-             (!('trialActive' in data) || (data.trialActive is bool || data.trialActive is string)) &&
-             (!('trialEndsAt' in data) || (data.trialEndsAt is string || data.trialEndsAt is timestamp)) &&
-             (!('isTrial' in data) || (data.isTrial is bool || data.isTrial is string)) &&
-             (!('isDb' in data) || (data.isDb is bool || data.isDb is string)) &&
-             (!('role' in data) || data.role is string) &&
-             (!('avatar' in data) || data.avatar is string) &&
-             (!('isVerified' in data) || (data.isVerified is bool || data.isVerified is string)) &&
-             (!('isRtl' in data) || (data.isRtl is bool || data.isRtl is string)) &&
-             (!('aiSalesInstructions' in data) || data.aiSalesInstructions is string) &&
-             (!('storeCompanyName' in data) || data.storeCompanyName is string) &&
-             (!('storeMarquee' in data) || data.storeMarquee is string) &&
-             (!('storeCompanyLogo' in data) || data.storeCompanyLogo is string) &&
-             (!('storeBannerUrl' in data) || data.storeBannerUrl is string) &&
-             (!('socialLinks' in data) || data.socialLinks is list);
+      return (!('referralPending' in data) || data.referralPending == null || data.referralPending is number) &&
+             (!('referralEarnings' in data) || data.referralEarnings == null || data.referralEarnings is number) &&
+             (!('hideReferral' in data) || data.hideReferral == null || (data.hideReferral is bool || data.hideReferral is string)) &&
+             (!('teamMembers' in data) || data.teamMembers == null || data.teamMembers is list) &&
+             (!('mapLink' in data) || data.mapLink == null || data.mapLink is string) &&
+             (!('crmProvider' in data) || data.crmProvider == null || data.crmProvider is string) &&
+             (!('aiApiKey' in data) || data.aiApiKey == null || data.aiApiKey is string) &&
+             (!('aiPrompt' in data) || data.aiPrompt == null || data.aiPrompt is string) &&
+             (!('stockSyncEnabled' in data) || data.stockSyncEnabled == null || (data.stockSyncEnabled is bool || data.stockSyncEnabled is string)) &&
+             (!('stockSourceType' in data) || data.stockSourceType == null || data.stockSourceType is string) &&
+             (!('showStockPrice' in data) || data.showStockPrice == null || (data.showStockPrice is bool || data.showStockPrice is string)) &&
+             (!('stockSourceUrl' in data) || data.stockSourceUrl == null || data.stockSourceUrl is string) &&
+             (!('stockManualData' in data) || data.stockManualData == null || data.stockManualData is string) &&
+             (!('referredBy' in data) || data.referredBy == null || data.referredBy is string) &&
+             (!('vCardUrl' in data) || data.vCardUrl == null || data.vCardUrl is string) &&
+             (!('qrUrl' in data) || data.qrUrl == null || data.qrUrl is string) &&
+             (!('nfcUrl' in data) || data.nfcUrl == null || data.nfcUrl is string) &&
+             (!('createdAt' in data) || data.createdAt == null || (data.createdAt is string || data.createdAt is timestamp || data.createdAt is number)) &&
+             (!('bannerVideo' in data) || data.bannerVideo == null || data.bannerVideo is string) &&
+             (!('bannerVideoUrl' in data) || data.bannerVideoUrl == null || data.bannerVideoUrl is string) &&
+             (!('bannerUrl' in data) || data.bannerUrl == null || data.bannerUrl is string) &&
+             (!('photoUrl' in data) || data.photoUrl == null || data.photoUrl is string) &&
+             (!('photoURL' in data) || data.photoURL == null || data.photoURL is string) &&
+             (!('themeColor' in data) || data.themeColor == null || data.themeColor is string) &&
+             (!('isPrivate' in data) || data.isPrivate == null || (data.isPrivate is bool || data.isPrivate is string)) &&
+             (!('profileViews' in data) || data.profileViews == null || data.profileViews is number) &&
+             (!('active' in data) || data.active == null || (data.active is bool || data.active is string)) &&
+             (!('profession' in data) || data.profession == null || data.profession is string) &&
+             (!('skills' in data) || data.skills == null || data.skills is list) &&
+             (!('location' in data) || data.location == null || data.location is string) &&
+             (!('city' in data) || data.city == null || data.city is string) &&
+             (!('country' in data) || data.country == null || data.country is string) &&
+             (!('category' in data) || data.category == null || data.category is string) &&
+             (!('announcement' in data) || data.announcement == null || data.announcement is string) &&
+             (!('customDomain' in data) || data.customDomain == null || data.customDomain is string) &&
+             (!('featured' in data) || data.featured == null || (data.featured is bool || data.featured is string)) &&
+             (!('slug' in data) || data.slug == null || data.slug is string) &&
+             (!('meetingUrl' in data) || data.meetingUrl == null || data.meetingUrl is string) &&
+             (!('documentUrl' in data) || data.documentUrl == null || data.documentUrl is string) &&
+             (!('documentButtonText' in data) || data.documentButtonText == null || data.documentButtonText is string) &&
+             (!('bio' in data) || data.bio == null || data.bio is string) &&
+             (!('title' in data) || data.title == null || data.title is string) &&
+             (!('company' in data) || data.company == null || data.company is string) &&
+             (!('phone' in data) || data.phone == null || data.phone is string) &&
+             (!('whatsapp' in data) || data.whatsapp == null || data.whatsapp is string) &&
+             (!('email' in data) || data.email == null || data.email is string) &&
+             (!('website' in data) || data.website == null || data.website is string) &&
+             (!('address' in data) || data.address == null || data.address is string) &&
+             (!('updatedAt' in data) || data.updatedAt == null || (data.updatedAt is string || data.updatedAt is number || data.updatedAt is timestamp)) &&
+             (!('hasUsedTrial' in data) || data.hasUsedTrial == null || (data.hasUsedTrial is bool || data.hasUsedTrial is string)) &&
+             (!('trialActive' in data) || data.trialActive == null || (data.trialActive is bool || data.trialActive is string)) &&
+             (!('trialEndsAt' in data) || data.trialEndsAt == null || (data.trialEndsAt is string || data.trialEndsAt is timestamp)) &&
+             (!('isTrial' in data) || data.isTrial == null || (data.isTrial is bool || data.isTrial is string)) &&
+             (!('isDb' in data) || data.isDb == null || (data.isDb is bool || data.isDb is string)) &&
+             (!('role' in data) || data.role == null || data.role is string) &&
+             (!('avatar' in data) || data.avatar == null || data.avatar is string) &&
+             (!('isVerified' in data) || data.isVerified == null || (data.isVerified is bool || data.isVerified is string)) &&
+             (!('isRtl' in data) || data.isRtl == null || (data.isRtl is bool || data.isRtl is string)) &&
+             (!('aiSalesInstructions' in data) || data.aiSalesInstructions == null || data.aiSalesInstructions is string) &&
+             (!('storeCompanyName' in data) || data.storeCompanyName == null || data.storeCompanyName is string) &&
+             (!('storeMarquee' in data) || data.storeMarquee == null || data.storeMarquee is string) &&
+             (!('storeCompanyLogo' in data) || data.storeCompanyLogo == null || data.storeCompanyLogo is string) &&
+             (!('storeBannerUrl' in data) || data.storeBannerUrl == null || data.storeBannerUrl is string) &&
+             (!('socialLinks' in data) || data.socialLinks == null || data.socialLinks is list);
     }
 
     function isValidProfilePermissions(data) {
-      return (!('allowAnalytics' in data) || (data.allowAnalytics is bool || data.allowAnalytics is string)) &&
-             (!('allowAiChat' in data) || (data.allowAiChat is bool || data.allowAiChat is string)) &&
-             (!('allowLiveAgent' in data) || (data.allowLiveAgent is bool || data.allowLiveAgent is string)) &&
-             (!('allowStock' in data) || (data.allowStock is bool || data.allowStock is string)) &&
-             (!('allowProfileEdit' in data) || (data.allowProfileEdit is bool || data.allowProfileEdit is string)) &&
-             (!('allowLeadsAccess' in data) || (data.allowLeadsAccess is bool || data.allowLeadsAccess is string));
+      return (!('allowAnalytics' in data) || data.allowAnalytics == null || (data.allowAnalytics is bool || data.allowAnalytics is string)) &&
+             (!('allowAiChat' in data) || data.allowAiChat == null || (data.allowAiChat is bool || data.allowAiChat is string)) &&
+             (!('allowLiveAgent' in data) || data.allowLiveAgent == null || (data.allowLiveAgent is bool || data.allowLiveAgent is string)) &&
+             (!('allowStock' in data) || data.allowStock == null || (data.allowStock is bool || data.allowStock is string)) &&
+             (!('allowProfileEdit' in data) || data.allowProfileEdit == null || (data.allowProfileEdit is bool || data.allowProfileEdit is string)) &&
+             (!('allowLeadsAccess' in data) || data.allowLeadsAccess == null || (data.allowLeadsAccess is bool || data.allowLeadsAccess is string));
     }
 
     function isProfileOwner(docId, existingData) {
-      return isOwner(docId) || (isSignedIn() && (existingData.get('ownerId', '') == request.auth.uid || existingData.get('email', '').toLower() == request.auth.token.get('email', '').toLower()));
+      return isOwner(docId) || (isSignedIn() && (
+        existingData.get('ownerId', '') == request.auth.uid || 
+        existingData.get('userId', '') == request.auth.uid || 
+        existingData.get('email', '').toLower() == request.auth.token.get('email', '').toLower()
+      ));
     }
 
     function isValidAppointment(data) {
-      return (!('ownerId' in data) || isValidId(data.ownerId)) &&
-             (!('clientName' in data) || data.clientName is string) &&
-             (!('name' in data) || data.name is string) &&
-             (!('clientEmail' in data) || data.clientEmail is string) &&
-             (!('email' in data) || data.email is string) &&
-             (!('status' in data) || data.status is string);
+      return (!('ownerId' in data) || data.ownerId == null || isValidId(data.ownerId)) &&
+             (!('clientName' in data) || data.clientName == null || data.clientName is string) &&
+             (!('name' in data) || data.name == null || data.name is string) &&
+             (!('clientEmail' in data) || data.clientEmail == null || data.clientEmail is string) &&
+             (!('email' in data) || data.email == null || data.email is string) &&
+             (!('status' in data) || data.status == null || data.status is string);
     }
 
     function isValidLead(data) {
-      return (!('ownerId' in data) || isValidId(data.ownerId)) &&
-             (!('clientName' in data) || data.clientName is string) &&
-             (!('name' in data) || data.name is string) &&
+      return (!('ownerId' in data) || data.ownerId == null || isValidId(data.ownerId)) &&
+             (!('clientName' in data) || data.clientName == null || data.clientName is string) &&
+             (!('name' in data) || data.name == null || data.name is string) &&
              data.keys().size() <= 100;
     }
 
@@ -201,16 +206,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(incoming()) && (
-        isAdmin() || (
-          // Owner can update these fields (added more allowed fields for syncing)
-          incoming().diff(existing()).affectedKeys().hasOnly([
-            'name', 'displayName', 'photoURL', 'lastLogin', 'email', 'phone', 
-            'walletBalance', 'totalEarned', 'totalSpent', 'plan', 'isTrial', 'expiry', 'updatedAt'
-          ])
-        )
-      );
+      allow create, update: if isOwner(userId) || isAdmin();
     }
 
     match /join_notifications/{id} {
@@ -280,11 +276,11 @@ service cloud.firestore {
     match /profiles/{docId} {
       allow read: if true;
       allow list: if true; // Public directory and slug lookups
-      allow create: if isSignedIn() && isValidProfile(incoming());
+      allow create: if isSignedIn() && (isProfileOwner(docId, incoming()) || isAdmin());
       allow update: if 
         isAdmin() ||
         (incoming().diff(existing()).affectedKeys().hasOnly(['views']) && (incoming().views == (existing().get('views', 0) + 1))) ||
-        (isProfileOwner(docId, existing()) && isValidProfile(incoming()));
+        isProfileOwner(docId, existing());
       allow delete: if isAdmin() || isProfileOwner(docId, existing());
     }
 

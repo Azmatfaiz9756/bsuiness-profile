@@ -60,18 +60,17 @@ export default function LiveAgentPanel({ profileId }: { profileId: string }) {
     let q;
     if (profileId === 'platform') {
       q = query(sessionsRef, orderBy('updatedAt', 'desc'));
-    } else if (profileId) {
+    } else {
       q = query(
         sessionsRef,
         or(
           where('ownerId', '==', user.uid),
-          where('profileId', '==', profileId)
+          where('profileId', '==', user.uid),
+          ...(profileId ? [
+            where('profileId', '==', profileId),
+            where('ownerId', '==', profileId)
+          ] : [])
         )
-      );
-    } else {
-      q = query(
-        sessionsRef,
-        where('ownerId', '==', user.uid)
       );
     }
 
