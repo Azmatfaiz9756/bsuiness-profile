@@ -54,7 +54,9 @@ export const ImageUploadCrop: React.FC<ImageUploadCropProps> = ({
       const image = new Image();
       image.addEventListener('load', () => resolve(image));
       image.addEventListener('error', (error) => reject(error));
-      image.setAttribute('crossOrigin', 'anonymous');
+      if (!url.startsWith('data:')) {
+        image.setAttribute('crossOrigin', 'anonymous');
+      }
       image.src = url;
     });
 

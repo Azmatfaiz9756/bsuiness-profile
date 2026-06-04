@@ -1562,17 +1562,17 @@ export default function OwnerDashboard() {
                       </select>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Profile Photo</label>
                       <ImageUploadCrop 
                         value={formData.photoUrl || ''} 
                         onChange={(url) => setFormData({...formData, photoUrl: url})}
                         id={formData.id || user.uid}
                         circular={true}
-                        disabled={isFreePlan}
+                        disabled={false}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image {isFreePlan && <span title="Locked on Free Plan">🔒</span>}</label>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Banner Image</label>
                       <ImageUploadCrop 
                         value={formData.bannerUrl || ''} 
                         onChange={(url) => setFormData({...formData, bannerUrl: url})}
@@ -1580,7 +1580,7 @@ export default function OwnerDashboard() {
                         folder="banners"
                         aspectRatio={16/9}
                         circular={false}
-                        disabled={isFreePlan}
+                        disabled={false}
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">

@@ -158,6 +158,12 @@ service cloud.firestore {
              (!('role' in data) || data.role is string) &&
              (!('avatar' in data) || data.avatar is string) &&
              (!('isVerified' in data) || (data.isVerified is bool || data.isVerified is string)) &&
+             (!('isRtl' in data) || (data.isRtl is bool || data.isRtl is string)) &&
+             (!('aiSalesInstructions' in data) || data.aiSalesInstructions is string) &&
+             (!('storeCompanyName' in data) || data.storeCompanyName is string) &&
+             (!('storeMarquee' in data) || data.storeMarquee is string) &&
+             (!('storeCompanyLogo' in data) || data.storeCompanyLogo is string) &&
+             (!('storeBannerUrl' in data) || data.storeBannerUrl is string) &&
              (!('socialLinks' in data) || data.socialLinks is list);
     }
 
