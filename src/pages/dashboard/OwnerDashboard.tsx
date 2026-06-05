@@ -680,10 +680,26 @@ export default function OwnerDashboard() {
     if (!profile?.id) return;
     try {
       const { updateDoc, doc } = await import('firebase/firestore');
+      
+      const normalizedMap: any = {};
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      days.forEach(d => {
+        const lower = d.toLowerCase();
+        const baseData = businessHours[lower] || businessHours[d] || { open: '09:00', close: '18:00', closed: false };
+        normalizedMap[d] = baseData;
+        normalizedMap[lower] = baseData;
+      });
+
       await updateDoc(doc(db, 'profiles', profile.id), {
-        businessHours: businessHours,
+        businessHours: normalizedMap,
+        hours: normalizedMap,
         updatedAt: new Date().toISOString()
       });
+
+      setBusinessHours(normalizedMap);
+      setProfile(prev => prev ? { ...prev, businessHours: normalizedMap, hours: normalizedMap } : prev);
+      setFormData(prev => prev ? { ...prev, businessHours: normalizedMap, hours: normalizedMap } : prev);
+
       showToast('Business hours saved successfully!');
     } catch (e) {
       console.error(e);
@@ -808,6 +824,8 @@ export default function OwnerDashboard() {
           setFormData(data);
           if (data.businessHours) {
             setBusinessHours(data.businessHours);
+          } else if (data.hours) {
+            setBusinessHours(data.hours);
           }
           if (!data.name || !data.slug || !data.ownerId) {
             console.log("Partial profile detected, filling in defaults...");
@@ -1088,8 +1106,23 @@ export default function OwnerDashboard() {
         });
       }
 
+      const rawHours = publicData.hours || formData.hours || formData.businessHours || publicData.businessHours;
+      const normalizedHours: any = {};
+      if (rawHours) {
+        Object.keys(rawHours).forEach((k) => {
+          const lower = k.toLowerCase();
+          const cap = k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
+          normalizedHours[lower] = rawHours[k];
+          normalizedHours[cap] = rawHours[k];
+        });
+      }
+
+      const finalHours = Object.keys(normalizedHours).length > 0 ? normalizedHours : null;
+
       const savePayload = {
         ...publicData,
+        hours: finalHours || publicData.hours || null,
+        businessHours: finalHours || publicData.businessHours || null,
         updatedAt: new Date().toISOString()
       };
 
@@ -2521,7 +2554,19 @@ export default function OwnerDashboard() {
                        <div className="flex items-center justify-between">
                          <div>
                            <h3 className="m-0 text-lg font-black text-slate-900">Showcase Products</h3>
-                           <p className="text-xs text-slate-500 m-0 mt-1 font-medium">Add up to 20 products with direct Stripe payment links.</p>
+                           <p className="text-xs text-slate-500 m-0 mt-1 font-medium mb-3">Add up to 20 products with direct Stripe payment links.</p>
+                           <div className="flex items-center gap-2 bg-blue-50/70 border border-blue-100 rounded-2xl px-4 py-2 w-fit">
+                             <input 
+                               type="checkbox" 
+                               id="showStoreHighlights" 
+                               checked={!!formData.showStoreHighlights} 
+                               onChange={e => setFormData({ ...formData, showStoreHighlights: e.target.checked })} 
+                               className="w-4 h-4 rounded border-slate-300 bg-white text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                             />
+                             <label htmlFor="showStoreHighlights" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                               Show Store Highlights on Profile Home Page
+                             </label>
+                           </div>
                          </div>
                          <button 
                            onClick={() => {
@@ -2542,7 +2587,8 @@ export default function OwnerDashboard() {
                            <div key={`prod-${index}`} className="group bg-white border border-slate-200 p-6 rounded-3xl relative transition-all hover:border-blue-200 hover:shadow-xl">
                               <button 
                                 onClick={() => { const p = [...formData.products]; p.splice(index, 1); setFormData({...formData, products: p}); }}
-                                className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                                className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-all hover:scale-115 active:scale-90 z-20"
+                                title="Remove Product"
                               >
                                 <X size={14} />
                               </button>

@@ -181,7 +181,7 @@ service cloud.firestore {
       return isOwner(docId) || (isSignedIn() && (
         existingData.get('ownerId', '') == request.auth.uid || 
         existingData.get('userId', '') == request.auth.uid || 
-        existingData.get('email', '').toLower() == request.auth.token.get('email', '').toLower()
+        (existingData.get('email', '') != '' && request.auth.token.get('email', '') != '' && existingData.get('email', '').lower() == request.auth.token.get('email', '').lower())
       ));
     }
 

@@ -1993,7 +1993,7 @@ export default function ClassicModern({
                   </div>
                 </div>
               )}
-              {activeTab === 'home' && (
+              {activeTab === 'home' && profile?.showStoreHighlights && Array.isArray(profile?.products) && profile.products.length > 0 && (
                 <SectionContainer title="Store Highlights" icon={<ShoppingBag size={18} />}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {Array.isArray(profile?.products) && profile.products.length > 0 ? (

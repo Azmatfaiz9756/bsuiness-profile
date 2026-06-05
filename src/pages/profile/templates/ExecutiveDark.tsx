@@ -1428,7 +1428,7 @@ export default function ExecutiveDark({
                   </div>
                 </div>
               )}
-              {activeTab === 'home' && (
+              {activeTab === 'home' && profile?.showStoreHighlights && Array.isArray(profile?.products) && profile.products.length > 0 && (
                 <SectionContainer title={t.highlights} icon={<ShoppingBag size={18} />}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     {Array.isArray(profile?.products) && profile.products.slice(0, 3).map((prod: any, i: number) => (
