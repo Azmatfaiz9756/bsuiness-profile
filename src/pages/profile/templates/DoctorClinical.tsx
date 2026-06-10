@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useAppContext } from "../../../context/AppContext";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,7 +21,9 @@ import {
   Languages,
   CheckCircle,
   Activity,
-  Briefcase
+  Briefcase,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -50,6 +52,30 @@ export default function DoctorClinical({
   const { user } = useAppContext();
   const [activeTab, setActiveTab] = useState<string | null>('about');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const getYoutubeVideoId = (url: string) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  const bannerVideoSource = profile.bannerVideo || profile.bannerVideoUrl || profile.videoUrl;
+  const bannerImgSource = profile.bannerUrl || profile.coverImage || profile.bannerImage || profile.backgroundImage;
+  const youtubeVideoId = bannerVideoSource ? getYoutubeVideoId(bannerVideoSource) : null;
+
+  const toggleAudio = () => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      const command = isMuted ? 'unMute' : 'mute';
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: command, args: '' }),
+        '*'
+      );
+      setIsMuted(!isMuted);
+    }
+  };
 
   // Fallbacks for Doctor specific fields with mock placeholder values to ensure gorgeous presentation on select
   const medicalSpecialty = profile.medicalSpecialty || profile.title || "General Surgery Specialist";
@@ -97,12 +123,61 @@ export default function DoctorClinical({
         
         {/* Curved Header Banner consistent with the Dr. Sophia Carter mockup card */}
         <div className="relative h-64 bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-800 flex flex-col justify-end overflow-hidden">
-          {/* Sweeper curves */}
-          <div className="absolute inset-0 opacity-10">
-            <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0,0 Q50,50 100,0 T200,0 Z" fill="white" />
-            </svg>
-          </div>
+          
+          {youtubeVideoId ? (
+            <div 
+              onClick={toggleAudio}
+              className="absolute inset-0 overflow-hidden cursor-pointer z-0"
+            >
+              <div className="absolute top-[50%] left-[50%] w-[240%] h-[240%] -translate-x-[50%] -translate-y-[50%] pointer-events-none">
+                <iframe
+                  ref={iframeRef}
+                  className="w-full h-full border-0"
+                  src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&mute=1&controls=0&loop=1&modestbranding=1&rel=0&iv_load_policy=3&showinfo=0&disablekb=1&fs=0&enablejsapi=1&playlist=${youtubeVideoId}`}
+                  allow="autoplay; encrypted-media"
+                ></iframe>
+              </div>
+              
+              {/* Mute toggle indicator badge */}
+              <div className="absolute bottom-20 right-4 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center z-10 backdrop-blur-sm shadow border border-white/20">
+                {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </div>
+            </div>
+          ) : bannerVideoSource ? (
+            <div 
+              onClick={() => setIsMuted(prev => !prev)}
+              className="absolute inset-0 overflow-hidden cursor-pointer z-0"
+            >
+              <video
+                autoPlay
+                loop
+                muted={isMuted}
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-90"
+              >
+                <source src={bannerVideoSource} type="video/mp4" />
+              </video>
+
+              {/* Mute toggle indicator badge */}
+              <div className="absolute bottom-20 right-4 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center z-10 backdrop-blur-sm shadow border border-white/20">
+                {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </div>
+            </div>
+          ) : bannerImgSource ? (
+            <img 
+              src={bannerImgSource} 
+              className="absolute inset-0 w-full h-full object-cover opacity-90"
+              alt="Banner background"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            /* Sweeper curves fallback default */
+            <div className="absolute inset-0 opacity-10">
+              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M0,0 Q50,50 100,0 T200,0 Z" fill="white" />
+              </svg>
+            </div>
+          )}
           
           <div className="absolute top-4 left-4 z-20 flex gap-2">
             {onExit && (
