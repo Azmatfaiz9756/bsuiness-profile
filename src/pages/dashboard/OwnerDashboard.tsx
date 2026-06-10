@@ -1739,6 +1739,138 @@ export default function OwnerDashboard() {
                       <textarea disabled={isFreePlan} value={formData.bio || ''} onChange={e => setFormData({...formData, bio: e.target.value})} rows={4} className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none disabled:bg-slate-100 disabled:opacity-60" />
                     </div>
 
+                    {/* Clinical Doctor Custom Block */}
+                    <div className="flex flex-col gap-1.5 md:col-span-2 mt-6 p-6 bg-teal-50/50 rounded-2xl border-2 border-teal-100 shadow-sm">
+                      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">⚕️</span>
+                          <div>
+                            <h3 className="font-extrabold text-slate-900 uppercase tracking-widest text-[11px] sm:text-xs">Clinical Doctor Details</h3>
+                            <p className="text-[10px] text-teal-600 font-bold m-0 mt-0.5">Customize your clinical credentials, specialization and about info</p>
+                          </div>
+                        </div>
+                        {formData.template !== 'doctor' && (
+                          <button 
+                            onClick={() => setFormData({...formData, template: 'doctor'})}
+                            className="bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            Activate Doctor Template
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Medical Specialty</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. Cardiologist, General Surgery" 
+                            value={formData.medicalSpecialty || ''} 
+                            onChange={e => setFormData({...formData, medicalSpecialty: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm" 
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Medical Credentials / Badges</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. M.B.B.S, M.D., F.A.C.S" 
+                            value={formData.medicalCredentials || ''} 
+                            onChange={e => setFormData({...formData, medicalCredentials: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm" 
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Clinic & Hospital Affiliations</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. City Hospital Dubai" 
+                            value={formData.hospitalAffiliations || ''} 
+                            onChange={e => setFormData({...formData, hospitalAffiliations: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm" 
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Professional Medical License</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. DHA-Lic-98246" 
+                            value={formData.doctorLicense || ''} 
+                            onChange={e => setFormData({...formData, doctorLicense: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm" 
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 md:col-span-2">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Core Medical Competencies (Comma-separated)</label>
+                          <input 
+                            type="text" 
+                            placeholder="e.g. Laparoscopy, Trauma Care, Endoscopy" 
+                            value={formData.doctorSpecialtiesList ? (Array.isArray(formData.doctorSpecialtiesList) ? formData.doctorSpecialtiesList.join(', ') : formData.doctorSpecialtiesList) : ''} 
+                            onChange={e => setFormData({...formData, doctorSpecialtiesList: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm" 
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 md:col-span-2">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Medical Qualifications / Universities (One per line)</label>
+                          <textarea 
+                            rows={3}
+                            placeholder="e.g. M.D. in General Surgery - Harvard Medical School&#10;Residency training - Mayo Clinic" 
+                            value={formData.doctorEducation || ''} 
+                            onChange={e => setFormData({...formData, doctorEducation: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none" 
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5 md:col-span-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor Specialist Statement (About Bio)</label>
+                            <button 
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                const nameToUse = formData.name || "Sophia Carter";
+                                const specToUse = formData.medicalSpecialty || "General Surgery Specialist";
+                                const credToUse = formData.medicalCredentials || "M.D.";
+                                const btn = document.getElementById("ai-dr-bio-btn");
+                                if(btn) btn.innerHTML = "Generating...";
+                                try {
+                                  const aiInstance = new ProxyGoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+                                  const promptMessage = `Write an outstanding clinical bio for an expert doctor digital portfolio. Name: Dr. ${nameToUse}, Specialty: ${specToUse}, Credentials: ${credToUse}. Make it focus on high-quality patient care, advanced clinical technologies, and modern treatment approaches. Keep it to 3 highly professional, reassuring sentences. Do not use quotes or headers.`;
+                                  const res = await aiInstance.models.generateContent({
+                                    model: 'gemini-3-flash-preview',
+                                    contents: [{ role: 'user', parts: [{ text: promptMessage }] }]
+                                  });
+                                  const text = res.text;
+                                  if(text) {
+                                    setFormData({...formData, doctorAbout: text.trim()});
+                                  }
+                                } catch(e) {
+                                  console.error("AI Doctor Bio Writer Error:", e);
+                                  alert("Failed to generate clinical bio.");
+                                }
+                                if(btn) btn.innerHTML = "✨ AI Clinical Bio Writer";
+                              }}
+                              id="ai-dr-bio-btn"
+                              className="bg-gradient-to-r from-teal-500 via-emerald-500 to-indigo-500 text-white border-none px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer"
+                            >
+                              ✨ AI Clinical Bio Writer
+                            </button>
+                          </div>
+                          <textarea 
+                            rows={4}
+                            placeholder="With over 12 years of clinical experience, Dr. Sophia Carter is dedicated to providing high-quality dental care..." 
+                            value={formData.doctorAbout || ''} 
+                            onChange={e => setFormData({...formData, doctorAbout: e.target.value})} 
+                            className="p-3 border border-slate-300 rounded-lg bg-white outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex flex-col gap-1.5 md:col-span-2 mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200">
                       <div className="flex items-center gap-2 mb-4">
                         <Shield size={18} className="text-blue-600" />
@@ -2659,26 +2791,33 @@ export default function OwnerDashboard() {
                       <h3 className="m-0 text-base font-bold text-slate-800 mb-2">Profile Layout & Theme</h3>
                       <p className="m-0 text-sm text-slate-500 mb-6 underline decoration-blue-500/30">Select a layout and style for your digital profile.</p>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 mb-8">
                         <div onClick={() => setFormData({...formData, template: 'classic'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'classic' || !formData.template ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                           <div className="bg-slate-200 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
                             <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=400&q=80" alt="Classic Modern" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                           </div>
-                          <div className="font-bold text-slate-900">Classic Modern</div>
+                          <div className="font-bold text-slate-800 text-xs sm:text-sm">Classic Modern</div>
                         </div>
                         <div onClick={() => setFormData({...formData, template: 'executive'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'executive' ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-slate-900 hover:bg-slate-800'}`}>
-                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg">PREMIUM</div>
+                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-lg">PREMIUM</div>
                           <div className="bg-slate-800 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
                             <img src="https://images.unsplash.com/photo-1557682224-5b8590cd9ec5?w=400&q=80" alt="Executive Dark" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                           </div>
-                          <div className={`font-bold ${formData.template === 'executive' ? 'text-blue-700' : 'text-white'}`}>Executive Dark</div>
+                          <div className={`font-bold text-xs sm:text-sm ${formData.template === 'executive' ? 'text-blue-700' : 'text-white'}`}>Executive Dark</div>
                         </div>
                         <div onClick={() => setFormData({...formData, template: 'minimal'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'minimal' ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
-                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[10px] font-black px-2 py-1 rounded shadow-lg">PREMIUM</div>
+                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-amber-400 to-orange-600 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-lg">PREMIUM</div>
                           <div className="border border-slate-100 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
                             <img src="https://images.unsplash.com/photo-1451187530220-4c23ba3e0c60?w=400&q=80" alt="Minimal Clean" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                           </div>
-                          <div className="font-bold text-slate-900">Minimal Clean</div>
+                          <div className="font-bold text-slate-800 text-xs sm:text-sm">Minimal Clean</div>
+                        </div>
+                        <div onClick={() => setFormData({...formData, template: 'doctor'})} className={`relative border-2 rounded-2xl p-4 cursor-pointer text-center transition-all ${formData.template === 'doctor' ? 'border-teal-600 bg-teal-50/50 ring-4 ring-teal-500/10' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
+                          <div className="absolute -top-3 -right-2 bg-gradient-to-br from-teal-500 to-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-lg">SPECIALTY</div>
+                          <div className="border border-slate-100 aspect-[4/3] rounded-xl mb-4 shadow-inner overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80" alt="Clinical Specialist" className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
+                          </div>
+                          <div className="font-bold text-slate-800 text-xs sm:text-sm">Clinical Specialist</div>
                         </div>
                       </div>
 

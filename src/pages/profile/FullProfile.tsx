@@ -4,6 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import ClassicModern from './templates/ClassicModern';
 import ExecutiveDark from './templates/ExecutiveDark';
 import MinimalClean from './templates/MinimalClean';
+import DoctorClinical from './templates/DoctorClinical';
 import { doc, getDoc, collection, query, where, getDocs, increment, updateDoc, limit } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { QRCodeSVG } from 'qrcode.react';
@@ -263,16 +264,16 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
           })()}
         </script>
       )}
-      {isPreview && (
+       {isPreview && (
         <div className="sticky top-0 z-50 bg-slate-900 px-3 py-2.5 flex flex-wrap gap-2 items-center border-b-2 border-slate-800 shadow-md">
            <span className="text-[10px] font-bold text-slate-400 tracking-widest mr-2 uppercase">Preview Theme</span>
-           {['classic', 'executive', 'minimal'].map(tName => (
+           {['classic', 'executive', 'minimal', 'doctor'].map(tName => (
              <button 
                 key={tName}
                 onClick={() => setTemplate(tName)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors border-2 ${template === tName ? 'bg-blue-600 text-white border-blue-600' : 'bg-transparent text-slate-400 border-slate-700 hover:border-slate-500'}`}
              >
-                {tName.toUpperCase()}
+                {tName === 'doctor' ? 'DOCTOR EXPERT' : tName.toUpperCase()}
              </button>
            ))}
         </div>
@@ -294,6 +295,7 @@ export default function FullProfile({ forcedId }: FullProfileProps) {
             {template === 'classic' && <ClassicModern profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
             {template === 'executive' && <ExecutiveDark profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
             {template === 'minimal' && <MinimalClean profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
+            {template === 'doctor' && <DoctorClinical profile={displayProfile} onExit={isPreview ? () => navigate('/dashboard') : undefined} />}
           </>
         );
       })()}
